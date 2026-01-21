@@ -314,6 +314,7 @@ Các tài liệu chi tiết của dự án được lưu trong thư mục [`docs
 - [🚨 EXCEPTION_HANDLING.md](docs/EXCEPTION_HANDLING.md) - Hướng dẫn về Exception Handling chuẩn (Standardized Error Format)
 - [⚙️ CONFIG_ENVIRONMENT.md](docs/CONFIG_ENVIRONMENT.md) - Hướng dẫn về Configuration & Environment (Cache, Queue, Mail, File System)
 - [🔄 QUEUE_SCHEDULER.md](docs/QUEUE_SCHEDULER.md) - Hướng dẫn về Queue & Scheduler (Redis Queue, Jobs, Cron Tasks)
+- [💾 CACHE_STRATEGY.md](docs/CACHE_STRATEGY.md) - Hướng dẫn về Cache Strategy (Key Convention, Invalidation)
 - [🚀 QUICK_START.md](docs/QUICK_START.md) - Hướng dẫn khởi động nhanh dự án
 - [✅ AUTH_CHECKLIST.md](docs/AUTH_CHECKLIST.md) - Checklist các tính năng Auth & Authorization
 

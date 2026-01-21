@@ -32,5 +32,8 @@ class AppServiceProvider extends ServiceProvider
         if (! $this->app->runningInConsole()) {
             $this->app->make(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
         }
+
+        // Register User Observer for cache invalidation
+        \App\Models\User::observe(\App\Observers\UserObserver::class);
     }
 }
