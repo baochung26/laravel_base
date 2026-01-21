@@ -13,12 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-/**
- * @OA\Tag(
- *     name="Users",
- *     description="User management endpoints (Admin only)"
- * )
- */
 class UserController extends ApiController
 {
     public function __construct(
@@ -27,36 +21,7 @@ class UserController extends ApiController
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/v1/users",
-     *     summary="Get all users",
-     *     tags={"Users"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="per_page",
-     *         in="query",
-     *         description="Items per page",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=15)
-     *     ),
-     *     @OA\Parameter(
-     *         name="search",
-     *         in="query",
-     *         description="Search by name or email",
-     *         required=false,
-     *         @OA\Schema(type="string", example="john")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of users",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Success"),
-     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/UserResource")),
-     *             @OA\Property(property="meta", ref="#/components/schemas/PaginationMeta")
-     *         )
-     *     )
-     * )
+     * Get all users.
      */
     public function index(Request $request): JsonResponse
     {
@@ -82,35 +47,7 @@ class UserController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/users",
-     *     summary="Create a new user",
-     *     tags={"Users"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 required={"name","email","password","password_confirmation"},
-     *                 @OA\Property(property="name", type="string", example="John Doe"),
-     *                 @OA\Property(property="email", type="string", format="email", example="john@example.com"),
-     *                 @OA\Property(property="password", type="string", format="password", example="password123"),
-     *                 @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
-     *                 @OA\Property(property="avatar", type="string", format="binary", description="User avatar image (max 2MB)")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="User created successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="User created successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/UserResource")
-     *         )
-     *     )
-     * )
+     * Create a new user.
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
@@ -139,35 +76,7 @@ class UserController extends ApiController
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/v1/users/{id}",
-     *     summary="Get user by ID",
-     *     tags={"Users"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="User details",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Success"),
-     *             @OA\Property(property="data", ref="#/components/schemas/UserResource")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="User not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Resource not found")
-     *         )
-     *     )
-     * )
+     * Get user by ID.
      */
     public function show(int $id): JsonResponse
     {
@@ -184,38 +93,7 @@ class UserController extends ApiController
     }
 
     /**
-     * @OA\Put(
-     *     path="/api/v1/users/{id}",
-     *     summary="Update user",
-     *     tags={"Users"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 @OA\Property(property="name", type="string", example="John Updated"),
-     *                 @OA\Property(property="email", type="string", format="email", example="john.updated@example.com"),
-     *                 @OA\Property(property="avatar", type="string", format="binary", description="User avatar image (max 2MB)")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="User updated successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="User updated successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/UserResource")
-     *         )
-     *     )
-     * )
+     * Update user.
      */
     public function update(UpdateUserRequest $request, int $id): JsonResponse
     {
@@ -251,26 +129,7 @@ class UserController extends ApiController
     }
 
     /**
-     * @OA\Delete(
-     *     path="/api/v1/users/{id}",
-     *     summary="Delete user",
-     *     tags={"Users"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="User deleted successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="User deleted successfully")
-     *         )
-     *     )
-     * )
+     * Delete user.
      */
     public function destroy(int $id): JsonResponse
     {
@@ -290,36 +149,7 @@ class UserController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/users/{id}/avatar",
-     *     summary="Upload avatar for user",
-     *     tags={"Users"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 @OA\Property(property="avatar", type="string", format="binary", description="User avatar image (max 2MB)")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Avatar uploaded successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Avatar uploaded successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/UserResource")
-     *         )
-     *     )
-     * )
+     * Upload avatar for user.
      */
     public function uploadAvatar(Request $request, int $id): JsonResponse
     {
@@ -349,27 +179,7 @@ class UserController extends ApiController
     }
 
     /**
-     * @OA\Delete(
-     *     path="/api/v1/users/{id}/avatar",
-     *     summary="Delete avatar for user",
-     *     tags={"Users"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Avatar deleted successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Avatar deleted successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/UserResource")
-     *         )
-     *     )
-     * )
+     * Delete avatar for user.
      */
     public function deleteAvatar(int $id): JsonResponse
     {

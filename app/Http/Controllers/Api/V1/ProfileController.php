@@ -11,12 +11,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-/**
- * @OA\Tag(
- *     name="Profile",
- *     description="Profile management endpoints"
- * )
- */
 class ProfileController extends ApiController
 {
     public function __construct(
@@ -25,21 +19,7 @@ class ProfileController extends ApiController
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/v1/profile",
-     *     summary="Get authenticated user profile",
-     *     tags={"Profile"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Profile information",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Success"),
-     *             @OA\Property(property="data", ref="#/components/schemas/UserResource")
-     *         )
-     *     )
-     * )
+     * Get authenticated user profile.
      */
     public function show(Request $request): JsonResponse
     {
@@ -53,32 +33,7 @@ class ProfileController extends ApiController
     }
 
     /**
-     * @OA\Put(
-     *     path="/api/v1/profile",
-     *     summary="Update authenticated user profile",
-     *     tags={"Profile"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 @OA\Property(property="name", type="string", example="John Updated"),
-     *                 @OA\Property(property="email", type="string", format="email", example="john.updated@example.com"),
-     *                 @OA\Property(property="avatar", type="string", format="binary", description="User avatar image (max 2MB)")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Profile updated successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Profile updated successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/UserResource")
-     *         )
-     *     )
-     * )
+     * Update authenticated user profile.
      */
     public function update(UpdateProfileRequest $request): JsonResponse
     {
@@ -113,30 +68,7 @@ class ProfileController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/profile/avatar",
-     *     summary="Upload avatar for authenticated user",
-     *     tags={"Profile"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 @OA\Property(property="avatar", type="string", format="binary", description="User avatar image (max 2MB)")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Avatar uploaded successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Avatar uploaded successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/UserResource")
-     *         )
-     *     )
-     * )
+     * Upload avatar for authenticated user.
      */
     public function uploadAvatar(Request $request): JsonResponse
     {
@@ -168,21 +100,7 @@ class ProfileController extends ApiController
     }
 
     /**
-     * @OA\Delete(
-     *     path="/api/v1/profile/avatar",
-     *     summary="Delete avatar for authenticated user",
-     *     tags={"Profile"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Avatar deleted successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Avatar deleted successfully"),
-     *             @OA\Property(property="data", ref="#/components/schemas/UserResource")
-     *         )
-     *     )
-     * )
+     * Delete avatar for authenticated user.
      */
     public function deleteAvatar(Request $request): JsonResponse
     {

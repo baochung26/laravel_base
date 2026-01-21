@@ -1,6 +1,6 @@
 # API Foundation Documentation
 
-Tài liệu về API Foundation với versioning, response format chuẩn, pagination, API Resources, và Swagger/OpenAPI.
+Tài liệu về API Foundation với versioning, response format chuẩn, pagination, và API Resources.
 
 ## 📋 Tổng quan
 
@@ -9,7 +9,6 @@ API Foundation bao gồm:
 - ✅ **Response Format** - Standardized success/error responses
 - ✅ **Pagination** - Standardized pagination format
 - ✅ **API Resources** - Transformers cho data formatting
-- ✅ **Swagger/OpenAPI** - API documentation với L5-Swagger
 
 ## 🔢 1. API Versioning
 
@@ -213,73 +212,6 @@ return $this->resourcePaginatedResponse(
 - `RoleResource` - Role data transformer
 - `PermissionResource` - Permission data transformer
 
-## 📚 5. Swagger/OpenAPI Documentation
-
-### Cài đặt
-
-Swagger được cài đặt thông qua `darkaonline/l5-swagger` package.
-
-### Truy cập Documentation
-
-Sau khi cài đặt và generate docs:
-
-```bash
-# Generate Swagger documentation (sử dụng Makefile - khuyến nghị)
-make swagger-generate
-
-# Hoặc sử dụng artisan trực tiếp
-php artisan l5-swagger:generate
-```
-
-Truy cập: `http://localhost:8000/api/documentation`
-
-**Lưu ý:** Sau mỗi lần thay đổi Swagger annotations trong controllers, cần chạy lại `make swagger-generate` để cập nhật documentation.
-
-### Swagger Annotations
-
-Các controllers đã được annotate với Swagger/OpenAPI annotations:
-
-```php
-/**
- * @OA\Post(
- *     path="/api/v1/register",
- *     summary="Register a new user",
- *     tags={"Authentication"},
- *     @OA\RequestBody(...),
- *     @OA\Response(...)
- * )
- */
-public function register(RegisterRequest $request): JsonResponse
-{
-    // Implementation
-}
-```
-
-### Security Definitions
-
-API sử dụng Laravel Sanctum với Bearer token:
-
-```php
-/**
- * @OA\SecurityScheme(
- *     securityScheme="sanctum",
- *     type="apiKey",
- *     in="header",
- *     name="Authorization",
- *     description="Enter token in format: Bearer {token}"
- * )
- */
-```
-
-### Components/Schemas
-
-Định nghĩa schemas cho Swagger:
-
-- `UserResource` - User schema
-- `RoleResource` - Role schema
-- `PermissionResource` - Permission schema
-- `PaginationMeta` - Pagination metadata schema
-
 ## 🔧 Cấu hình
 
 ### RouteServiceProvider
@@ -438,5 +370,4 @@ Authorization: Bearer {token}
 ## 📚 Tài liệu tham khảo
 
 - [Laravel API Resources](https://laravel.com/docs/eloquent-resources)
-- [L5-Swagger Documentation](https://github.com/DarkaOnLine/L5-Swagger)
-- [OpenAPI Specification](https://swagger.io/specification/)
+- [Laravel Form Requests](https://laravel.com/docs/validation#form-request-validation)

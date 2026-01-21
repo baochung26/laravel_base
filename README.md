@@ -80,7 +80,6 @@ make composer CMD="install" # Chạy composer command
 make npm CMD="install"      # Chạy npm command
 make fresh         # Fresh migration với seeding
 make cache-clear   # Xóa tất cả cache
-make swagger-generate  # Generate Swagger/OpenAPI documentation
 ```
 
 ### Hoặc sử dụng Docker Compose trực tiếp
@@ -310,7 +309,7 @@ Các tài liệu chi tiết của dự án được lưu trong thư mục [`docs
 - [📐 ARCHITECTURE.md](docs/ARCHITECTURE.md) - Hướng dẫn về kiến trúc và Repository-Service-Controller Pattern
 - [🔐 AUTHENTICATION.md](docs/AUTHENTICATION.md) - Hướng dẫn về Authentication & Authorization
 - [👤 USER_MODULE.md](docs/USER_MODULE.md) - Hướng dẫn về User Module (CRUD, Profile, Password)
-- [🔌 API_FOUNDATION.md](docs/API_FOUNDATION.md) - Hướng dẫn về API Foundation (Versioning, Response Format, Swagger)
+- [🔌 API_FOUNDATION.md](docs/API_FOUNDATION.md) - Hướng dẫn về API Foundation (Versioning, Response Format, Resources)
 - [🔢 API_VERSIONING_STRATEGY.md](docs/API_VERSIONING_STRATEGY.md) - Chiến lược API Versioning và Deprecation Policy
 - [❤️ HEALTH_CHECK.md](docs/HEALTH_CHECK.md) - Health check endpoints (Liveness/Readiness) cho monitoring/K8s probes
 - [📊 LOGGING.md](docs/LOGGING.md) - Hướng dẫn về Logging & Monitoring (JSON logs, Request ID, Slow Queries)
@@ -336,25 +335,8 @@ Dự án sử dụng API Foundation với các tính năng:
 - **Response Format:** Standardized success/error responses
 - **Pagination:** Standardized pagination format
 - **API Resources:** Transformers cho data formatting
-- **Swagger/OpenAPI:** API documentation với L5-Swagger
 
 Xem chi tiết trong file [API_FOUNDATION.md](docs/API_FOUNDATION.md)
-
-### Swagger Documentation
-
-Sau khi cài đặt và generate:
-
-```bash
-# Sử dụng Makefile (khuyến nghị)
-make swagger-generate
-
-# Hoặc sử dụng artisan trực tiếp
-php artisan l5-swagger:generate
-```
-
-Truy cập: `http://localhost:8000/api/documentation`
-
-**Lưu ý:** Sau mỗi lần thay đổi Swagger annotations trong controllers, cần chạy lại `make swagger-generate` để cập nhật documentation.
 
 ## 🔗 Tài liệu tham khảo
 

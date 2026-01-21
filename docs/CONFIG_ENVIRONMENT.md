@@ -43,7 +43,6 @@ File `.env.example` được chia thành các sections:
 10. **Broadcasting Configuration** - Cấu hình broadcasting (optional)
 11. **File System Configuration** - Cấu hình file system
 12. **Sanctum Configuration** - Cấu hình Sanctum
-13. **Swagger Configuration** - Cấu hình Swagger
 
 ## 📦 2. Configuration Files
 

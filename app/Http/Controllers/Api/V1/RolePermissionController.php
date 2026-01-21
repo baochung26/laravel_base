@@ -11,36 +11,15 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
-/**
- * @OA\Tag(
- *     name="Roles & Permissions",
- *     description="Role and Permission management endpoints (Admin only)"
- * )
- */
 class RolePermissionController extends ApiController
 {
     public function __construct(
         protected UserService $userService
     ) {
     }
+
     /**
-     * @OA\Get(
-     *     path="/api/v1/roles-permissions/roles",
-     *     summary="Get all roles",
-     *     tags={"Roles & Permissions"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of roles",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Success"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="roles", type="array", @OA\Items(ref="#/components/schemas/RoleResource"))
-     *             )
-     *         )
-     *     )
-     * )
+     * Get all roles.
      */
     public function getRoles(): JsonResponse
     {
@@ -52,23 +31,7 @@ class RolePermissionController extends ApiController
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/v1/roles-permissions/permissions",
-     *     summary="Get all permissions",
-     *     tags={"Roles & Permissions"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of permissions",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Success"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="permissions", type="array", @OA\Items(ref="#/components/schemas/PermissionResource"))
-     *             )
-     *         )
-     *     )
-     * )
+     * Get all permissions.
      */
     public function getPermissions(): JsonResponse
     {
@@ -80,31 +43,7 @@ class RolePermissionController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/roles-permissions/assign-role",
-     *     summary="Assign role to user",
-     *     tags={"Roles & Permissions"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"user_id","role"},
-     *             @OA\Property(property="user_id", type="integer", example=1),
-     *             @OA\Property(property="role", type="string", example="admin")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Role assigned successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Role assigned successfully"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource")
-     *             )
-     *         )
-     *     )
-     * )
+     * Assign role to user.
      */
     public function assignRole(Request $request): JsonResponse
     {
@@ -122,31 +61,7 @@ class RolePermissionController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/roles-permissions/remove-role",
-     *     summary="Remove role from user",
-     *     tags={"Roles & Permissions"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"user_id","role"},
-     *             @OA\Property(property="user_id", type="integer", example=1),
-     *             @OA\Property(property="role", type="string", example="admin")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Role removed successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Role removed successfully"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource")
-     *             )
-     *         )
-     *     )
-     * )
+     * Remove role from user.
      */
     public function removeRole(Request $request): JsonResponse
     {
@@ -164,31 +79,7 @@ class RolePermissionController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/roles-permissions/sync-roles",
-     *     summary="Sync user roles",
-     *     tags={"Roles & Permissions"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"user_id","roles"},
-     *             @OA\Property(property="user_id", type="integer", example=1),
-     *             @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"admin", "moderator"})
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Roles synced successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Roles synced successfully"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource")
-     *             )
-     *         )
-     *     )
-     * )
+     * Sync user roles.
      */
     public function syncRoles(Request $request): JsonResponse
     {
@@ -207,31 +98,7 @@ class RolePermissionController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/roles-permissions/give-permission",
-     *     summary="Assign permission to user",
-     *     tags={"Roles & Permissions"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"user_id","permission"},
-     *             @OA\Property(property="user_id", type="integer", example=1),
-     *             @OA\Property(property="permission", type="string", example="edit users")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Permission assigned successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Permission assigned successfully"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource")
-     *             )
-     *         )
-     *     )
-     * )
+     * Give permission to user.
      */
     public function givePermissionTo(Request $request): JsonResponse
     {
@@ -249,31 +116,7 @@ class RolePermissionController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/roles-permissions/revoke-permission",
-     *     summary="Revoke permission from user",
-     *     tags={"Roles & Permissions"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"user_id","permission"},
-     *             @OA\Property(property="user_id", type="integer", example=1),
-     *             @OA\Property(property="permission", type="string", example="edit users")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Permission revoked successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Permission revoked successfully"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource")
-     *             )
-     *         )
-     *     )
-     * )
+     * Revoke permission from user.
      */
     public function revokePermissionFrom(Request $request): JsonResponse
     {

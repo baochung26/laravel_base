@@ -70,7 +70,3 @@ cache-clear: ## Clear all caches
 
 db-shell: ## Open MySQL shell
 	docker-compose exec db mysql -u laravel_user -proot laravel_db
-
-swagger-generate: ## Generate Swagger/OpenAPI documentation
-	docker-compose exec app php artisan l5-swagger:generate
-	@echo "Swagger documentation generated! Access at http://localhost:8000/api/documentation"

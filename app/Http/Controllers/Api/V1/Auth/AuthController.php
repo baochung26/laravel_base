@@ -14,12 +14,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
-/**
- * @OA\Tag(
- *     name="Authentication",
- *     description="Authentication endpoints"
- * )
- */
 class AuthController extends ApiController
 {
     public function __construct(
@@ -28,42 +22,7 @@ class AuthController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/register",
-     *     summary="Register a new user",
-     *     tags={"Authentication"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name","email","password","password_confirmation"},
-     *             @OA\Property(property="name", type="string", example="John Doe"),
-     *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="password123"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="User registered successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="User registered successfully"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource"),
-     *                 @OA\Property(property="token", type="string", example="1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Validation failed"),
-     *             @OA\Property(property="errors", type="object")
-     *         )
-     *     )
-     * )
+     * Register a new user.
      */
     public function register(RegisterRequest $request): JsonResponse
     {
@@ -89,42 +48,7 @@ class AuthController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/login",
-     *     summary="Login user",
-     *     tags={"Authentication"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"email","password"},
-     *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="password123")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Login successful",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Login successful"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource"),
-     *                 @OA\Property(property="token", type="string", example="1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"),
-     *                 @OA\Property(property="permissions", type="array", @OA\Items(type="string")),
-     *                 @OA\Property(property="roles", type="array", @OA\Items(type="string"))
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="The provided credentials are incorrect."),
-     *             @OA\Property(property="errors", type="object")
-     *         )
-     *     )
-     * )
+     * Login user.
      */
     public function login(LoginRequest $request): JsonResponse
     {
@@ -151,20 +75,7 @@ class AuthController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/logout",
-     *     summary="Logout user",
-     *     tags={"Authentication"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Logged out successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Logged out successfully")
-     *         )
-     *     )
-     * )
+     * Logout user.
      */
     public function logout(Request $request): JsonResponse
     {
@@ -174,25 +85,7 @@ class AuthController extends ApiController
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/v1/me",
-     *     summary="Get authenticated user",
-     *     tags={"Authentication"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="User information",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Success"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource"),
-     *                 @OA\Property(property="permissions", type="array", @OA\Items(type="string")),
-     *                 @OA\Property(property="roles", type="array", @OA\Items(type="string"))
-     *             )
-     *         )
-     *     )
-     * )
+     * Get authenticated user.
      */
     public function me(Request $request): JsonResponse
     {
@@ -207,23 +100,7 @@ class AuthController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/refresh",
-     *     summary="Refresh token",
-     *     tags={"Authentication"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Token refreshed successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Token refreshed successfully"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="token", type="string", example="2|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-     *             )
-     *         )
-     *     )
-     * )
+     * Refresh token.
      */
     public function refresh(Request $request): JsonResponse
     {

@@ -159,13 +159,6 @@ FILESYSTEM_DISK=local
 SANCTUM_STATEFUL_DOMAINS=localhost,127.0.0.1,::1
 SESSION_DOMAIN=null
 
-# ============================================================================
-# Swagger Configuration
-# ============================================================================
-L5_SWAGGER_USE_ABSOLUTE_PATH=false
-L5_FORMAT_TO_USE_FOR_DOCS=json
-SWAGGER_VERSION=3.0
-L5_SWAGGER_CONST_HOST=http://localhost:8000
 
 # ============================================================================
 # API Rate Limiting Configuration
