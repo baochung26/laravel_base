@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController as V1AuthController;
+use App\Http\Controllers\Api\V1\HealthController as V1HealthController;
 use App\Http\Controllers\Api\V1\ProfileController as V1ProfileController;
 use App\Http\Controllers\Api\V1\PasswordController as V1PasswordController;
 use App\Http\Controllers\Api\V1\UserController as V1UserController;
@@ -24,6 +25,11 @@ use Illuminate\Support\Facades\Route;
 | Public Routes
 |--------------------------------------------------------------------------
 */
+
+// Health check
+Route::get('/health', V1HealthController::class)->name('v1.health');
+Route::get('/health/live', [V1HealthController::class, 'live'])->name('v1.health.live');
+Route::get('/health/ready', [V1HealthController::class, 'ready'])->name('v1.health.ready');
 
 // Authentication routes (with rate limiting)
 Route::post('/register', [V1AuthController::class, 'register'])
@@ -85,5 +91,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/sync-roles', [V1RolePermissionController::class, 'syncRoles'])->name('v1.sync.roles');
         Route::post('/give-permission', [V1RolePermissionController::class, 'givePermissionTo'])->name('v1.give.permission');
         Route::post('/revoke-permission', [V1RolePermissionController::class, 'revokePermissionFrom'])->name('v1.revoke.permission');
+    });
+
+    // Storage routes (for private file access)
+    Route::prefix('storage')->middleware(['auth:sanctum'])->group(function () {
+        Route::get('/download/{path}', [\App\Http\Controllers\StorageController::class, 'download'])
+            ->where('path', '.*')
+            ->name('v1.storage.download');
+        Route::get('/temporary-url/{path}', [\App\Http\Controllers\StorageController::class, 'getTemporaryUrl'])
+            ->where('path', '.*')
+            ->name('v1.storage.temporary-url');
     });
 });

@@ -23,10 +23,36 @@ QUEUE_FAILED_DRIVER=database-uuids
 
 **Redis Configuration:**
 ```env
-REDIS_HOST=127.0.0.1
+REDIS_HOST=redis
 REDIS_PASSWORD=null
 REDIS_PORT=6379
 REDIS_DB=0
+```
+
+## 🐳 Docker Runtime (Queue Worker + Scheduler)
+
+Dự án đã cấu hình sẵn 2 container chạy nền:
+
+- **`queue`**: chạy `php artisan queue:work ...`
+- **`scheduler`**: chạy `php artisan schedule:work`
+
+### Khởi động
+
+```bash
+docker compose up -d
+```
+
+### Kiểm tra logs
+
+```bash
+docker compose logs -f queue
+docker compose logs -f scheduler
+```
+
+### Restart worker/scheduler (khi deploy code mới)
+
+```bash
+docker compose restart queue scheduler
 ```
 
 ### Queue Connections

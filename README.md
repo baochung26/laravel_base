@@ -310,11 +310,15 @@ Các tài liệu chi tiết của dự án được lưu trong thư mục [`docs
 - [🔐 AUTHENTICATION.md](docs/AUTHENTICATION.md) - Hướng dẫn về Authentication & Authorization
 - [👤 USER_MODULE.md](docs/USER_MODULE.md) - Hướng dẫn về User Module (CRUD, Profile, Password)
 - [🔌 API_FOUNDATION.md](docs/API_FOUNDATION.md) - Hướng dẫn về API Foundation (Versioning, Response Format, Swagger)
+- [❤️ HEALTH_CHECK.md](docs/HEALTH_CHECK.md) - Health check endpoints (Liveness/Readiness) cho monitoring/K8s probes
 - [📊 LOGGING.md](docs/LOGGING.md) - Hướng dẫn về Logging & Monitoring (JSON logs, Request ID, Slow Queries)
 - [🚨 EXCEPTION_HANDLING.md](docs/EXCEPTION_HANDLING.md) - Hướng dẫn về Exception Handling chuẩn (Standardized Error Format)
 - [⚙️ CONFIG_ENVIRONMENT.md](docs/CONFIG_ENVIRONMENT.md) - Hướng dẫn về Configuration & Environment (Cache, Queue, Mail, File System)
 - [🔄 QUEUE_SCHEDULER.md](docs/QUEUE_SCHEDULER.md) - Hướng dẫn về Queue & Scheduler (Redis Queue, Jobs, Cron Tasks)
 - [💾 CACHE_STRATEGY.md](docs/CACHE_STRATEGY.md) - Hướng dẫn về Cache Strategy (Key Convention, Invalidation)
+- [📁 FILE_STORAGE.md](docs/FILE_STORAGE.md) - Hướng dẫn về File Storage (Local, S3, Public/Private Files)
+- [🗄️ DATABASE_CONVENTIONS.md](docs/DATABASE_CONVENTIONS.md) - Hướng dẫn về Database Conventions (Migrations, Soft Deletes, Indexing)
+- [🔴 REDIS_SETUP.md](docs/REDIS_SETUP.md) - Hướng dẫn về Redis Setup trong Docker
 - [🚀 QUICK_START.md](docs/QUICK_START.md) - Hướng dẫn khởi động nhanh dự án
 - [✅ AUTH_CHECKLIST.md](docs/AUTH_CHECKLIST.md) - Checklist các tính năng Auth & Authorization
 

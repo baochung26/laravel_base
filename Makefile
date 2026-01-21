@@ -1,4 +1,4 @@
-.PHONY: help install up down restart logs shell composer npm artisan
+.PHONY: help install up down restart logs shell composer npm artisan queue-logs scheduler-logs workers-restart ps
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -21,6 +21,9 @@ restart: ## Restart Docker containers
 
 logs: ## Show container logs
 	docker-compose logs -f
+
+ps: ## Show running containers
+	docker-compose ps
 
 shell: ## Open shell in app container
 	docker-compose exec app bash
@@ -49,6 +52,15 @@ fresh: ## Fresh migration with seeding
 
 test: ## Run tests
 	docker-compose exec app php artisan test
+
+queue-logs: ## Tail queue worker logs
+	docker-compose logs -f queue
+
+scheduler-logs: ## Tail scheduler logs
+	docker-compose logs -f scheduler
+
+workers-restart: ## Restart queue worker + scheduler
+	docker-compose restart queue scheduler
 
 cache-clear: ## Clear all caches
 	docker-compose exec app php artisan cache:clear

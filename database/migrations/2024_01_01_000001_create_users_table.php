@@ -14,17 +14,29 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
+            $table->string('email')->unique(); // Indexed automatically by unique()
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('avatar')->nullable();
             $table->rememberToken();
+            
+            // Timestamps convention
             $table->timestamps();
+            $table->softDeletes(); // Soft deletes convention
+            
+            // Indexes for frequently queried columns
+            $table->index('email'); // Additional index (unique already creates index)
+            $table->index('created_at'); // For date range queries
+            $table->index('deleted_at'); // For soft delete queries
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
+            
+            // Index for token lookup
+            $table->index('token');
         });
 
         Schema::create('sessions', function (Blueprint $table) {
@@ -34,6 +46,10 @@ return new class extends Migration
             $table->text('user_agent')->nullable();
             $table->longText('payload');
             $table->integer('last_activity')->index();
+            
+            // Indexes
+            $table->index('user_id');
+            $table->index('last_activity');
         });
     }
 
@@ -42,8 +58,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };

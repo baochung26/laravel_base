@@ -70,24 +70,6 @@ class RolePermissionSeeder extends Seeder
             'edit content',
         ]);
 
-        // Create a demo admin user (optional)
-        $admin = \App\Models\User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'password' => \Illuminate\Support\Facades\Hash::make('password'),
-        ]);
-        $admin->assignRole($adminRole);
-
-        // Create a demo regular user (optional)
-        $user = \App\Models\User::create([
-            'name' => 'Regular User',
-            'email' => 'user@example.com',
-            'password' => \Illuminate\Support\Facades\Hash::make('password'),
-        ]);
-        $user->assignRole($userRole);
-
         $this->command->info('Roles and permissions created successfully!');
-        $this->command->info('Admin credentials: admin@example.com / password');
-        $this->command->info('User credentials: user@example.com / password');
     }
 }

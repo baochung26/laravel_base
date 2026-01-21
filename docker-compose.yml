@@ -16,6 +16,44 @@ services:
       - laravel
     depends_on:
       - db
+      - redis
+
+  # Queue Worker (Redis)
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_queue
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - laravel
+    depends_on:
+      - db
+      - redis
+    command: php artisan queue:work --sleep=1 --tries=3 --timeout=300
+
+  # Scheduler Runner
+  # Preferred for containers: schedule:work (keeps running) instead of cron+schedule:run
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - laravel
+    depends_on:
+      - db
+      - redis
+    command: php artisan schedule:work
 
   # Nginx Web Server
   webserver:
@@ -69,10 +107,29 @@ services:
     depends_on:
       - db
 
+  # Redis (Cache/Queue)
+  redis:
+    image: redis:7-alpine
+    container_name: laravel_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - laravel
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 networks:
   laravel:
     driver: bridge
 
 volumes:
   dbdata:
+    driver: local
+  redisdata:
     driver: local
