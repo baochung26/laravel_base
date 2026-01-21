@@ -1,0 +1,11 @@
+.git
+.gitignore
+.env
+.env.backup
+.phpunit.result.cache
+docker-compose.yml
+Dockerfile
+node_modules
+vendor
+npm-debug.log
+yarn-error.log

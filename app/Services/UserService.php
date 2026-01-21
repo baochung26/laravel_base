@@ -1,0 +1,293 @@
+<?php
+
+namespace App\Services;
+
+use App\DTOs\UserDTO;
+use App\Exceptions\ResourceNotFoundException;
+use App\Exceptions\ValidationException;
+use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+
+class UserService
+{
+    public function __construct(
+        protected UserRepositoryInterface $userRepository
+    ) {
+    }
+
+    /**
+     * Get all users.
+     */
+    public function getAll(array $columns = ['*']): Collection
+    {
+        return $this->userRepository->all($columns);
+    }
+
+    /**
+     * Get user by ID.
+     */
+    public function getById(int $id): UserDTO
+    {
+        $user = $this->userRepository->findOrFail($id);
+
+        return UserDTO::fromModel($user);
+    }
+
+    /**
+     * Get user by ID with roles and permissions.
+     */
+    public function getByIdWithRelations(int $id): UserDTO
+    {
+        $user = $this->userRepository->withRolesAndPermissions($id);
+
+        if (! $user) {
+            throw new ResourceNotFoundException("User with ID {$id} not found");
+        }
+
+        return UserDTO::fromModel($user);
+    }
+
+    /**
+     * Get user by email.
+     */
+    public function getByEmail(string $email): ?UserDTO
+    {
+        $user = $this->userRepository->findByEmail($email);
+
+        return $user ? UserDTO::fromModel($user) : null;
+    }
+
+    /**
+     * Create a new user.
+     */
+    public function create(UserDTO $userDTO, ?string $roleName = null): UserDTO
+    {
+        // Check if email already exists
+        if ($this->userRepository->existsByEmail($userDTO->email)) {
+            throw new ValidationException('Email already exists');
+        }
+
+        // Hash password if provided
+        $data = $userDTO->toCreateArray();
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        // Create user
+        $user = $this->userRepository->create($data);
+
+        // Assign role if provided
+        if ($roleName) {
+            $role = Role::where('name', $roleName)->first();
+            if ($role) {
+                $user->assignRole($role);
+            }
+        }
+
+        return UserDTO::fromModel($user->load('roles', 'permissions'));
+    }
+
+    /**
+     * Update user.
+     */
+    public function update(int $id, UserDTO $userDTO): UserDTO
+    {
+        // Check if user exists
+        $user = $this->userRepository->findOrFail($id);
+
+        // Check if email is being changed and if it's already taken
+        if ($userDTO->email !== $user->email && $this->userRepository->existsByEmail($userDTO->email)) {
+            throw new ValidationException('Email already exists');
+        }
+
+        // Prepare update data
+        $data = [
+            'name' => $userDTO->name,
+            'email' => $userDTO->email,
+        ];
+
+        // Update password if provided
+        if ($userDTO->password) {
+            $data['password'] = Hash::make($userDTO->password);
+        }
+
+        // Update avatar if provided
+        if ($userDTO->avatar) {
+            $data['avatar'] = $userDTO->avatar;
+        }
+
+        // Update user
+        $this->userRepository->update($id, $data);
+
+        // Reload user with relations
+        $updatedUser = $this->userRepository->withRolesAndPermissions($id);
+
+        return UserDTO::fromModel($updatedUser);
+    }
+
+    /**
+     * Update user avatar.
+     */
+    public function updateAvatar(int $id, string $avatarPath): UserDTO
+    {
+        // Check if user exists
+        $this->userRepository->findOrFail($id);
+
+        // Update avatar
+        $this->userRepository->update($id, ['avatar' => $avatarPath]);
+
+        // Reload user with relations
+        $updatedUser = $this->userRepository->withRolesAndPermissions($id);
+
+        return UserDTO::fromModel($updatedUser);
+    }
+
+    /**
+     * Delete user avatar.
+     */
+    public function deleteAvatar(int $id): UserDTO
+    {
+        // Check if user exists
+        $user = $this->userRepository->findOrFail($id);
+
+        // Delete old avatar file if exists
+        if ($user->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->avatar)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+        }
+
+        // Update user to remove avatar
+        $this->userRepository->update($id, ['avatar' => null]);
+
+        // Reload user with relations
+        $updatedUser = $this->userRepository->withRolesAndPermissions($id);
+
+        return UserDTO::fromModel($updatedUser);
+    }
+
+    /**
+     * Update user profile (name, email, avatar).
+     */
+    public function updateProfile(int $id, UserDTO $userDTO): UserDTO
+    {
+        // Check if user exists
+        $user = $this->userRepository->findOrFail($id);
+
+        // Check if email is being changed and if it's already taken
+        if ($userDTO->email !== $user->email && $this->userRepository->existsByEmail($userDTO->email)) {
+            throw new ValidationException('Email already exists');
+        }
+
+        // Prepare update data
+        $data = [
+            'name' => $userDTO->name,
+            'email' => $userDTO->email,
+        ];
+
+        // Update avatar if provided
+        if ($userDTO->avatar) {
+            // Delete old avatar if exists
+            if ($user->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->avatar)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            }
+            $data['avatar'] = $userDTO->avatar;
+        }
+
+        // Update user
+        $this->userRepository->update($id, $data);
+
+        // Reload user with relations
+        $updatedUser = $this->userRepository->withRolesAndPermissions($id);
+
+        return UserDTO::fromModel($updatedUser);
+    }
+
+    /**
+     * Change user password.
+     */
+    public function changePassword(int $id, string $currentPassword, string $newPassword): bool
+    {
+        // Check if user exists
+        $user = $this->userRepository->findOrFail($id);
+
+        // Verify current password
+        if (! Hash::check($currentPassword, $user->password)) {
+            throw new ValidationException('Current password is incorrect');
+        }
+
+        // Update password
+        $this->userRepository->update($id, [
+            'password' => Hash::make($newPassword),
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Delete user.
+     */
+    public function delete(int $id): bool
+    {
+        // Check if user exists
+        $this->userRepository->findOrFail($id);
+
+        return $this->userRepository->delete($id);
+    }
+
+    /**
+     * Search users.
+     */
+    public function search(string $keyword, int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->userRepository->search($keyword, $perPage);
+    }
+
+    /**
+     * Assign role to user.
+     */
+    public function assignRole(int $userId, string $roleName): UserDTO
+    {
+        $user = $this->userRepository->findOrFail($userId);
+
+        $role = Role::where('name', $roleName)->first();
+        if (! $role) {
+            throw new ValidationException("Role '{$roleName}' not found");
+        }
+
+        $user->assignRole($role);
+
+        return UserDTO::fromModel($user->load('roles', 'permissions'));
+    }
+
+    /**
+     * Remove role from user.
+     */
+    public function removeRole(int $userId, string $roleName): UserDTO
+    {
+        $user = $this->userRepository->findOrFail($userId);
+
+        $user->removeRole($roleName);
+
+        return UserDTO::fromModel($user->load('roles', 'permissions'));
+    }
+
+    /**
+     * Sync user roles.
+     */
+    public function syncRoles(int $userId, array $roleNames): UserDTO
+    {
+        $user = $this->userRepository->findOrFail($userId);
+
+        // Validate all roles exist
+        $roles = Role::whereIn('name', $roleNames)->get();
+        if ($roles->count() !== count($roleNames)) {
+            throw new ValidationException('One or more roles not found');
+        }
+
+        $user->syncRoles($roleNames);
+
+        return UserDTO::fromModel($user->load('roles', 'permissions'));
+    }
+}
