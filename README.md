@@ -338,11 +338,43 @@ Dự án sử dụng API Foundation với các tính năng:
 
 Xem chi tiết trong file [API_FOUNDATION.md](docs/API_FOUNDATION.md)
 
+## 🎛️ Admin Panel
+
+Dự án có Admin Panel được xây dựng với **Filament 3.x**:
+
+- **URL:** `http://localhost:8000/admin`
+- **Features:**
+  - User Management (CRUD)
+  - Role & Permission Management
+  - Dashboard với statistics
+  - Tích hợp với Spatie Permission
+
+Xem chi tiết trong file [ADMIN_PANEL.md](docs/ADMIN_PANEL.md)
+
+### Setup Admin Panel
+
+```bash
+# Install Filament (đã có trong composer.json)
+docker-compose exec app composer install
+
+# Publish Filament assets
+docker-compose exec app php artisan filament:install --panels
+
+# Tạo admin user
+docker-compose exec app php artisan make:filament-user
+
+# Hoặc sử dụng seeder
+docker-compose exec app php artisan db:seed --class=DemoSeeder
+```
+
+Truy cập: `http://localhost:8000/admin`
+
 ## 🔗 Tài liệu tham khảo
 
 - [Laravel 12 Documentation](https://laravel.com/docs/12.x)
 - [Laravel Sanctum Documentation](https://laravel.com/docs/sanctum)
 - [Spatie Laravel Permission Documentation](https://spatie.be/docs/laravel-permission)
+- [Filament Documentation](https://filamentphp.com/docs)
 - [Docker Documentation](https://docs.docker.com/)
 
 ## 🤝 Contributing

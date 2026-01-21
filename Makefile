@@ -70,3 +70,9 @@ cache-clear: ## Clear all caches
 
 db-shell: ## Open MySQL shell
 	docker-compose exec db mysql -u laravel_user -proot laravel_db
+
+filament-install: ## Install Filament admin panel
+	docker-compose exec app php artisan filament:install --panels
+
+filament-user: ## Create Filament admin user
+	docker-compose exec app php artisan make:filament-user
