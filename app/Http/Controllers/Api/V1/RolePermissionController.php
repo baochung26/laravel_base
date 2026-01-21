@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Resources\PermissionResource;
 use App\Http\Resources\RoleResource;
+use App\Http\Resources\UserResource;
+use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
@@ -17,6 +19,10 @@ use Spatie\Permission\Models\Permission;
  */
 class RolePermissionController extends ApiController
 {
+    public function __construct(
+        protected UserService $userService
+    ) {
+    }
     /**
      * @OA\Get(
      *     path="/api/v1/roles-permissions/roles",
@@ -107,11 +113,11 @@ class RolePermissionController extends ApiController
             'role' => 'required|exists:roles,name',
         ]);
 
-        $user = \App\Models\User::findOrFail($request->user_id);
-        $user->assignRole($request->role);
+        $this->userService->assignRole($request->user_id, $request->role);
+        $userModel = $this->userService->getModelByIdWithRelations($request->user_id);
 
         return $this->successResponse([
-            'user' => new \App\Http\Resources\UserResource($user->load('roles', 'permissions')),
+            'user' => new UserResource($userModel),
         ], 'Role assigned successfully');
     }
 
@@ -149,11 +155,11 @@ class RolePermissionController extends ApiController
             'role' => 'required|exists:roles,name',
         ]);
 
-        $user = \App\Models\User::findOrFail($request->user_id);
-        $user->removeRole($request->role);
+        $this->userService->removeRole($request->user_id, $request->role);
+        $userModel = $this->userService->getModelByIdWithRelations($request->user_id);
 
         return $this->successResponse([
-            'user' => new \App\Http\Resources\UserResource($user->load('roles', 'permissions')),
+            'user' => new UserResource($userModel),
         ], 'Role removed successfully');
     }
 
@@ -192,11 +198,11 @@ class RolePermissionController extends ApiController
             'roles.*' => 'exists:roles,name',
         ]);
 
-        $user = \App\Models\User::findOrFail($request->user_id);
-        $user->syncRoles($request->roles);
+        $this->userService->syncRoles($request->user_id, $request->roles);
+        $userModel = $this->userService->getModelByIdWithRelations($request->user_id);
 
         return $this->successResponse([
-            'user' => new \App\Http\Resources\UserResource($user->load('roles', 'permissions')),
+            'user' => new UserResource($userModel),
         ], 'Roles synced successfully');
     }
 
@@ -234,11 +240,11 @@ class RolePermissionController extends ApiController
             'permission' => 'required|exists:permissions,name',
         ]);
 
-        $user = \App\Models\User::findOrFail($request->user_id);
-        $user->givePermissionTo($request->permission);
+        $this->userService->givePermissionTo($request->user_id, $request->permission);
+        $userModel = $this->userService->getModelByIdWithRelations($request->user_id);
 
         return $this->successResponse([
-            'user' => new \App\Http\Resources\UserResource($user->load('roles', 'permissions')),
+            'user' => new UserResource($userModel),
         ], 'Permission assigned successfully');
     }
 
@@ -276,11 +282,11 @@ class RolePermissionController extends ApiController
             'permission' => 'required|exists:permissions,name',
         ]);
 
-        $user = \App\Models\User::findOrFail($request->user_id);
-        $user->revokePermissionTo($request->permission);
+        $this->userService->revokePermissionFrom($request->user_id, $request->permission);
+        $userModel = $this->userService->getModelByIdWithRelations($request->user_id);
 
         return $this->successResponse([
-            'user' => new \App\Http\Resources\UserResource($user->load('roles', 'permissions')),
+            'user' => new UserResource($userModel),
         ], 'Permission revoked successfully');
     }
 }

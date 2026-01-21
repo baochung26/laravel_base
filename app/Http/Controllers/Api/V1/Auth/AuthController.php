@@ -76,10 +76,11 @@ class AuthController extends ApiController
 
             $result = $this->authService->register($userDTO, 'user');
 
-            $user = app(\App\Models\User::class)->findOrFail($result['user']->id);
+            // Get model with relations for Resource (result['user'] is UserDTO)
+            $userModel = app(\App\Services\UserService::class)->getModelByIdWithRelations($result['user']->id);
             
             return $this->successResponse([
-                'user' => new UserResource($user->load('roles', 'permissions')),
+                'user' => new UserResource($userModel),
                 'token' => $result['token'],
             ], 'User registered successfully', 201);
         } catch (AppValidationException $e) {
@@ -135,10 +136,11 @@ class AuthController extends ApiController
 
             $result = $this->authService->login($loginDTO);
 
-            $user = app(\App\Models\User::class)->findOrFail($result['user']->id);
+            // Get model with relations for Resource (result['user'] is UserDTO)
+            $userModel = app(\App\Services\UserService::class)->getModelByIdWithRelations($result['user']->id);
 
             return $this->successResponse([
-                'user' => new UserResource($user->load('roles', 'permissions')),
+                'user' => new UserResource($userModel),
                 'token' => $result['token'],
                 'permissions' => $result['permissions'],
                 'roles' => $result['roles'],
@@ -195,10 +197,10 @@ class AuthController extends ApiController
     public function me(Request $request): JsonResponse
     {
         $userDTO = $this->authService->me();
-        $user = app(\App\Models\User::class)->findOrFail($userDTO->id);
+        $userModel = app(\App\Services\UserService::class)->getModelByIdWithRelations($userDTO->id);
 
         return $this->successResponse([
-            'user' => new UserResource($user->load('roles', 'permissions')),
+            'user' => new UserResource($userModel),
             'permissions' => $userDTO->permissions ?? [],
             'roles' => $userDTO->roles ?? [],
         ]);

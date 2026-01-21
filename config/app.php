@@ -160,4 +160,17 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+    /*
+    |--------------------------------------------------------------------------
+    | API Rate Limiting Configuration
+    |--------------------------------------------------------------------------
+    |
+    | These values determine the rate limits for API endpoints.
+    | Different limits can be set for authenticated vs unauthenticated users.
+    |
+    */
+
+    'api_rate_limit_authenticated' => env('API_RATE_LIMIT_AUTHENTICATED', 100),
+    'api_rate_limit_guest' => env('API_RATE_LIMIT_GUEST', 60),
+
 ];

@@ -23,7 +23,15 @@ class UserService
      */
     public function getAll(array $columns = ['*']): Collection
     {
-        return $this->userRepository->all($columns);
+        return $this->userRepository->getAllWithRoles($columns);
+    }
+
+    /**
+     * Get all users with roles and permissions.
+     */
+    public function getAllWithRelations(array $columns = ['*']): Collection
+    {
+        return $this->userRepository->getAllWithRelations($columns);
     }
 
     /**
@@ -249,7 +257,10 @@ class UserService
      */
     public function assignRole(int $userId, string $roleName): UserDTO
     {
-        $user = $this->userRepository->findOrFail($userId);
+        $user = $this->userRepository->withRolesAndPermissions($userId);
+        if (! $user) {
+            throw new ResourceNotFoundException("User with ID {$userId} not found");
+        }
 
         $role = Role::where('name', $roleName)->first();
         if (! $role) {
@@ -258,6 +269,7 @@ class UserService
 
         $user->assignRole($role);
 
+        // Reload with fresh relations
         return UserDTO::fromModel($user->load('roles', 'permissions'));
     }
 
@@ -266,10 +278,14 @@ class UserService
      */
     public function removeRole(int $userId, string $roleName): UserDTO
     {
-        $user = $this->userRepository->findOrFail($userId);
+        $user = $this->userRepository->withRolesAndPermissions($userId);
+        if (! $user) {
+            throw new ResourceNotFoundException("User with ID {$userId} not found");
+        }
 
         $user->removeRole($roleName);
 
+        // Reload with fresh relations
         return UserDTO::fromModel($user->load('roles', 'permissions'));
     }
 
@@ -278,7 +294,10 @@ class UserService
      */
     public function syncRoles(int $userId, array $roleNames): UserDTO
     {
-        $user = $this->userRepository->findOrFail($userId);
+        $user = $this->userRepository->withRolesAndPermissions($userId);
+        if (! $user) {
+            throw new ResourceNotFoundException("User with ID {$userId} not found");
+        }
 
         // Validate all roles exist
         $roles = Role::whereIn('name', $roleNames)->get();
@@ -288,6 +307,65 @@ class UserService
 
         $user->syncRoles($roleNames);
 
+        // Reload with fresh relations
+        return UserDTO::fromModel($user->load('roles', 'permissions'));
+    }
+
+    /**
+     * Get paginated users with relations.
+     */
+    public function paginate(int $perPage = 15, array $columns = ['*']): LengthAwarePaginator
+    {
+        return $this->userRepository->paginateWithRelations($perPage, $columns);
+    }
+
+    /**
+     * Get user model by ID with relations (for Resource usage).
+     */
+    public function getModelByIdWithRelations(int $id)
+    {
+        $user = $this->userRepository->withRolesAndPermissions($id);
+        if (! $user) {
+            throw new ResourceNotFoundException("User with ID {$id} not found");
+        }
+
+        return $user;
+    }
+
+    /**
+     * Give permission to user.
+     */
+    public function givePermissionTo(int $userId, string $permissionName): UserDTO
+    {
+        $user = $this->userRepository->withRolesAndPermissions($userId);
+        if (! $user) {
+            throw new ResourceNotFoundException("User with ID {$userId} not found");
+        }
+
+        $permission = \Spatie\Permission\Models\Permission::where('name', $permissionName)->first();
+        if (! $permission) {
+            throw new ValidationException("Permission '{$permissionName}' not found");
+        }
+
+        $user->givePermissionTo($permission);
+
+        // Reload with fresh relations
+        return UserDTO::fromModel($user->load('roles', 'permissions'));
+    }
+
+    /**
+     * Revoke permission from user.
+     */
+    public function revokePermissionFrom(int $userId, string $permissionName): UserDTO
+    {
+        $user = $this->userRepository->withRolesAndPermissions($userId);
+        if (! $user) {
+            throw new ResourceNotFoundException("User with ID {$userId} not found");
+        }
+
+        $user->revokePermissionTo($permissionName);
+
+        // Reload with fresh relations
         return UserDTO::fromModel($user->load('roles', 'permissions'));
     }
 }

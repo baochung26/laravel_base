@@ -25,7 +25,8 @@ return new class extends Migration
             $table->softDeletes(); // Soft deletes convention
             
             // Indexes for frequently queried columns
-            $table->index('email'); // Additional index (unique already creates index)
+            // Note: email already has unique index (unique() automatically creates index)
+            // No need for additional index('email') - it's redundant
             $table->index('created_at'); // For date range queries
             $table->index('deleted_at'); // For soft delete queries
         });

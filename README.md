@@ -318,11 +318,13 @@ Các tài liệu chi tiết của dự án được lưu trong thư mục [`docs
 - [💾 CACHE_STRATEGY.md](docs/CACHE_STRATEGY.md) - Hướng dẫn về Cache Strategy (Key Convention, Invalidation)
 - [📁 FILE_STORAGE.md](docs/FILE_STORAGE.md) - Hướng dẫn về File Storage (Local, S3, Public/Private Files)
 - [🗄️ DATABASE_CONVENTIONS.md](docs/DATABASE_CONVENTIONS.md) - Hướng dẫn về Database Conventions (Migrations, Soft Deletes, Indexing)
+- [⚡ QUERY_OPTIMIZATION.md](docs/QUERY_OPTIMIZATION.md) - Hướng dẫn về Database Query Optimization (Eager Loading, Indexing, Performance)
 - [🔴 REDIS_SETUP.md](docs/REDIS_SETUP.md) - Hướng dẫn về Redis Setup trong Docker
 - [🚀 QUICK_START.md](docs/QUICK_START.md) - Hướng dẫn khởi động nhanh dự án
 - [✅ AUTH_CHECKLIST.md](docs/AUTH_CHECKLIST.md) - Checklist các tính năng Auth & Authorization
+- [📋 PROJECT_AUDIT.md](docs/PROJECT_AUDIT.md) - Báo cáo đánh giá và tối ưu dự án
 
-**Note:** File `.env.example` template có thể được tìm thấy trong `docs/.env.example` hoặc `docs/CONFIG_ENV.example`
+**Note:** File `.env.example` đã có sẵn trong root directory. Template chi tiết có thể được tìm thấy trong `docs/CONFIG_ENV.example`
 
 ## 🔌 API Foundation
 

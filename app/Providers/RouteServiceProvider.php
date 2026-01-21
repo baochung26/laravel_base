@@ -24,9 +24,18 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // API Rate Limiting
+        // Global API Rate Limiting
+        // Different limits for authenticated vs unauthenticated users
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            if ($request->user()) {
+                // Authenticated users: 100 requests per minute per user
+                return Limit::perMinute((int) config('app.api_rate_limit_authenticated', 100))
+                    ->by($request->user()->id);
+            }
+            
+            // Unauthenticated users: 60 requests per minute per IP
+            return Limit::perMinute((int) config('app.api_rate_limit_guest', 60))
+                ->by($request->ip());
         });
 
         // Login Rate Limiting (5 attempts per 5 minutes)
@@ -40,11 +49,15 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinutes(10, 3)->by($request->ip());
         });
 
-        // General API throttling (100 requests per minute for authenticated users)
-        RateLimiter::for('api-auth', function (Request $request) {
-            return $request->user()
-                ? Limit::perMinute(100)->by($request->user()->id)
-                : Limit::perMinute(60)->by($request->ip());
+        // Password Reset Rate Limiting (5 attempts per 15 minutes per email)
+        RateLimiter::for('password-reset', function (Request $request) {
+            $email = (string) ($request->email ?? $request->input('email', $request->ip()));
+            return Limit::perMinutes(15, 5)->by('password-reset:' . $email . '|' . $request->ip());
+        });
+
+        // Public API Rate Limiting (for health check, etc. - more lenient)
+        RateLimiter::for('api-public', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
         });
 
         // Register API versioning routes

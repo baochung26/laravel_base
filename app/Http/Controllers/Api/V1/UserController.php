@@ -72,10 +72,8 @@ class UserController extends ApiController
             );
         }
 
+        // getAll() now automatically eager loads roles
         $users = $this->userService->getAll(['id', 'name', 'email', 'avatar', 'created_at']);
-        
-        // Load roles for all users
-        $users->load('roles');
         
         return $this->successResponse(
             UserResource::collection($users),
@@ -127,10 +125,11 @@ class UserController extends ApiController
 
             $userDTO = UserDTO::fromArray($data);
             $user = $this->userService->create($userDTO);
-            $userModel = app(\App\Models\User::class)->findOrFail($user->id);
+            // Get model with relations for Resource
+            $userModel = $this->userService->getModelByIdWithRelations($user->id);
 
             return $this->successResponse(
-                new UserResource($userModel->load('roles', 'permissions')),
+                new UserResource($userModel),
                 'User created successfully',
                 201
             );
@@ -173,11 +172,10 @@ class UserController extends ApiController
     public function show(int $id): JsonResponse
     {
         try {
-            $user = $this->userService->getByIdWithRelations($id);
-            $userModel = app(\App\Models\User::class)->findOrFail($id);
+            $userModel = $this->userService->getModelByIdWithRelations($id);
 
             return $this->successResponse(
-                new UserResource($userModel->load('roles', 'permissions')),
+                new UserResource($userModel),
                 'User retrieved successfully'
             );
         } catch (ResourceNotFoundException $e) {
@@ -238,11 +236,11 @@ class UserController extends ApiController
             }
 
             $userDTO = UserDTO::fromArray(array_merge($data, ['id' => $id]));
-            $user = $this->userService->update($id, $userDTO);
-            $userModel = app(\App\Models\User::class)->findOrFail($id);
+            $this->userService->update($id, $userDTO);
+            $userModel = $this->userService->getModelByIdWithRelations($id);
 
             return $this->successResponse(
-                new UserResource($userModel->load('roles', 'permissions')),
+                new UserResource($userModel),
                 'User updated successfully'
             );
         } catch (ValidationException $e) {
@@ -338,11 +336,11 @@ class UserController extends ApiController
 
             // Upload new avatar
             $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            $user = $this->userService->updateAvatar($id, $avatarPath);
-            $userModel = app(\App\Models\User::class)->findOrFail($id);
+            $this->userService->updateAvatar($id, $avatarPath);
+            $userModel = $this->userService->getModelByIdWithRelations($id);
 
             return $this->successResponse(
-                new UserResource($userModel->load('roles', 'permissions')),
+                new UserResource($userModel),
                 'Avatar uploaded successfully'
             );
         } catch (ResourceNotFoundException $e) {
@@ -376,11 +374,11 @@ class UserController extends ApiController
     public function deleteAvatar(int $id): JsonResponse
     {
         try {
-            $user = $this->userService->deleteAvatar($id);
-            $userModel = app(\App\Models\User::class)->findOrFail($id);
+            $this->userService->deleteAvatar($id);
+            $userModel = $this->userService->getModelByIdWithRelations($id);
 
             return $this->successResponse(
-                new UserResource($userModel->load('roles', 'permissions')),
+                new UserResource($userModel),
                 'Avatar deleted successfully'
             );
         } catch (ResourceNotFoundException $e) {

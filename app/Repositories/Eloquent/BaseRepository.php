@@ -74,7 +74,11 @@ abstract class BaseRepository implements RepositoryInterface
     {
         $this->applyCriteria();
 
-        $result = $this->model->get($columns);
+        $query = $this->model;
+        if (! empty($this->with)) {
+            $query = $query->with($this->with);
+        }
+        $result = $query->get($columns);
 
         $this->resetModel();
 
@@ -88,7 +92,11 @@ abstract class BaseRepository implements RepositoryInterface
     {
         $this->applyCriteria();
 
-        $result = $this->model->find($id, $columns);
+        $query = $this->model;
+        if (! empty($this->with)) {
+            $query = $query->with($this->with);
+        }
+        $result = $query->find($id, $columns);
 
         $this->resetModel();
 
@@ -102,7 +110,11 @@ abstract class BaseRepository implements RepositoryInterface
     {
         $this->applyCriteria();
 
-        $result = $this->model->findOrFail($id, $columns);
+        $query = $this->model;
+        if (! empty($this->with)) {
+            $query = $query->with($this->with);
+        }
+        $result = $query->findOrFail($id, $columns);
 
         $this->resetModel();
 
@@ -196,7 +208,11 @@ abstract class BaseRepository implements RepositoryInterface
     {
         $this->applyCriteria();
 
-        $result = $this->model->paginate($perPage, $columns);
+        $query = $this->model;
+        if (! empty($this->with)) {
+            $query = $query->with($this->with);
+        }
+        $result = $query->paginate($perPage, $columns);
 
         $this->resetModel();
 

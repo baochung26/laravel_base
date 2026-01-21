@@ -51,6 +51,33 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
     }
 
     /**
+     * Get all users with roles and permissions.
+     */
+    public function getAllWithRelations(array $columns = ['*'])
+    {
+        return $this->with(['roles', 'permissions'])
+            ->all($columns);
+    }
+
+    /**
+     * Get paginated users with roles.
+     */
+    public function paginateWithRoles(int $perPage = 15, array $columns = ['*']): LengthAwarePaginator
+    {
+        return $this->with(['roles'])
+            ->paginate($perPage, $columns);
+    }
+
+    /**
+     * Get paginated users with roles and permissions.
+     */
+    public function paginateWithRelations(int $perPage = 15, array $columns = ['*']): LengthAwarePaginator
+    {
+        return $this->with(['roles', 'permissions'])
+            ->paginate($perPage, $columns);
+    }
+
+    /**
      * Search users by name or email.
      */
     public function search(string $keyword, int $perPage = 15): LengthAwarePaginator

@@ -26,12 +26,14 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Health check
-Route::get('/health', V1HealthController::class)->name('v1.health');
-Route::get('/health/live', [V1HealthController::class, 'live'])->name('v1.health.live');
-Route::get('/health/ready', [V1HealthController::class, 'ready'])->name('v1.health.ready');
+// Health check (public, more lenient rate limit)
+Route::middleware('throttle:api-public')->group(function () {
+    Route::get('/health', V1HealthController::class)->name('v1.health');
+    Route::get('/health/live', [V1HealthController::class, 'live'])->name('v1.health.live');
+    Route::get('/health/ready', [V1HealthController::class, 'ready'])->name('v1.health.ready');
+});
 
-// Authentication routes (with rate limiting)
+// Authentication routes (with specific rate limiting)
 Route::post('/register', [V1AuthController::class, 'register'])
     ->middleware('throttle:register')
     ->name('v1.register');
@@ -40,8 +42,8 @@ Route::post('/login', [V1AuthController::class, 'login'])
     ->middleware('throttle:login')
     ->name('v1.login');
 
-// Password Reset (Public routes)
-Route::prefix('password')->group(function () {
+// Password Reset (Public routes with rate limiting)
+Route::prefix('password')->middleware('throttle:password-reset')->group(function () {
     Route::post('/forgot', [V1PasswordController::class, 'forgotPassword'])->name('v1.password.forgot');
     Route::post('/reset', [V1PasswordController::class, 'resetPassword'])->name('v1.password.reset');
 });

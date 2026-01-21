@@ -44,11 +44,10 @@ class ProfileController extends ApiController
     public function show(Request $request): JsonResponse
     {
         $user = $request->user();
-        $userDTO = $this->userService->getByIdWithRelations($user->id);
-        $userModel = app(\App\Models\User::class)->findOrFail($user->id);
+        $userModel = $this->userService->getModelByIdWithRelations($user->id);
 
         return $this->successResponse(
-            new UserResource($userModel->load('roles', 'permissions')),
+            new UserResource($userModel),
             'Profile retrieved successfully'
         );
     }
@@ -101,11 +100,11 @@ class ProfileController extends ApiController
             }
 
             $userDTO = UserDTO::fromArray(array_merge($data, ['id' => $user->id]));
-            $updatedUser = $this->userService->updateProfile($user->id, $userDTO);
-            $userModel = app(\App\Models\User::class)->findOrFail($user->id);
+            $this->userService->updateProfile($user->id, $userDTO);
+            $userModel = $this->userService->getModelByIdWithRelations($user->id);
 
             return $this->successResponse(
-                new UserResource($userModel->load('roles', 'permissions')),
+                new UserResource($userModel),
                 'Profile updated successfully'
             );
         } catch (ValidationException $e) {
@@ -156,11 +155,11 @@ class ProfileController extends ApiController
 
             // Upload new avatar
             $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            $updatedUser = $this->userService->updateAvatar($user->id, $avatarPath);
-            $userModel = app(\App\Models\User::class)->findOrFail($user->id);
+            $this->userService->updateAvatar($user->id, $avatarPath);
+            $userModel = $this->userService->getModelByIdWithRelations($user->id);
 
             return $this->successResponse(
-                new UserResource($userModel->load('roles', 'permissions')),
+                new UserResource($userModel),
                 'Avatar uploaded successfully'
             );
         } catch (ValidationException $e) {
@@ -189,11 +188,11 @@ class ProfileController extends ApiController
     {
         try {
             $user = $request->user();
-            $updatedUser = $this->userService->deleteAvatar($user->id);
-            $userModel = app(\App\Models\User::class)->findOrFail($user->id);
+            $this->userService->deleteAvatar($user->id);
+            $userModel = $this->userService->getModelByIdWithRelations($user->id);
 
             return $this->successResponse(
-                new UserResource($userModel->load('roles', 'permissions')),
+                new UserResource($userModel),
                 'Avatar deleted successfully'
             );
         } catch (ValidationException $e) {
