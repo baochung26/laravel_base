@@ -35,6 +35,11 @@ routes/
 - `GET /api/v1/users` - Danh sách users
 - `GET /api/v1/profile` - Profile của user
 
+### Versioning Strategy
+
+Để biết thêm chi tiết về API Versioning Strategy và Deprecation Policy, xem:
+- 📖 [API_VERSIONING_STRATEGY.md](API_VERSIONING_STRATEGY.md) - Chiến lược versioning và deprecation policy đầy đủ
+
 ## 📦 2. Response Format Chuẩn
 
 ### Success Response
@@ -219,11 +224,16 @@ Swagger được cài đặt thông qua `darkaonline/l5-swagger` package.
 Sau khi cài đặt và generate docs:
 
 ```bash
-# Generate Swagger documentation
+# Generate Swagger documentation (sử dụng Makefile - khuyến nghị)
+make swagger-generate
+
+# Hoặc sử dụng artisan trực tiếp
 php artisan l5-swagger:generate
 ```
 
 Truy cập: `http://localhost:8000/api/documentation`
+
+**Lưu ý:** Sau mỗi lần thay đổi Swagger annotations trong controllers, cần chạy lại `make swagger-generate` để cập nhật documentation.
 
 ### Swagger Annotations
 
@@ -414,6 +424,9 @@ Authorization: Bearer {token}
 
 ✅ **DO:**
 - Sử dụng version trong URL (`/api/v1/`)
+- Follow versioning strategy (xem [API_VERSIONING_STRATEGY.md](API_VERSIONING_STRATEGY.md))
+- Maintain backward compatibility when possible
+- Provide migration guides for new versions
 - Keep backward compatibility với legacy routes
 - Document breaking changes
 
