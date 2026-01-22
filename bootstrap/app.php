@@ -20,8 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Request ID middleware (should be early in the stack)
         $middleware->append(\App\Http\Middleware\RequestIdMiddleware::class);
         
-        // Query logging middleware (optional, can be enabled/disabled via config)
-        if (config('logging.enable_query_log', false)) {
+        // Query logging middleware (optional, can be enabled/disabled via env)
+        // Note: Using env() here because config() is not available during bootstrap
+        if (env('LOG_ENABLE_QUERY_LOG', false)) {
             $middleware->append(\App\Http\Middleware\LogQueryMiddleware::class);
         }
 
