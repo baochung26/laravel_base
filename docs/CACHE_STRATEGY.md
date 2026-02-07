@@ -216,6 +216,13 @@ Khi User **created / updated / deleted**:
 - Xóa cache danh sách: pattern `users:list:*`
 - Nếu dùng tag: xóa tag `users`
 
+**Cấu hình đăng ký:** `app/Providers/AppServiceProvider.php` → `boot()` gọi  
+`App\Models\User::observe(App\Observers\UserObserver::class);`
+
+**Lưu ý hành vi:**
+- Observer chỉ chạy khi thao tác qua Eloquent (save/update/delete). Nếu sửa DB trực tiếp hoặc query builder thì không kích hoạt.
+- Xóa theo pattern và tag chỉ hiệu lực khi `CACHE_DRIVER=redis`. Với `file`, chỉ xóa được theo từng key.
+
 Bạn không cần gọi forget thủ công cho các key trên khi đổi user trong app (qua Eloquent).
 
 ### 6.2 Xóa thủ công (khi cần)
