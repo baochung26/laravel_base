@@ -159,4 +159,10 @@ return [
 
         'store' => 'default',
     ],
+
+    /*
+     * Auto-register package migrations.
+     * When true, the package migrations will be loaded automatically.
+     */
+    'register_permission_migrations' => true,
 ];
