@@ -178,7 +178,7 @@ class AuthService
     {
         $user = Auth::user();
         if ($user) {
-            $user->currentAccessToken()->delete();
+            $user->tokens()->delete();
             return true;
         }
 
@@ -208,8 +208,13 @@ class AuthService
             throw new ValidationException('User not authenticated');
         }
 
-        // Delete current token
-        $user->currentAccessToken()->delete();
+        $currentToken = $user->currentAccessToken();
+        if (! $currentToken || $currentToken->name !== 'refresh_token') {
+            throw new UnauthorizedException('Refresh token is required.');
+        }
+
+        // Rotate token session: revoke all existing tokens, then issue a new pair.
+        $user->tokens()->delete();
 
         return $this->issueTokenPair($user);
     }
@@ -219,8 +224,8 @@ class AuthService
      */
     private function issueTokenPair(User $user): array
     {
-        $accessToken = $user->createToken('auth_token')->plainTextToken;
-        $refreshToken = $user->createToken('refresh_token')->plainTextToken;
+        $accessToken = $user->createToken('auth_token', ['*'])->plainTextToken;
+        $refreshToken = $user->createToken('refresh_token', ['token:refresh'])->plainTextToken;
 
         return [
             'token' => $accessToken, // backward compatibility

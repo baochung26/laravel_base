@@ -1,63 +1,163 @@
 # Quick Start Guide
 
-## Khởi động nhanh dự án
+Chạy dự án Laravel API base (Docker) và gọi API lần đầu.
 
-### 1. Cài đặt Laravel (nếu chưa có)
+---
 
-Nếu bạn chưa có Laravel installed, chạy:
+## 1. Yêu cầu
+
+- Docker Desktop (hoặc Docker Engine + Docker Compose)
+- Git
+
+---
+
+## 2. Khởi động với Docker
 
 ```bash
+# Clone / vào thư mục dự án
+cd laravel_base_cursor
+
+# Khởi động containers
 docker-compose up -d
-docker-compose exec app composer create-project laravel/laravel .
-```
 
-Hoặc sử dụng Laravel installer:
+# Cài đặt dependencies
+docker-compose exec app composer install
 
-```bash
-composer create-project laravel/laravel .
-```
-
-### 2. Setup môi trường
-
-```bash
-# Copy .env.example thành .env (sẽ được tạo tự động nếu dùng composer create-project)
-cp .env.example .env
-
-# Generate application key
+# Copy env và tạo key
+docker-compose exec app cp .env.example .env
 docker-compose exec app php artisan key:generate
 ```
 
-### 3. Chạy migrations
+---
+
+## 3. Database và RBAC
 
 ```bash
+# Publish Spatie Permission migrations (nếu chưa có bảng permission)
+docker-compose exec app php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
+
+# Chạy migrations
 docker-compose exec app php artisan migrate
+
+# Seed roles & permissions (admin, user, permissions)
+docker-compose exec app php artisan db:seed --class=RolePermissionSeeder
+
+# (Tùy chọn) Seed dữ liệu demo
+docker-compose exec app php artisan db:seed --class=DemoSeeder
 ```
 
-### 4. Truy cập ứng dụng
+---
 
-- Application: http://localhost:8000
-- phpMyAdmin: http://localhost:8080
+## 4. Truy cập ứng dụng
 
-## Hoặc sử dụng Makefile (khuyến nghị)
+| Dịch vụ | URL |
+|--------|-----|
+| **API / App** | http://localhost:8000 |
+| **phpMyAdmin** | http://localhost:8080 |
+
+API base path: **`http://localhost:8000/api/v1`**.
+
+---
+
+## 5. Demo: Gọi API nhanh
+
+### 5.1 Health check (không cần auth)
 
 ```bash
-make setup
+curl http://localhost:8000/api/v1/health
 ```
 
-Lệnh này sẽ tự động:
-- Khởi động containers
-- Cài đặt dependencies
-- Copy .env.example thành .env
-- Generate application key
-- Chạy migrations
+Ví dụ response:
 
-## Ghi chú
+```json
+{
+  "success": true,
+  "message": "OK",
+  "meta": { "request_id": "...", "timestamp": "..." },
+  "data": { "status": "healthy" }
+}
+```
 
-- File `.env.example` sẽ được tạo tự động khi bạn cài đặt Laravel bằng `composer create-project`
-- Nếu bạn đã có Laravel project, chỉ cần copy file `.env.example` từ project Laravel khác hoặc tạo file `.env` với cấu hình phù hợp
-- Database connection đã được cấu hình sẵn trong `docker-compose.yml`:
-  - Host: db
-  - Port: 3306
-  - Database: laravel_db
-  - Username: laravel_user
-  - Password: root
+### 5.2 Đăng ký
+
+```bash
+curl -X POST http://localhost:8000/api/v1/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Demo User",
+    "email": "demo@example.com",
+    "password": "password123",
+    "password_confirmation": "password123"
+  }'
+```
+
+Response chứa `data.access_token` và `data.refresh_token`. Lưu `access_token` cho bước sau.
+
+### 5.3 Đăng nhập (nếu đã có tài khoản)
+
+```bash
+curl -X POST http://localhost:8000/api/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@example.com","password":"password123"}'
+```
+
+Lấy `data.access_token` từ response.
+
+### 5.4 Lấy thông tin user (cần token)
+
+```bash
+export TOKEN="<dán_access_token_vào_đây>"
+curl http://localhost:8000/api/v1/me \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### 5.5 Danh sách users (cần permission `manage users` – admin)
+
+```bash
+curl "http://localhost:8000/api/v1/users?per_page=10" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Response có dạng paginated: `data` (mảng user), `meta` (current_page, per_page, total, ...), `links` (first, next, ...).
+
+---
+
+## 6. Dùng Makefile (khuyến nghị)
+
+```bash
+make help      # Xem lệnh
+make setup     # Cài đặt lần đầu (containers, composer, .env, key, migrate)
+make up        # Bật containers
+make down      # Tắt containers
+make shell     # Shell trong container app
+make artisan CMD="migrate"   # Chạy migrate
+make fresh     # migrate:fresh + seed
+make cache-clear
+```
+
+Sau `make setup`, nhớ chạy seed RBAC và (tuỳ chọn) demo:
+
+```bash
+docker-compose exec app php artisan db:seed --class=RolePermissionSeeder
+docker-compose exec app php artisan db:seed --class=DemoSeeder
+```
+
+---
+
+## 7. Tài khoản demo (sau khi chạy DemoSeeder / RolePermissionSeeder)
+
+| Email | Password | Ghi chú |
+|-------|----------|--------|
+| admin@example.com | password | Admin (manage users, manage roles) |
+| user@example.com | password | User thường |
+
+---
+
+## 8. Cấu trúc routes API v1
+
+Routes được định nghĩa trong `routes/api/v1/routes.php`, prefix `api/v1`:
+
+- **Public:** `POST /register`, `POST /login`, `POST /login/google`, `POST /password/forgot`, `POST /password/reset`, `GET /health`, `GET /health/live`, `GET /health/ready`
+- **Auth (Bearer):** `POST /logout`, `POST /refresh`, `GET /me`, `GET|PUT /profile/*`, `POST /password/change`, `GET|POST|PUT|DELETE /users/*`, `GET|POST .../roles-permissions/*`, `POST|GET|DELETE .../files/*`
+
+Chi tiết từng nhóm: [AUTHENTICATION.md](AUTHENTICATION.md), [USER_MODULE.md](USER_MODULE.md), [API_FOUNDATION.md](API_FOUNDATION.md).

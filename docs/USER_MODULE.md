@@ -1,130 +1,112 @@
 # User Module Documentation
 
-Tài liệu hướng dẫn sử dụng User Module với đầy đủ các tính năng CRUD, Profile Management, Password Management và Avatar Upload.
+Hướng dẫn User Module: CRUD users, Profile, Password, Avatar. Tất cả endpoint dùng prefix **`/api/v1`**.
 
-## 📋 Tổng quan
+## Tổng quan
 
-User Module bao gồm:
-- ✅ **CRUD Operations** - Create, Read, Update, Delete users
-- ✅ **Profile Management** - Quản lý profile của user đã đăng nhập
-- ✅ **Password Management** - Đổi mật khẩu và reset password
-- ✅ **Avatar Upload** - Upload và quản lý avatar của user
+- **User CRUD** – Create, Read, Update, Delete (cần permission `manage users`, thường là admin).
+- **Profile** – Xem/sửa profile user đang đăng nhập (không cần permission).
+- **Password** – Đổi mật khẩu, forgot/reset (theo từng endpoint).
+- **Avatar** – Upload/xóa avatar (user hoặc admin tùy route).
 
-## 🔐 Authentication & Authorization
+## Permission
 
-### Permission Required
+| Nhóm | Permission |
+|------|------------|
+| User CRUD, avatar admin | `manage users` |
+| Profile, đổi mật khẩu | Không (chỉ user hiện tại) |
 
-- **User Management:** Yêu cầu permission `manage users` (chỉ admin)
-- **Profile Management:** Không cần permission (user có thể quản lý profile của chính họ)
-- **Password Management:** Không cần permission (user có thể đổi mật khẩu của chính họ)
+---
 
-## 📦 API Endpoints
+## API Endpoints (base: `/api/v1`)
 
-### 1. User CRUD Operations (Admin only)
+### 1. User CRUD (Admin – permission: `manage users`)
 
-#### Get All Users
+#### Get all users (always paginated)
 
 ```http
-GET /api/users
+GET /api/v1/users?per_page=10&page=1&search=john
 Authorization: Bearer {token}
 ```
 
-**Query Parameters:**
-- `per_page` (optional): Số lượng users mỗi trang (default: 15)
-- `search` (optional): Tìm kiếm theo name hoặc email
+**Query:** `per_page` (default 15, max 100), `page`, `search` (optional).
 
-**Response:**
+**Response (200):**
 ```json
 {
-    "data": [
-        {
-            "id": 1,
-            "name": "John Doe",
-            "email": "john@example.com",
-            "avatar": "avatars/abc123.jpg",
-            "roles": ["user"],
-            "permissions": ["view content"]
-        }
-    ],
-    "meta": {
-        "current_page": 1,
-        "per_page": 15,
-        "total": 100,
-        "last_page": 7
+  "success": true,
+  "message": "Users retrieved successfully",
+  "meta": {
+    "request_id": "...",
+    "timestamp": "...",
+    "current_page": 1,
+    "per_page": 10,
+    "total": 100,
+    "last_page": 10,
+    "from": 1,
+    "to": 10
+  },
+  "data": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "avatar": "http://localhost:8000/storage/avatars/abc.jpg",
+      "roles": ["user"],
+      "permissions": ["view content"]
     }
+  ],
+  "links": {
+    "first": "http://localhost:8000/api/v1/users?page=1",
+    "last": "http://localhost:8000/api/v1/users?page=10",
+    "prev": null,
+    "next": "http://localhost:8000/api/v1/users?page=2"
+  }
 }
 ```
 
-#### Get User by ID
+#### Get user by ID
 
 ```http
-GET /api/users/{id}
+GET /api/v1/users/{id}
 Authorization: Bearer {token}
 ```
 
-**Response:**
-```json
-{
-    "data": {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@example.com",
-        "avatar": "avatars/abc123.jpg",
-        "roles": ["user"],
-        "permissions": ["view content"]
-    }
-}
-```
+**Response (200):** `success`, `message`, `data` (user object với roles, permissions).
 
-#### Create User
+#### Create user
 
 ```http
-POST /api/users
+POST /api/v1/users
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
 
-{
-    "name": "John Doe",
-    "email": "john@example.com",
-    "password": "password123",
-    "password_confirmation": "password123",
-    "avatar": <file> // optional
-}
+name=John Doe
+email=john@example.com
+password=password123
+password_confirmation=password123
+avatar=<file>   (optional)
 ```
 
-**Response:**
-```json
-{
-    "message": "User created successfully",
-    "data": {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@example.com",
-        "avatar": "avatars/abc123.jpg",
-        "roles": [],
-        "permissions": []
-    }
-}
-```
+**Response (201):** `success`, `message`, `data` (user created).
 
-#### Update User
+#### Update user
 
 ```http
-PUT /api/users/{id}
+PUT /api/v1/users/{id}
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
 
-{
-    "name": "John Updated",
-    "email": "john.updated@example.com",
-    "avatar": <file> // optional
-}
+name=John Updated
+email=john.updated@example.com
+avatar=<file>   (optional)
 ```
 
-**Response:**
+**Response (200):** `success`, `message`, `data` (user). Example:
 ```json
 {
-    "message": "User updated successfully",
+  "success": true,
+  "message": "User updated successfully",
     "data": {
         "id": 1,
         "name": "John Updated",
@@ -136,26 +118,23 @@ Content-Type: multipart/form-data
 }
 ```
 
-#### Delete User
+#### Delete user
 
 ```http
-DELETE /api/users/{id}
+DELETE /api/v1/users/{id}
 Authorization: Bearer {token}
 ```
 
-**Response:**
-```json
-{
-    "message": "User deleted successfully"
-}
-```
+**Response (200):** `success`, `message`, `data`: null.
 
-### 2. Profile Management (Authenticated User)
+---
 
-#### Get Profile
+### 2. Profile (authenticated user – own profile)
+
+#### Get profile
 
 ```http
-GET /api/profile
+GET /api/v1/profile
 Authorization: Bearer {token}
 ```
 
@@ -173,18 +152,16 @@ Authorization: Bearer {token}
 }
 ```
 
-#### Update Profile
+#### Update profile
 
 ```http
-PUT /api/profile
+PUT /api/v1/profile
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
 
-{
-    "name": "John Updated",
-    "email": "john.updated@example.com",
-    "avatar": <file> // optional
-}
+name=John Updated
+email=john.updated@example.com
+avatar=<file>   (optional)
 ```
 
 **Response:**
@@ -204,16 +181,14 @@ Content-Type: multipart/form-data
 
 ### 3. Avatar Management
 
-#### Upload Avatar (Profile)
+#### Upload avatar (own profile)
 
 ```http
-POST /api/profile/avatar
+POST /api/v1/profile/avatar
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
 
-{
-    "avatar": <file>
-}
+avatar=<file>
 ```
 
 **File Requirements:**
@@ -235,10 +210,10 @@ Content-Type: multipart/form-data
 }
 ```
 
-#### Delete Avatar (Profile)
+#### Delete avatar (own profile)
 
 ```http
-DELETE /api/profile/avatar
+DELETE /api/v1/profile/avatar
 Authorization: Bearer {token}
 ```
 
@@ -260,7 +235,7 @@ Authorization: Bearer {token}
 #### Upload Avatar (Admin - for any user)
 
 ```http
-POST /api/users/{id}/avatar
+POST /api/v1/users/{id}/avatar
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
 
@@ -272,7 +247,7 @@ Content-Type: multipart/form-data
 #### Delete Avatar (Admin - for any user)
 
 ```http
-DELETE /api/users/{id}/avatar
+DELETE /api/v1/users/{id}/avatar
 Authorization: Bearer {token}
 ```
 
@@ -281,7 +256,7 @@ Authorization: Bearer {token}
 #### Change Password (Authenticated User)
 
 ```http
-POST /api/password/change
+POST /api/v1/password/change
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -302,7 +277,7 @@ Content-Type: application/json
 #### Forgot Password (Public)
 
 ```http
-POST /api/password/forgot
+POST /api/v1/password/forgot
 Content-Type: application/json
 
 {
@@ -322,7 +297,7 @@ Content-Type: application/json
 #### Reset Password (Public)
 
 ```http
-POST /api/password/reset
+POST /api/v1/password/reset
 Content-Type: application/json
 
 {
@@ -411,14 +386,14 @@ MAIL_FROM_NAME="${APP_NAME}"
 
 #### Get All Users (Admin)
 ```bash
-curl -X GET "http://localhost:8000/api/users" \
+curl -X GET "http://localhost:8000/api/v1/users" \
   -H "Authorization: Bearer {token}" \
   -H "Accept: application/json"
 ```
 
 #### Create User (Admin)
 ```bash
-curl -X POST "http://localhost:8000/api/users" \
+curl -X POST "http://localhost:8000/api/v1/users" \
   -H "Authorization: Bearer {token}" \
   -H "Accept: application/json" \
   -F "name=John Doe" \
@@ -430,7 +405,7 @@ curl -X POST "http://localhost:8000/api/users" \
 
 #### Update Profile
 ```bash
-curl -X PUT "http://localhost:8000/api/profile" \
+curl -X PUT "http://localhost:8000/api/v1/profile" \
   -H "Authorization: Bearer {token}" \
   -H "Accept: application/json" \
   -F "name=John Updated" \
@@ -440,7 +415,7 @@ curl -X PUT "http://localhost:8000/api/profile" \
 
 #### Change Password
 ```bash
-curl -X POST "http://localhost:8000/api/password/change" \
+curl -X POST "http://localhost:8000/api/v1/password/change" \
   -H "Authorization: Bearer {token}" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
@@ -453,7 +428,7 @@ curl -X POST "http://localhost:8000/api/password/change" \
 
 #### Forgot Password
 ```bash
-curl -X POST "http://localhost:8000/api/password/forgot" \
+curl -X POST "http://localhost:8000/api/v1/password/forgot" \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   -d '{

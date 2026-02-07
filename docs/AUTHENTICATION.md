@@ -13,89 +13,70 @@ Dự án sử dụng:
 
 ### API Endpoints
 
-#### 1. Đăng ký (Register)
+All auth endpoints use base path **`/api/v1`**. Response format: `success`, `message`, `meta` (request_id, timestamp), `data` (see [API_RESPONSE_FORMAT.md](API_RESPONSE_FORMAT.md)).
+
+#### 1. Register
 
 ```http
-POST /api/register
+POST /api/v1/register
 Content-Type: application/json
 
 {
-    "name": "John Doe",
-    "email": "john@example.com",
-    "password": "password123",
-    "password_confirmation": "password123"
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password123",
+  "password_confirmation": "password123"
 }
 ```
 
-**Response:**
+**Response (201):**
 ```json
 {
-    "message": "User registered successfully",
-    "user": {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@example.com"
-    },
-    "token": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  "success": true,
+  "message": "User registered successfully",
+  "meta": { "request_id": "...", "timestamp": "..." },
+  "data": {
+    "user": { "id": 1, "name": "John Doe", "email": "john@example.com", ... },
+    "token": "1|...",
+    "access_token": "1|...",
+    "refresh_token": "2|...",
+    "permissions": [],
+    "roles": ["user"]
+  }
 }
 ```
 
-**Rate Limit:** 3 requests per 10 minutes per IP
+**Rate limit:** 3 requests per 10 minutes per IP.
 
-#### 2. Đăng nhập (Login)
+#### 2. Login
 
 ```http
-POST /api/login
+POST /api/v1/login
 Content-Type: application/json
 
 {
-    "email": "john@example.com",
-    "password": "password123"
+  "email": "john@example.com",
+  "password": "password123"
 }
 ```
 
-**Response:**
-```json
-{
-    "message": "Login successful",
-    "user": {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@example.com"
-    },
-    "token": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "permissions": ["view content", "create content"],
-    "roles": ["user"]
-}
-```
+**Response (200):** Same shape; `data` includes `user`, `access_token`, `refresh_token`, `permissions`, `roles`, `login_type`: `"password"`.
 
-**Rate Limit:** 5 attempts per 5 minutes per email+IP
-**Lockout:** 5 minutes sau 5 lần thử sai
+**Rate limit:** 5 attempts per 5 minutes per email+IP. Lockout 5 minutes after 5 failed attempts.
 
-#### 3. Lấy thông tin user (Get Me)
+#### 3. Get current user (Me)
 
 ```http
-GET /api/me
-Authorization: Bearer {token}
+GET /api/v1/me
+Authorization: Bearer {access_token}
 ```
 
-**Response:**
-```json
-{
-    "user": {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@example.com"
-    },
-    "permissions": ["view content", "create content"],
-    "roles": ["user"]
-}
-```
+**Response (200):** `data` contains `user`, `permissions`, `roles`.
 
-#### 4. Đăng xuất (Logout)
+#### 4. Logout
 
 ```http
-POST /api/logout
+POST /api/v1/logout
 Authorization: Bearer {token}
 ```
 
@@ -109,17 +90,21 @@ Authorization: Bearer {token}
 #### 5. Refresh Token
 
 ```http
-POST /api/refresh
-Authorization: Bearer {token}
+POST /api/v1/refresh
+Authorization: Bearer {refresh_token}
 ```
 
 **Response:**
 ```json
 {
     "message": "Token refreshed successfully",
-    "token": "2|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    "token": "2|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "access_token": "2|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "refresh_token": "3|yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
 }
 ```
+
+**Luu y:** Endpoint refresh chi chap nhan `refresh_token`. Dung `access_token` se bi tu choi voi 401.
 
 ## 🛡️ Authorization (RBAC)
 
@@ -234,21 +219,21 @@ public function edit(Request $request, $id)
 #### Get All Roles
 
 ```http
-GET /api/roles-permissions/roles
+GET /api/v1/roles-permissions/roles
 Authorization: Bearer {token}
 ```
 
 #### Get All Permissions
 
 ```http
-GET /api/roles-permissions/permissions
+GET /api/v1/roles-permissions/permissions
 Authorization: Bearer {token}
 ```
 
 #### Assign Role to User
 
 ```http
-POST /api/roles-permissions/assign-role
+POST /api/v1/roles-permissions/assign-role
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -261,7 +246,7 @@ Content-Type: application/json
 #### Remove Role from User
 
 ```http
-POST /api/roles-permissions/remove-role
+POST /api/v1/roles-permissions/remove-role
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -274,7 +259,7 @@ Content-Type: application/json
 #### Sync User Roles
 
 ```http
-POST /api/roles-permissions/sync-roles
+POST /api/v1/roles-permissions/sync-roles
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -287,7 +272,7 @@ Content-Type: application/json
 #### Give Permission to User
 
 ```http
-POST /api/roles-permissions/give-permission
+POST /api/v1/roles-permissions/give-permission
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -300,7 +285,7 @@ Content-Type: application/json
 #### Revoke Permission from User
 
 ```http
-POST /api/roles-permissions/revoke-permission
+POST /api/v1/roles-permissions/revoke-permission
 Authorization: Bearer {token}
 Content-Type: application/json
 

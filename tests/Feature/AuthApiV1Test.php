@@ -127,10 +127,12 @@ class AuthApiV1Test extends TestCase
         ]);
     }
 
-    public function test_logout_revokes_current_token(): void
+    public function test_logout_revokes_all_user_tokens(): void
     {
         $user = User::factory()->create();
-        $token = $user->createToken('test_token')->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'])->plainTextToken;
+        $user->createToken('refresh_token', ['token:refresh']);
+        $this->assertDatabaseCount('personal_access_tokens', 2);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/logout');
@@ -142,6 +144,47 @@ class AuthApiV1Test extends TestCase
         ]);
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
+    public function test_refresh_requires_refresh_token(): void
+    {
+        $user = User::factory()->create();
+        $accessToken = $user->createToken('auth_token', ['*'])->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$accessToken)
+            ->postJson('/api/v1/refresh');
+
+        $response->assertStatus(401);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Refresh token is required.',
+        ]);
+    }
+
+    public function test_refresh_with_refresh_token_rotates_token_pair(): void
+    {
+        $user = User::factory()->create();
+        $refreshToken = $user->createToken('refresh_token', ['token:refresh'])->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$refreshToken)
+            ->postJson('/api/v1/refresh');
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Token refreshed successfully',
+        ]);
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'data' => [
+                'token',
+                'access_token',
+                'refresh_token',
+            ],
+        ]);
+
+        $this->assertDatabaseCount('personal_access_tokens', 2);
     }
 
     public function test_google_login_creates_user_and_returns_token(): void

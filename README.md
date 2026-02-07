@@ -152,7 +152,9 @@ laravel_base_cursor/
 │   └── js/               # JavaScript files
 ├── routes/               # Route definitions
 │   ├── web.php           # Web routes
-│   └── api.php           # API routes
+│   ├── console.php       # Artisan commands
+│   └── api/v1/           # API v1 (prefix: /api/v1)
+│       └── routes.php    # Auth, users, files, health, etc.
 ├── storage/              # Storage files
 ├── tests/                # Tests
 ├── docker/               # Docker configuration
@@ -305,29 +307,19 @@ Hoặc sử dụng: `make cache-clear`
 
 ## 📚 Tài liệu dự án
 
-Các tài liệu chi tiết của dự án được lưu trong thư mục [`docs/`](docs/):
+Tài liệu chi tiết nằm trong [`docs/`](docs/). **Mục lục:** [docs/README.md](docs/README.md).
 
-- [📐 API_FOUNDATION.md](docs/API_FOUNDATION.md) - Nền tảng API và kiến trúc (versioning, response, resources)
-- [🔐 AUTHENTICATION.md](docs/AUTHENTICATION.md) - Hướng dẫn về Authentication & Authorization
-- [👤 USER_MODULE.md](docs/USER_MODULE.md) - Hướng dẫn về User Module (CRUD, Profile, Password)
-- [🔌 API_FOUNDATION.md](docs/API_FOUNDATION.md) - Hướng dẫn về API Foundation (Versioning, Response Format, Resources)
-- [🔢 API_VERSIONING_STRATEGY.md](docs/API_VERSIONING_STRATEGY.md) - Chiến lược API Versioning và Deprecation Policy
-- [❤️ HEALTH_CHECK.md](docs/HEALTH_CHECK.md) - Health check endpoints (Liveness/Readiness) cho monitoring/K8s probes
-- [📊 LOGGING.md](docs/LOGGING.md) - Hướng dẫn về Logging & Monitoring (JSON logs, Request ID, Slow Queries)
-- [🚨 EXCEPTION_HANDLING.md](docs/EXCEPTION_HANDLING.md) - Hướng dẫn về Exception Handling chuẩn (Standardized Error Format)
-- [⚙️ CONFIG_ENVIRONMENT.md](docs/CONFIG_ENVIRONMENT.md) - Hướng dẫn về Configuration & Environment (Cache, Queue, Mail, File System)
-- [🔄 QUEUE_SCHEDULER.md](docs/QUEUE_SCHEDULER.md) - Hướng dẫn về Queue & Scheduler (Redis Queue, Jobs, Cron Tasks)
-- [💾 CACHE_STRATEGY.md](docs/CACHE_STRATEGY.md) - Hướng dẫn về Cache Strategy (Key Convention, Invalidation)
-- [📁 FILE_STORAGE.md](docs/FILE_STORAGE.md) - Hướng dẫn về File Storage (Local, S3, Public/Private Files)
-- [🗄️ DATABASE_CONVENTIONS.md](docs/DATABASE_CONVENTIONS.md) - Hướng dẫn về Database Conventions (Migrations, Soft Deletes, Indexing)
-- [⚡ QUERY_OPTIMIZATION.md](docs/QUERY_OPTIMIZATION.md) - Hướng dẫn về Database Query Optimization (Eager Loading, Indexing, Performance)
-- [🔴 REDIS_SETUP.md](docs/REDIS_SETUP.md) - Hướng dẫn về Redis Setup trong Docker
-- [🚀 QUICK_START.md](docs/QUICK_START.md) - Hướng dẫn khởi động nhanh dự án
-- [✅ AUTH_CHECKLIST.md](docs/AUTH_CHECKLIST.md) - Checklist các tính năng Auth & Authorization
-- [📋 PROJECT_AUDIT.md](docs/PROJECT_AUDIT.md) - Báo cáo đánh giá và tối ưu dự án
-- [📋 DANH_GIA_PROJECT.md](docs/DANH_GIA_PROJECT.md) - Đánh giá toàn diện (điểm tốt/chưa tốt, đề xuất sửa)
+| Nhóm | Tài liệu chính |
+|------|----------------|
+| **Bắt đầu** | [QUICK_START.md](docs/QUICK_START.md) |
+| **API** | [API_FOUNDATION.md](docs/API_FOUNDATION.md), [API_RESPONSE_FORMAT.md](docs/API_RESPONSE_FORMAT.md), [API_VERSIONING_STRATEGY.md](docs/API_VERSIONING_STRATEGY.md) |
+| **Auth & User** | [AUTHENTICATION.md](docs/AUTHENTICATION.md), [AUTH_CHECKLIST.md](docs/AUTH_CHECKLIST.md), [USER_MODULE.md](docs/USER_MODULE.md) |
+| **Hạ tầng** | [CONFIG_ENVIRONMENT.md](docs/CONFIG_ENVIRONMENT.md), [HEALTH_CHECK.md](docs/HEALTH_CHECK.md), [REDIS_SETUP.md](docs/REDIS_SETUP.md), [QUEUE_SCHEDULER.md](docs/QUEUE_SCHEDULER.md), [CACHE_STRATEGY.md](docs/CACHE_STRATEGY.md) |
+| **Data & Storage** | [DATABASE_CONVENTIONS.md](docs/DATABASE_CONVENTIONS.md), [QUERY_OPTIMIZATION.md](docs/QUERY_OPTIMIZATION.md), [FILE_STORAGE.md](docs/FILE_STORAGE.md) |
+| **Khác** | [LOGGING.md](docs/LOGGING.md), [EXCEPTION_HANDLING.md](docs/EXCEPTION_HANDLING.md), [SECURITY.md](docs/SECURITY.md), [EMAIL_USAGE.md](docs/EMAIL_USAGE.md) |
+| **Đánh giá** | [PROJECT_EVALUATION.md](docs/PROJECT_EVALUATION.md), [PROJECT_AUDIT.md](docs/PROJECT_AUDIT.md) |
 
-**Note:** File `.env.example` đã có sẵn trong root directory. Template chi tiết có thể được tìm thấy trong `docs/CONFIG_ENV.example`
+**Ghi chú:** `.env.example` có sẵn ở root. Template mở rộng: `docs/CONFIG_ENV.example`.
 
 ## 🔌 API Foundation
 

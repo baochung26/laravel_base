@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\ApiResponse;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,9 +18,7 @@ class CheckRole
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         if (! $request->user()) {
-            return response()->json([
-                'message' => 'Unauthenticated.',
-            ], 401);
+            return ApiResponse::error('Unauthenticated.', 401);
         }
 
         foreach ($roles as $role) {
@@ -28,10 +27,13 @@ class CheckRole
             }
         }
 
-        return response()->json([
-            'message' => 'Unauthorized. You do not have the required role.',
-            'required_roles' => $roles,
-            'user_roles' => $request->user()->getRoleNames(),
-        ], 403);
+        return ApiResponse::error(
+            'Forbidden. You do not have the required role.',
+            403,
+            [
+                'required_roles' => $roles,
+                'user_roles' => $request->user()->getRoleNames()->toArray(),
+            ]
+        );
     }
 }

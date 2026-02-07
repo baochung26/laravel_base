@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\ApiResponse;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,11 +17,18 @@ class CheckPermission
      */
     public function handle(Request $request, Closure $next, string $permission): Response
     {
-        if (! $request->user() || ! $request->user()->can($permission)) {
-            return response()->json([
-                'message' => 'Unauthorized. You do not have the required permission.',
-                'required_permission' => $permission,
-            ], 403);
+        if (! $request->user()) {
+            return ApiResponse::error('Unauthenticated.', 401);
+        }
+
+        if (! $request->user()->can($permission)) {
+            return ApiResponse::error(
+                'Forbidden. You do not have the required permission.',
+                403,
+                [
+                    'required_permission' => [$permission],
+                ]
+            );
         }
 
         return $next($request);

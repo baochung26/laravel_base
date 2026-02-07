@@ -18,21 +18,33 @@ API được tổ chức theo version:
 - **Version 1:** `/api/v1/*`
 - **Legacy:** `/api/*` (backward compatibility)
 
-### Routes Structure
+### Routes structure
 
 ```
 routes/
-├── api.php        # Legacy routes (backward compatibility)
+├── web.php
+├── console.php
 └── api/
-    └── v1.php     # API V1 routes
+    └── v1/
+        └── routes.php   # All API v1 routes (loaded with prefix "api/v1")
 ```
 
-### Ví dụ URLs
+Loaded in `RouteServiceProvider`: `Route::middleware('api')->prefix('api/v1')->group(base_path('routes/api/v1/routes.php'))`.
 
-- `POST /api/v1/register` - Đăng ký
-- `POST /api/v1/login` - Đăng nhập
-- `GET /api/v1/users` - Danh sách users
-- `GET /api/v1/profile` - Profile của user
+### Example URLs (base: `/api/v1`)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/register` | Register |
+| POST | `/login` | Login |
+| POST | `/login/google` | Google login |
+| GET | `/me` | Current user (auth) |
+| GET | `/users` | List users, paginated (permission: manage users) |
+| GET | `/users/{id}` | User by ID |
+| GET | `/profile` | Own profile |
+| GET | `/health` | Health check |
+| GET | `/health/live` | Liveness probe |
+| GET | `/health/ready` | Readiness probe (DB) |
 
 ### Versioning Strategy
 
@@ -162,10 +174,12 @@ API Resources giúp:
 - Transform data structure
 - Tách biệt data presentation khỏi model
 
-### Ví dụ: UserResource
+### Example: UserResource (extends BaseResource)
+
+Avatar URL uses disk config so it works with local storage or S3/CloudFront:
 
 ```php
-class UserResource extends JsonResource
+class UserResource extends BaseResource
 {
     public function toArray($request): array
     {
@@ -173,14 +187,14 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'avatar' => $this->avatar ? url('storage/' . $this->avatar) : null,
-            'roles' => $this->whenLoaded('roles', function () {
-                return $this->roles->pluck('name');
-            }),
+            'avatar' => $this->storageUrl($this->avatar, config('constants.uploads.avatar_disk')),
+            'roles' => $this->whenLoaded('roles', fn () => $this->roles->pluck('name')),
         ];
     }
 }
 ```
+
+`BaseResource::storageUrl($path, $disk)` uses `Storage::disk($disk)->url($path)`.
 
 ### Sử dụng trong Controllers
 
@@ -216,17 +230,13 @@ return $this->resourcePaginatedResponse(
 
 ### RouteServiceProvider
 
-Routes được đăng ký trong `RouteServiceProvider`:
+API v1 routes are registered in `app/Providers/RouteServiceProvider.php`:
 
 ```php
 Route::middleware('api')
     ->prefix('api/v1')
-    ->group(base_path('routes/api/v1.php'));
+    ->group(base_path('routes/api/v1/routes.php'));
 ```
-
-### Bootstrap App
-
-API routes không còn được đăng ký trong `bootstrap/app.php`, thay vào đó được đăng ký trong `RouteServiceProvider`.
 
 ## 📝 Ví dụ sử dụng
 
