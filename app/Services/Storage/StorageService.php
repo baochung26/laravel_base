@@ -77,7 +77,7 @@ class StorageService
         } catch (\Exception $e) {
             // For local storage, return a download route instead
             if ($disk === 'private' || $disk === 'local') {
-                return route('storage.download', ['path' => $path]);
+                return route('v1.files.download', ['disk' => 'private', 'path' => $path]);
             }
 
             throw $e;

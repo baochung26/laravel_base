@@ -1,6 +1,6 @@
 # Email Usage Guide
 
-This document describes how email is configured and used in the project, including templates, verification, and password reset flows.
+This document describes how email is configured and used in the project, including templates, verification, password reset, and production operations.
 
 ## 1) Environment Configuration
 
@@ -35,7 +35,7 @@ Frontend URL for email actions:
 Default mailer:
 - `MAIL_MAILER` defaults to `log` if not set.
 
-## 2.1) Supported Mailers (Common)
+## 3) Supported Mailers (Common)
 
 ### SMTP (Mailtrap / Gmail / SMTP Server)
 ```
@@ -84,7 +84,7 @@ MAIL_FAILOVER_MAILERS=smtp,log
 Markdown templates:
 - Paths are configured to `resources/views/emails`.
 
-## 3) Email Templates
+## 4) Email Templates
 
 Markdown templates are used for standard flows:
 - Password reset: `resources/views/emails/auth/reset-password.blade.php`
@@ -92,7 +92,7 @@ Markdown templates are used for standard flows:
 
 You can customize the copy or branding directly in these templates.
 
-## 4) Email Verification Flow
+## 5) Email Verification Flow
 
 Implementation:
 - User model implements `MustVerifyEmail`
@@ -101,7 +101,7 @@ Implementation:
 
 If you want to force verification before login, add a check in the login flow and return a proper error response.
 
-## 5) Password Reset Flow
+## 6) Password Reset Flow
 
 Implementation:
 - Notification: `app/Notifications/ResetPasswordNotification.php`
@@ -111,7 +111,7 @@ Implementation:
 Reset URL:
 - Built using `FRONTEND_URL` with `/reset-password?token=...&email=...`
 
-## 6) Testing Email Locally
+## 7) Testing Email Locally
 
 Use a safe local strategy during development:
 
@@ -121,18 +121,6 @@ Option A: Log driver
 
 Option B: Mailtrap (SMTP)
 - Set SMTP credentials in `.env`
-
-## 7) Common Troubleshooting
-
-- Emails not sending:
-  - Check `MAIL_MAILER` and credentials
-  - Run `php artisan config:clear`
-
-- Wrong reset link:
-  - Check `FRONTEND_URL`
-
-- Templates not updating:
-  - Clear view cache: `php artisan view:clear`
 
 ## 8) Sending Custom Emails
 
@@ -171,7 +159,7 @@ Thanks for joining **{{ $appName }}**.
 Go to App
 @endcomponent
 
-Thanks,  
+Thanks,
 {{ $appName }}
 @endcomponent
 ```
@@ -210,9 +198,31 @@ $user->notify(new OrderShipped());
 
 ### When to use which?
 - **Mailable**: one-off emails not tied to a User model.
-- **Notification**: user‑centric emails, or when you may add SMS/DB channels later.
+- **Notification**: user-centric emails, or when you may add SMS/DB channels later.
 
-## 8) Useful Commands
+## 9) Common Troubleshooting
+
+- If emails are not sending, check `MAIL_MAILER` and provider credentials.
+- If emails are not sending, run `php artisan config:clear` and retry.
+- If reset links are wrong, verify `FRONTEND_URL`.
+- If template changes are not visible, run `php artisan view:clear`.
+
+## 10) Production Best-Practice Checklist
+
+- Set `MAIL_MAILER` to a production provider (`ses`, `mailgun`, `postmark`, or hardened `smtp`)
+- Keep `MAIL_FROM_ADDRESS` on a verified domain
+- Configure SPF, DKIM, and DMARC for sender domain
+- Keep `MAIL_ENCRYPTION=tls` (or provider-secured transport)
+- Do not send emails synchronously for high traffic paths
+- Queue mail jobs (`ShouldQueue`) and run workers with retry/backoff policy
+- Configure `MAIL_FAILOVER_MAILERS` when using `failover` transport
+- Store provider secrets in a secret manager, not in git
+- Set a stable `FRONTEND_URL` for reset/verify links
+- Add monitoring for bounce, reject, and deferred events
+- Add idempotency for repeated send triggers (avoid duplicate emails)
+- Validate templates after every release (links, placeholders, branding)
+
+## 11) Useful Commands
 
 Clear config cache:
 ```

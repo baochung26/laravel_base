@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\PasswordController;
+use App\Http\Controllers\Api\V1\FileController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\RolePermissionController;
 use Illuminate\Http\Request;
@@ -99,13 +100,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/revoke-permission', [RolePermissionController::class, 'revokePermissionFrom'])->name('v1.revoke.permission');
     });
 
-    // Storage routes (for private file access)
-    Route::prefix('storage')->middleware(['auth:sanctum'])->group(function () {
-        Route::get('/download/{path}', [\App\Http\Controllers\StorageController::class, 'download'])
-            ->where('path', '.*')
-            ->name('v1.storage.download');
-        Route::get('/temporary-url/{path}', [\App\Http\Controllers\StorageController::class, 'getTemporaryUrl'])
-            ->where('path', '.*')
-            ->name('v1.storage.temporary-url');
+    // File management routes (authenticated + ownership/permission checks in service)
+    Route::prefix('files')->group(function () {
+        Route::post('/upload', [FileController::class, 'upload'])->name('v1.files.upload');
+        Route::post('/upload-multiple', [FileController::class, 'uploadMultiple'])->name('v1.files.upload-multiple');
+        Route::get('/download', [FileController::class, 'download'])->name('v1.files.download');
+        Route::delete('/', [FileController::class, 'delete'])->name('v1.files.delete');
+        Route::get('/list', [FileController::class, 'list'])->name('v1.files.list');
+        Route::get('/stats', [FileController::class, 'stats'])->name('v1.files.stats');
     });
 });

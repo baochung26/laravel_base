@@ -60,7 +60,25 @@ Templates:
 - Use a real mail provider (SES/Mailgun/Postmark).
 - Keep `SECURITY_CSP` minimal and tighten gradually.
 
-## 5) Testing
+## 5) Production Best-Practice Checklist
+
+- `APP_ENV=production` and `APP_DEBUG=false`
+- `APP_KEY` is set and never rotated without a key-rotation plan
+- Enforce HTTPS at LB/reverse proxy and set `SECURITY_HSTS_ENABLED=true`
+- Set a minimal CSP first, validate, then tighten (`SECURITY_CSP=...`)
+- Keep `SECURITY_X_FRAME_OPTIONS=SAMEORIGIN` (or stricter `DENY` if UI allows)
+- Keep `SECURITY_X_CONTENT_TYPE_OPTIONS=nosniff`
+- Keep `SECURITY_REFERRER_POLICY=strict-origin-when-cross-origin` or stricter
+- Configure rate limits per traffic profile in `app/Providers/RouteServiceProvider.php`
+- Ensure auth endpoints (`login`, `register`, `password-reset`) are throttled
+- Configure logging/monitoring for 401/403/429 spikes and failed auth bursts
+- Use managed secrets for `.env` values (do not commit production secrets)
+- Run `php artisan config:cache` on deploy after validating configuration
+- Run `php artisan route:cache` in production if routes are cache-safe
+- Review CORS allowlist (no wildcard origins when credentials are enabled)
+- Verify backup/restore and incident response runbook exist
+
+## 6) Testing
 
 Clear config cache:
 ```
