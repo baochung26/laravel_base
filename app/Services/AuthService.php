@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Validation\ValidationException as LaravelValidationException;
 use Spatie\Permission\Models\Role;
 
@@ -48,6 +49,9 @@ class AuthService
 
         // Generate token
         $user = $this->userRepository->findOrFail($createdUser->id);
+        if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
+            $user->sendEmailVerificationNotification();
+        }
         $tokens = $this->issueTokenPair($user);
 
         // Clear rate limiter on success

@@ -25,7 +25,7 @@ class UserController extends ApiController
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->get('per_page', config('constants.app.default_per_page'));
         $search = $request->get('search');
 
         if ($search) {
@@ -56,7 +56,10 @@ class UserController extends ApiController
             
             // Handle avatar upload
             if ($request->hasFile('avatar')) {
-                $avatarPath = $request->file('avatar')->store('avatars', 'public');
+                $avatarPath = $request->file('avatar')->store(
+                    config('constants.uploads.avatar_dir'),
+                    config('constants.uploads.avatar_disk')
+                );
                 $data['avatar'] = $avatarPath;
             }
 
@@ -104,12 +107,15 @@ class UserController extends ApiController
             if ($request->hasFile('avatar')) {
                 // Delete old avatar if exists
                 $user = $this->userService->getById($id);
-                if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                    Storage::disk('public')->delete($user->avatar);
+                if ($user->avatar && Storage::disk(config('constants.uploads.avatar_disk'))->exists($user->avatar)) {
+                    Storage::disk(config('constants.uploads.avatar_disk'))->delete($user->avatar);
                 }
 
                 // Upload new avatar
-                $avatarPath = $request->file('avatar')->store('avatars', 'public');
+                $avatarPath = $request->file('avatar')->store(
+                    config('constants.uploads.avatar_dir'),
+                    config('constants.uploads.avatar_disk')
+                );
                 $data['avatar'] = $avatarPath;
             }
 
@@ -136,8 +142,8 @@ class UserController extends ApiController
         try {
             // Delete avatar if exists
             $user = $this->userService->getById($id);
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
+            if ($user->avatar && Storage::disk(config('constants.uploads.avatar_disk'))->exists($user->avatar)) {
+                Storage::disk(config('constants.uploads.avatar_disk'))->delete($user->avatar);
             }
 
             $this->userService->delete($id);
@@ -155,17 +161,25 @@ class UserController extends ApiController
     {
         try {
             $request->validate([
-                'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+                'avatar' => [
+                    'required',
+                    'image',
+                    'mimes:' . implode(',', config('constants.uploads.allowed_avatar_mimes')),
+                    'max:' . config('constants.uploads.max_avatar_kb'),
+                ],
             ]);
 
             // Delete old avatar if exists
             $user = $this->userService->getById($id);
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
+            if ($user->avatar && Storage::disk(config('constants.uploads.avatar_disk'))->exists($user->avatar)) {
+                Storage::disk(config('constants.uploads.avatar_disk'))->delete($user->avatar);
             }
 
             // Upload new avatar
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $avatarPath = $request->file('avatar')->store(
+                config('constants.uploads.avatar_dir'),
+                config('constants.uploads.avatar_disk')
+            );
             $this->userService->updateAvatar($id, $avatarPath);
             $userModel = $this->userService->getModelByIdWithRelations($id);
 

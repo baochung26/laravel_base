@@ -74,7 +74,12 @@ class ProfileController extends ApiController
     {
         try {
             $request->validate([
-                'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+                'avatar' => [
+                    'required',
+                    'image',
+                    'mimes:' . implode(',', config('constants.uploads.allowed_avatar_mimes')),
+                    'max:' . config('constants.uploads.max_avatar_kb'),
+                ],
             ]);
 
             $user = $request->user();
@@ -86,7 +91,10 @@ class ProfileController extends ApiController
             }
 
             // Upload new avatar
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $avatarPath = $request->file('avatar')->store(
+                config('constants.uploads.avatar_dir'),
+                config('constants.uploads.avatar_disk')
+            );
             $this->userService->updateAvatar($user->id, $avatarPath);
             $userModel = $this->userService->getModelByIdWithRelations($user->id);
 

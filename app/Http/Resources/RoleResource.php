@@ -3,9 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
-
-class RoleResource extends JsonResource
+class RoleResource extends BaseResource
 {
     /**
      * Transform the resource into an array.
@@ -18,8 +16,8 @@ class RoleResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'guard_name' => $this->guard_name,
-            'created_at' => $this->created_at->toISOString(),
-            'updated_at' => $this->updated_at->toISOString(),
+            'created_at' => $this->iso($this->created_at),
+            'updated_at' => $this->iso($this->updated_at),
             
             // Relations
             'permissions' => $this->whenLoaded('permissions', function () {
