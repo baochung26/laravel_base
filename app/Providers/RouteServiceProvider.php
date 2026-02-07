@@ -65,12 +65,7 @@ class RouteServiceProvider extends ServiceProvider
             // API V1 Routes
             Route::middleware('api')
                 ->prefix('api/v1')
-                ->group(base_path('routes/api/v1.php'));
-
-            // Legacy API Routes (backward compatibility)
-            Route::middleware('api')
-                ->prefix('api')
-                ->group(base_path('routes/api.php'));
+                ->group(base_path('routes/api/v1/routes.php'));
         });
     }
 }

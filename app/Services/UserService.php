@@ -11,11 +11,12 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
-class UserService
+class UserService extends BaseService
 {
     public function __construct(
         protected UserRepositoryInterface $userRepository
     ) {
+        parent::__construct($userRepository);
     }
 
     /**
@@ -39,7 +40,7 @@ class UserService
      */
     public function getById(int $id): UserDTO
     {
-        $user = $this->userRepository->findOrFail($id);
+        $user = $this->findOrFail($id);
 
         return UserDTO::fromModel($user);
     }
@@ -239,9 +240,9 @@ class UserService
     public function delete(int $id): bool
     {
         // Check if user exists
-        $this->userRepository->findOrFail($id);
+        $this->findOrFail($id);
 
-        return $this->userRepository->delete($id);
+        return $this->deleteRecord($id);
     }
 
     /**

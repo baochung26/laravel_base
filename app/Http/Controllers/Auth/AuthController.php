@@ -17,8 +17,7 @@ class AuthController extends Controller
 {
     public function __construct(
         protected AuthService $authService
-    ) {
-    }
+    ) {}
 
     /**
      * Register a new user.
@@ -38,6 +37,8 @@ class AuthController extends Controller
                 'message' => 'User registered successfully',
                 'user' => $result['user']->toArray(),
                 'token' => $result['token'],
+                'access_token' => $result['access_token'] ?? $result['token'],
+                'refresh_token' => $result['refresh_token'] ?? null,
             ], 201);
         } catch (AppValidationException $e) {
             return response()->json([
@@ -63,6 +64,8 @@ class AuthController extends Controller
                 'message' => 'Login successful',
                 'user' => $result['user']->toArray(),
                 'token' => $result['token'],
+                'access_token' => $result['access_token'] ?? $result['token'],
+                'refresh_token' => $result['refresh_token'] ?? null,
                 'permissions' => $result['permissions'],
                 'roles' => $result['roles'],
             ]);
@@ -106,11 +109,13 @@ class AuthController extends Controller
     public function refresh(Request $request): JsonResponse
     {
         try {
-            $token = $this->authService->refresh();
+            $tokens = $this->authService->refresh();
 
             return response()->json([
                 'message' => 'Token refreshed successfully',
-                'token' => $token,
+                'token' => $tokens['token'],
+                'access_token' => $tokens['access_token'] ?? $tokens['token'],
+                'refresh_token' => $tokens['refresh_token'] ?? null,
             ]);
         } catch (AppValidationException $e) {
             return response()->json([
