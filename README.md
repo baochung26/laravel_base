@@ -312,11 +312,11 @@ Tài liệu chi tiết nằm trong [`docs/`](docs/). **Mục lục:** [docs/READ
 | Nhóm | Tài liệu chính |
 |------|----------------|
 | **Bắt đầu** | [QUICK_START.md](docs/QUICK_START.md) |
-| **API** | [API_FOUNDATION.md](docs/API_FOUNDATION.md), [API_RESPONSE_FORMAT.md](docs/API_RESPONSE_FORMAT.md), [API_VERSIONING_STRATEGY.md](docs/API_VERSIONING_STRATEGY.md) |
+| **API** | [API_FOUNDATION.md](docs/API_FOUNDATION.md), [API_RESPONSE_AND_ERRORS.md](docs/API_RESPONSE_AND_ERRORS.md), [API_VERSIONING_STRATEGY.md](docs/API_VERSIONING_STRATEGY.md) |
 | **Auth & User** | [AUTHENTICATION.md](docs/AUTHENTICATION.md), [AUTH_CHECKLIST.md](docs/AUTH_CHECKLIST.md), [USER_MODULE.md](docs/USER_MODULE.md) |
 | **Hạ tầng** | [CONFIG_ENVIRONMENT.md](docs/CONFIG_ENVIRONMENT.md), [HEALTH_CHECK.md](docs/HEALTH_CHECK.md), [REDIS_SETUP.md](docs/REDIS_SETUP.md), [QUEUE_SCHEDULER.md](docs/QUEUE_SCHEDULER.md), [CACHE_STRATEGY.md](docs/CACHE_STRATEGY.md) |
 | **Data & Storage** | [DATABASE_CONVENTIONS.md](docs/DATABASE_CONVENTIONS.md), [QUERY_OPTIMIZATION.md](docs/QUERY_OPTIMIZATION.md), [FILE_STORAGE.md](docs/FILE_STORAGE.md) |
-| **Khác** | [LOGGING.md](docs/LOGGING.md), [EXCEPTION_HANDLING.md](docs/EXCEPTION_HANDLING.md), [SECURITY.md](docs/SECURITY.md), [EMAIL_USAGE.md](docs/EMAIL_USAGE.md) |
+| **Khác** | [LOGGING.md](docs/LOGGING.md), [API_RESPONSE_AND_ERRORS.md](docs/API_RESPONSE_AND_ERRORS.md), [SECURITY.md](docs/SECURITY.md), [EMAIL_USAGE.md](docs/EMAIL_USAGE.md) |
 | **Đánh giá** | [PROJECT_EVALUATION.md](docs/PROJECT_EVALUATION.md), [PROJECT_AUDIT.md](docs/PROJECT_AUDIT.md) |
 
 **Ghi chú:** `.env.example` có sẵn ở root. Template mở rộng: `docs/CONFIG_ENV.example`.

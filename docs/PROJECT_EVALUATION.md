@@ -38,7 +38,7 @@
 
 - `app/Support/ApiResponse.php`: consistent success/error format, `request_id`, `timestamp`.
 - Headers `X-Request-ID`, `X-Correlation-ID` for tracing.
-- Doc: `docs/API_RESPONSE_FORMAT.md`.
+- Doc: `docs/API_RESPONSE_AND_ERRORS.md`.
 
 ### 2.3 Rate limiting
 
@@ -165,7 +165,7 @@
 
 ## 7. Related docs
 
-- API response: `docs/API_RESPONSE_FORMAT.md`
+- API response & errors: `docs/API_RESPONSE_AND_ERRORS.md`
 - Auth: `docs/AUTHENTICATION.md`, `docs/AUTH_CHECKLIST.md`
 - Previous audits: `docs/PROJECT_AUDIT_2026-02-07.md`, `docs/PROJECT_AUDIT.md`
 

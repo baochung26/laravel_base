@@ -10,14 +10,14 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 |------|------------|
 | Run the project locally | [QUICK_START.md](QUICK_START.md) |
 | Call the API (auth, users, files) | [API_FOUNDATION.md](API_FOUNDATION.md), [AUTHENTICATION.md](AUTHENTICATION.md), [USER_MODULE.md](USER_MODULE.md) |
-| Response/error format | [API_RESPONSE_FORMAT.md](API_RESPONSE_FORMAT.md) |
+| Response/error format | [API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md) |
 | API versioning & breaking changes | [API_VERSIONING_STRATEGY.md](API_VERSIONING_STRATEGY.md) |
 | Health checks (K8s, monitoring) | [HEALTH_CHECK.md](HEALTH_CHECK.md) |
 | Security, CORS, rate limits | [SECURITY.md](SECURITY.md), [AUTHENTICATION.md](AUTHENTICATION.md) |
 | Config, env, cache, queue | [CONFIG_ENVIRONMENT.md](CONFIG_ENVIRONMENT.md), [CACHE_STRATEGY.md](CACHE_STRATEGY.md), [QUEUE_SCHEDULER.md](QUEUE_SCHEDULER.md) |
 | Database, migrations, queries | [DATABASE_CONVENTIONS.md](DATABASE_CONVENTIONS.md), [QUERY_OPTIMIZATION.md](QUERY_OPTIMIZATION.md) |
 | Files, storage, S3 | [FILE_STORAGE.md](FILE_STORAGE.md) |
-| Logging, exceptions | [LOGGING.md](LOGGING.md), [EXCEPTION_HANDLING.md](EXCEPTION_HANDLING.md) |
+| Logging, exceptions | [LOGGING.md](LOGGING.md), [API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md) |
 | Project evaluation & roadmap | [PROJECT_EVALUATION.md](PROJECT_EVALUATION.md) |
 
 ---
@@ -31,7 +31,7 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 ### API
 
 - **[API_FOUNDATION.md](API_FOUNDATION.md)** – Versioning (`/api/v1`), response format, pagination, resources.
-- **[API_RESPONSE_FORMAT.md](API_RESPONSE_FORMAT.md)** – Exact JSON shape for success/error/paginated.
+- **[API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md)** – Response format (success/error/paginated) and exception handling.
 - **[API_VERSIONING_STRATEGY.md](API_VERSIONING_STRATEGY.md)** – Version lifecycle, deprecation policy.
 
 ### Auth & users
@@ -58,7 +58,6 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 ### Reliability & operations
 
 - **[LOGGING.md](LOGGING.md)** – JSON logs, request ID, slow queries.
-- **[EXCEPTION_HANDLING.md](EXCEPTION_HANDLING.md)** – Standardized error responses.
 - **[QUEUE_SCHEDULER.md](QUEUE_SCHEDULER.md)** – Queues, jobs, scheduler.
 - **[SECURITY.md](SECURITY.md)** – Headers, CORS, best practices.
 
@@ -89,4 +88,4 @@ curl -X POST http://localhost:8000/api/v1/login \
 curl http://localhost:8000/api/v1/me -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-All responses follow the format in [API_RESPONSE_FORMAT.md](API_RESPONSE_FORMAT.md) (`success`, `message`, `data`, `meta`, `errors`).
+All responses follow the format in [API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md) (`success`, `message`, `data`, `meta`, `errors`).

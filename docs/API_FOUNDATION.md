@@ -53,6 +53,8 @@ Loaded in `RouteServiceProvider`: `Route::middleware('api')->prefix('api/v1')->g
 
 ## 📦 2. Response Format Chuẩn
 
+Chi tiết đầy đủ (meta, request_id, paginated, exception handling): [API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md).
+
 ### Success Response
 
 ```json

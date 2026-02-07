@@ -1,541 +1,338 @@
-# Cache Strategy Documentation
+# Hướng dẫn Cache
 
-Tài liệu về Cache Strategy, Cache Key Convention, và Cache Invalidation.
+Tài liệu dùng cache trong project: quy ước key, service, xóa cache khi dữ liệu thay đổi, và ví dụ sử dụng.
 
-## 📋 Tổng quan
+---
 
-Hệ thống Cache Strategy bao gồm:
-- ✅ **Cache Key Convention** - Quy ước đặt tên cache key thống nhất
-- ✅ **Cache Service** - Service layer để quản lý cache
-- ✅ **Cache Invalidation** - Cơ chế làm mất hiệu lực cache tự động
-- ✅ **Model Cache Trait** - Trait để cache model data
-- ✅ **Observer Pattern** - Observer để tự động invalidate cache
+## 1. Tổng quan
 
-## 🔑 1. Cache Key Convention
+| Thành phần | Mô tả |
+|------------|--------|
+| **CacheKey** | Helper tạo key thống nhất, dễ đọc và tránh trùng. |
+| **CacheService** | Lớp dùng để get/put/remember và xóa cache (theo key hoặc pattern). |
+| **UserObserver** | Khi User đổi (create/update/delete) → tự động xóa cache liên quan user đó và cache danh sách users. |
+| **HasCache** | Trait gắn vào Model để cache theo từng bản ghi (remember, forget theo model). |
 
-### Format
+**Cấu hình:** `.env` dùng `CACHE_DRIVER` (file / redis), `CACHE_PREFIX` (tiền tố key). Chi tiết ở [mục 7](#7-cấu-hình).
 
-```
-{prefix}:{module}:{identifier}:{suffix?}
-```
+---
 
-**Components:**
-- `prefix` - Application prefix (default: `laravel`)
-- `module` - Module/table name (e.g., `user`, `users`)
-- `identifier` - Resource identifier (e.g., user ID, role name)
-- `suffix` - Optional suffix for specific data (e.g., `profile`, `roles`)
+## 2. Quy ước đặt tên key (CacheKey)
 
-### Examples
+Format chung: **`{prefix}:{module}:{identifier}:{suffix?}`**
 
-```php
-use App\Helpers\CacheKey;
+- **prefix:** Mặc định `laravel` (theo config).
+- **module:** Tên nhóm (user, users, role, permissions…).
+- **identifier:** Id hoặc định danh (ví dụ: user id, số trang).
+- **suffix:** (tùy chọn) Loại dữ liệu (profile, roles, list…).
 
-// User cache keys
-CacheKey::user(1)                    // laravel:user:1
-CacheKey::user(1, 'profile')         // laravel:user:1:profile
-CacheKey::userProfile(1)             // laravel:user:1:profile
-CacheKey::userRoles(1)               // laravel:user:1:roles
-CacheKey::userPermissions(1)         // laravel:user:1:permissions
+### Ví dụ dùng CacheKey
 
-// Users list cache keys
-CacheKey::usersList(1)               // laravel:users:list:page:1
-CacheKey::usersList(1, 'john')       // laravel:users:list:page:1:search:5d41402abc4b2a76b9719d911017c592
-
-// Role cache keys
-CacheKey::role('admin')              // laravel:role:admin
-CacheKey::rolesList()                // laravel:roles:list
-
-// Permission cache keys
-CacheKey::permissionsList()          // laravel:permissions:list
-```
-
-### Custom Cache Keys
+File: `app/Helpers/CacheKey.php`
 
 ```php
 use App\Helpers\CacheKey;
 
-// Generate custom key
-$key = CacheKey::generate('product', '123', 'reviews');
-// Result: laravel:product:123:reviews
+// Cache 1 user
+CacheKey::user(1);                    // laravel:user:1
+CacheKey::user(1, 'profile');         // laravel:user:1:profile
+CacheKey::userProfile(1);             // laravel:user:1:profile
+CacheKey::userRoles(1);               // laravel:user:1:roles
+CacheKey::userPermissions(1);         // laravel:user:1:permissions
 
-// With multiple identifiers
-$key = CacheKey::generate('order', '123:item:456');
-// Result: laravel:order:123:item:456
+// Cache danh sách users (phân trang, tìm kiếm)
+CacheKey::usersList(1);               // laravel:users:list:page:1
+CacheKey::usersList(1, 'john');       // laravel:users:list:page:1:search:<md5>
+
+// Role / permission
+CacheKey::role('admin');              // laravel:role:admin
+CacheKey::rolesList();                // laravel:roles:list
+CacheKey::permissionsList();          // laravel:permissions:list
+
+// Key tùy chỉnh (module:identifier:suffix)
+CacheKey::generate('product', '123', 'reviews');  // laravel:product:123:reviews
 ```
 
-## 🔧 2. Cache Service
+**Lưu ý:** Nên luôn dùng `CacheKey` thay vì tự ghép chuỗi để thống nhất và dễ đổi prefix sau này.
 
-### CacheService
+---
 
-Service layer để quản lý cache với các methods:
+## 3. CacheService – lấy, lưu, xóa cache
 
-**Location:** `app/Services/Cache/CacheService.php`
+File: `app/Services/Cache/CacheService.php`
 
-### Methods
+### 3.1 Remember (lấy từ cache hoặc tính rồi lưu)
 
-#### Remember
+Dùng khi: lần đầu lấy từ DB/tính toán, sau đó trả từ cache đến khi hết TTL.
 
 ```php
+use App\Helpers\CacheKey;
 use App\Services\Cache\CacheService;
 
-$cacheService = app(CacheService::class);
+$cache = app(CacheService::class);
+$userId = 1;
 
-$value = $cacheService->remember($key, function () {
-    return 'expensive computation';
-}, 3600); // TTL: 1 hour
+// TTL mặc định 3600 (1 giây), có thể truyền tham số thứ 3
+$profile = $cache->remember(
+    CacheKey::userProfile($userId),
+    function () use ($userId) {
+        return User::find($userId)->load('profile')->profile;
+    },
+    3600  // 1 giờ
+);
 ```
 
-#### Get
+**Demo:** Gọi lần 1 → chạy closure, lưu cache. Gọi lần 2 trong vòng 1 giờ → trả từ cache, không chạy closure.
+
+### 3.2 Get / Put
 
 ```php
-$value = $cacheService->get($key, 'default value');
+// Lấy (không có thì null hoặc giá trị mặc định)
+$value = $cache->get(CacheKey::user(1), 'default');
+
+// Lưu (TTL giây)
+$cache->put(CacheKey::user(1), $userData, 3600);
 ```
 
-#### Put
+### 3.3 Forget (xóa cache)
 
 ```php
-$cacheService->put($key, $value, 3600);
+// Xóa 1 key
+$cache->forget(CacheKey::userProfile($userId));
+
+// Xóa theo pattern (chỉ Redis) – ví dụ mọi key danh sách users
+$cache->forgetPattern('users:list:*');
+
+// Xóa toàn bộ cache của module (Redis)
+$cache->forgetModule('users');   // xóa laravel:users:*
+
+// Xóa hết cache liên quan 1 user (user đó + danh sách users)
+$cache->forgetUser($userId);
+
+// Xóa toàn bộ cache (cẩn thận trên production)
+$cache->flush();
 ```
 
-#### Forget
+### 3.4 Cache có tag (chỉ Redis)
+
+Tag dùng để nhóm nhiều key, xóa cả nhóm một lúc.
 
 ```php
-// Forget single key
-$cacheService->forget($key);
+use App\Helpers\CacheKey;
 
-// Forget by pattern (Redis only)
-$cacheService->forgetPattern('users:list:*');
-
-// Forget entire module
-$cacheService->forgetModule('users');
-
-// Forget user-related cache
-$cacheService->forgetUser($userId);
-```
-
-#### Flush
-
-```php
-$cacheService->flush(); // Clear all cache
-```
-
-#### Tagged Cache (Redis only)
-
-```php
-// Remember with tags
-$value = $cacheService->rememberWithTags(
-    ['users', 'profiles'],
-    $key,
-    fn() => 'value',
+// Lưu với tag
+$users = $cache->rememberWithTags(
+    ['users'],                      // tag
+    CacheKey::usersList(1),         // key
+    fn () => User::paginate(15),    // closure
     3600
 );
 
-// Forget by tags
-$cacheService->forgetTags(['users', 'profiles']);
+// Xóa mọi key gắn tag 'users'
+$cache->forgetTags(['users']);
 ```
 
-## 🚫 3. Cache Invalidation
+**Lưu ý:** `forgetPattern` và cache tag chỉ hoạt động khi `CACHE_DRIVER=redis`. Driver `file` không hỗ trợ.
 
-### Automatic Invalidation
+---
 
-Cache được tự động invalidate khi:
-- Model được updated
-- Model được deleted
-- Model được created (invalidates list cache)
+## 4. Demo: Cache profile user trong Service
 
-### User Observer
-
-UserObserver tự động invalidate cache khi User model thay đổi:
-
-**Location:** `app/Observers/UserObserver.php`
-
-**Registered in:** `app/Providers/AppServiceProvider.php`
+Ví dụ trong một service (hoặc controller) – cache profile user 1 giờ.
 
 ```php
-// Observer automatically invalidates:
-// - User cache
-// - User profile cache
-// - User roles cache
-// - User permissions cache
-// - Users list cache
+namespace App\Services;
+
+use App\Helpers\CacheKey;
+use App\Services\Cache\CacheService;
+
+class UserService
+{
+    public function __construct(
+        protected CacheService $cache,
+        protected UserRepositoryInterface $userRepo
+    ) {}
+
+    /**
+     * Lấy profile user, có cache 1 giờ.
+     */
+    public function getProfile(int $userId): array
+    {
+        return $this->cache->remember(
+            CacheKey::userProfile($userId),
+            function () use ($userId) {
+                $user = $this->userRepo->withRolesAndPermissions($userId);
+                return [
+                    'id'   => $user->id,
+                    'name' => $user->name,
+                    'email'=> $user->email,
+                    'roles'=> $user->roles->pluck('name')->toArray(),
+                ];
+            },
+            3600
+        );
+    }
+}
 ```
 
-### Manual Invalidation
+Khi user bị sửa (tên, email, role…), cần xóa cache để lần sau không trả dữ liệu cũ. Ở project này **UserObserver** đã làm việc đó (xem mục 5).
+
+---
+
+## 5. Demo: Cache danh sách users (có phân trang, tìm kiếm)
 
 ```php
 use App\Helpers\CacheKey;
 use App\Services\Cache\CacheService;
 
-$cacheService = app(CacheService::class);
+$cache = app(CacheService::class);
+$page = request()->get('page', 1);
+$search = request()->get('search');
 
-// Invalidate user cache
-$cacheService->forgetUser($userId);
+$key = CacheKey::usersList($page, $search);
 
-// Invalidate specific cache
-$cacheService->forget(CacheKey::userProfile($userId));
-
-// Invalidate module cache
-$cacheService->forgetModule('users');
+$users = $cache->remember($key, function () use ($page, $search) {
+    $query = User::query()->with('roles');
+    if ($search) {
+        $query->where('name', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%");
+    }
+    return $query->paginate(15, ['*'], 'page', $page);
+}, 1800);  // 30 phút
 ```
 
-## 🎯 4. Model Cache Trait
+Khi có user mới/sửa/xóa, **UserObserver** sẽ xóa cache dạng `users:list:*`, nên lần gọi sau sẽ lấy lại dữ liệu mới từ DB và cache lại.
 
-### HasCache Trait
+---
 
-Trait để thêm cache functionality vào Models:
+## 6. Xóa cache khi dữ liệu thay đổi
 
-**Location:** `app/Traits/HasCache.php`
+### 6.1 Tự động (UserObserver)
 
-**Usage:**
+File: `app/Observers/UserObserver.php`  
+Khi User **created / updated / deleted**:
+
+- Xóa: `user:{id}`, `user:{id}:profile`, `user:{id}:roles`, `user:{id}:permissions`
+- Xóa cache danh sách: pattern `users:list:*`
+- Nếu dùng tag: xóa tag `users`
+
+Bạn không cần gọi forget thủ công cho các key trên khi đổi user trong app (qua Eloquent).
+
+### 6.2 Xóa thủ công (khi cần)
+
+Ví dụ: sau khi gán role ngoài Eloquent, hoặc sửa dữ liệu trực tiếp trong DB.
 
 ```php
+use App\Helpers\CacheKey;
+use App\Services\Cache\CacheService;
+
+$cache = app(CacheService::class);
+
+// Chỉ xóa cache của 1 user
+$cache->forgetUser($userId);
+
+// Hoặc từng key
+$cache->forget(CacheKey::userRoles($userId));
+$cache->forget(CacheKey::userProfile($userId));
+
+// Xóa toàn bộ cache danh sách users (Redis)
+$cache->forgetPattern('users:list:*');
+```
+
+---
+
+## 7. Trait HasCache (cache gắn với Model)
+
+File: `app/Traits/HasCache.php`
+
+Dùng khi bạn muốn cache theo từng bản ghi (ví dụ: roles, permissions của user) và tự xóa khi model update/delete.
+
+**Cách dùng:** Khai báo trait trong model (ví dụ `User`), sau đó gọi `rememberCache`, `getCached`, `putCache`, `forgetCache` trên instance.
+
+### Ví dụ (khi Model dùng HasCache)
+
+```php
+// Trong Model
 use App\Traits\HasCache;
 
 class User extends Model
 {
     use HasCache;
 
-    // Override cache TTL if needed
+    // Tùy chọn: đổi TTL mặc định (giây)
     protected function getCacheTtl(): int
     {
-        return 7200; // 2 hours
+        return 7200; // 2 giờ
     }
 }
 ```
 
-### Methods
-
-#### Remember Cache
-
 ```php
+// Trong service hoặc controller
 $user = User::find(1);
 
-// Remember cache for user
-$profile = $user->rememberCache('profile', function () use ($user) {
-    return $user->load('profile')->profile;
-}, 3600);
-```
-
-#### Get Cached Value
-
-```php
-$profile = $user->getCached('profile');
-```
-
-#### Put Cache
-
-```php
-$user->putCache('profile', $profileData, 3600);
-```
-
-#### Forget Cache
-
-```php
-// Forget specific cache
-$user->forgetCache('profile');
-
-// Forget all cache for this model
-$user->forgetCache();
-
-// Forget all cache for this model type
-$user->forgetModelCache();
-```
-
-## 💡 5. Usage Examples
-
-### Example 1: Cache User Profile
-
-```php
-use App\Helpers\CacheKey;
-use App\Services\Cache\CacheService;
-
-$cacheService = app(CacheService::class);
-$userId = 1;
-
-// Get user profile with cache
-$profile = $cacheService->remember(
-    CacheKey::userProfile($userId),
-    function () use ($userId) {
-        return User::find($userId)->load('profile')->profile;
-    },
-    3600 // 1 hour
-);
-
-// Cache is automatically invalidated when user is updated
-```
-
-### Example 2: Cache Users List
-
-```php
-use App\Helpers\CacheKey;
-use App\Services\Cache\CacheService;
-
-$cacheService = app(CacheService::class);
-$page = 1;
-$search = 'john';
-
-// Get users list with cache
-$users = $cacheService->remember(
-    CacheKey::usersList($page, $search),
-    function () use ($page, $search) {
-        $query = User::query();
-        
-        if ($search) {
-            $query->where('name', 'like', "%{$search}%");
-        }
-        
-        return $query->paginate(15, ['*'], 'page', $page);
-    },
-    1800 // 30 minutes
-);
-```
-
-### Example 3: Cache with Model Trait
-
-```php
-$user = User::find(1);
-
-// Remember cache using trait
+// Lấy từ cache hoặc tính rồi lưu (key sẽ là laravel:users:1:roles)
 $roles = $user->rememberCache('roles', function () use ($user) {
     return $user->roles()->pluck('name')->toArray();
-});
+}, 3600);
 
-// Get cached value
-$cachedRoles = $user->getCached('roles');
+// Chỉ lấy từ cache (không tính)
+$cached = $user->getCached('roles');
 
-// Forget cache
+// Lưu thủ công
+$user->putCache('roles', ['admin', 'user'], 3600);
+
+// Xóa cache của suffix 'roles' hoặc toàn bộ cache của user này
 $user->forgetCache('roles');
+$user->forgetCache();  // xóa mọi suffix của user 1
 ```
 
-### Example 4: Cache Invalidation on Update
+**Lưu ý:** Model `User` hiện tại trong project **chưa** dùng `HasCache`. Bạn có thể thêm `use HasCache` nếu muốn cache theo từng user như trên. UserObserver vẫn xóa cache khi user đổi (cache do Observer quản lý); HasCache thêm cách cache/forget gắn với từng instance model.
 
-```php
-$user = User::find(1);
-$user->update(['name' => 'New Name']);
+---
 
-// Cache is automatically invalidated by UserObserver
-// - user:1
-// - user:1:profile
-// - user:1:roles
-// - user:1:permissions
-// - users:list:*
+## 8. Cấu hình
+
+### Biến môi trường (.env)
+
+```env
+# Driver: file (dev) hoặc redis (production khuyến nghị)
+CACHE_DRIVER=file
+CACHE_PREFIX=laravel_cache
 ```
 
-### Example 5: Tagged Cache (Redis)
-
-```php
-use App\Helpers\CacheKey;
-use App\Services\Cache\CacheService;
-
-$cacheService = app(CacheService::class);
-
-// Remember with tags
-$users = $cacheService->rememberWithTags(
-    CacheKey::tags(['users']),
-    CacheKey::usersList(1),
-    fn() => User::paginate(15),
-    3600
-);
-
-// Invalidate all users cache by tag
-$cacheService->forgetTags(['users']);
-```
-
-## ⚙️ 6. Cache Configuration
-
-### Environment Variables
+**Redis (ví dụ Docker):**
 
 ```env
 CACHE_DRIVER=redis
 CACHE_PREFIX=laravel_cache
-```
-
-### TTL Configuration
-
-**Default TTL:** 3600 seconds (1 hour)
-
-**Recommended TTL:**
-- **Frequently changing data:** 300-600 seconds (5-10 minutes)
-- **Moderately changing data:** 1800-3600 seconds (30-60 minutes)
-- **Rarely changing data:** 7200-86400 seconds (2-24 hours)
-
-### Cache Drivers
-
-**File (Development):**
-```env
-CACHE_DRIVER=file
-```
-
-**Redis (Production):**
-```env
-CACHE_DRIVER=redis
-REDIS_HOST=127.0.0.1
+REDIS_HOST=redis
 REDIS_PORT=6379
+REDIS_PASSWORD=null
 REDIS_CACHE_DB=1
 ```
 
-## 📊 7. Cache Strategy Patterns
+### Gợi ý TTL (giây)
 
-### Pattern 1: Cache-Aside (Lazy Loading)
+| Loại dữ liệu | TTL gợi ý |
+|--------------|-----------|
+| Hay đổi (ví dụ: số lượng tồn) | 300–600 (5–10 phút) |
+| Đổi vừa (profile, danh sách) | 1800–3600 (30 phút – 1 giờ) |
+| Ít đổi (roles, permissions) | 7200–86400 (2–24 giờ) |
 
-```php
-// Check cache first
-$value = $cacheService->get($key);
+---
 
-if ($value === null) {
-    // Cache miss - load from database
-    $value = $this->loadFromDatabase();
-    
-    // Store in cache
-    $cacheService->put($key, $value, 3600);
-}
+## 9. Lưu ý và best practices
 
-return $value;
-```
+- **Key:** Luôn dùng `CacheKey`; không hardcode chuỗi key.
+- **Xóa khi đổi dữ liệu:** Dựa vào Observer cho User; trường hợp khác (job, command, sửa DB tay) gọi `forget` / `forgetUser` / `forgetPattern` khi cần.
+- **Redis vs File:** `forgetPattern`, cache tag chỉ có khi dùng Redis; driver file không hỗ trợ.
+- **TTL:** Đặt TTL phù hợp với tần suất thay đổi dữ liệu; tránh TTL quá dài cho dữ liệu hay đổi.
+- **Nhạy cảm:** Tránh cache mật khẩu, token đầy đủ; có thể cache thông tin hiển thị (tên, role, v.v.).
 
-**Or use remember:**
-```php
-$value = $cacheService->remember($key, function () {
-    return $this->loadFromDatabase();
-}, 3600);
-```
+---
 
-### Pattern 2: Write-Through
+## 10. Tài liệu liên quan
 
-```php
-// Update database
-$user->update($data);
-
-// Update cache immediately
-$cacheService->put(CacheKey::user($user->id), $user, 3600);
-```
-
-### Pattern 3: Write-Behind (Write-Back)
-
-```php
-// Update cache immediately
-$cacheService->put($key, $value, 3600);
-
-// Update database asynchronously (via queue)
-UpdateUserJob::dispatch($userId, $data);
-```
-
-### Pattern 4: Invalidation on Update
-
-```php
-// Update model (triggers observer)
-$user->update($data);
-
-// Observer automatically invalidates cache
-// - user:1
-// - user:1:profile
-// - users:list:*
-```
-
-## 🔒 8. Best Practices
-
-### Cache Key Design
-
-✅ **DO:**
-- Use descriptive, consistent naming
-- Include all relevant identifiers
-- Use CacheKey helper for consistency
-- Document cache keys in code
-
-❌ **DON'T:**
-- Don't use ambiguous keys
-- Don't hardcode cache keys
-- Don't use long, complex keys
-- Don't forget to include identifiers
-
-### Cache Invalidation
-
-✅ **DO:**
-- Invalidate cache on data changes
-- Use observers for automatic invalidation
-- Invalidate related caches together
-- Test cache invalidation
-
-❌ **DON'T:**
-- Don't forget to invalidate cache
-- Don't invalidate too aggressively
-- Don't leave stale cache
-- Don't invalidate unrelated caches
-
-### Cache TTL
-
-✅ **DO:**
-- Use appropriate TTL for data type
-- Consider data update frequency
-- Monitor cache hit/miss rates
-- Adjust TTL based on usage
-
-❌ **DON'T:**
-- Don't use too long TTL for changing data
-- Don't use too short TTL for static data
-- Don't ignore cache expiration
-- Don't cache sensitive data
-
-### Performance
-
-✅ **DO:**
-- Cache expensive operations
-- Cache frequently accessed data
-- Use cache tags for batch operations
-- Monitor cache performance
-
-❌ **DON'T:**
-- Don't cache everything
-- Don't cache rarely accessed data
-- Don't cache large objects unnecessarily
-- Don't ignore cache memory usage
-
-## 🧪 9. Testing
-
-### Test Cache
-
-```php
-use Illuminate\Support\Facades\Cache;
-use App\Helpers\CacheKey;
-use App\Services\Cache\CacheService;
-
-Cache::fake();
-
-$cacheService = app(CacheService::class);
-
-// Put value
-$cacheService->put($key, 'value', 3600);
-
-// Assert cache
-Cache::assertHas($key);
-
-// Get value
-$value = $cacheService->get($key);
-$this->assertEquals('value', $value);
-```
-
-### Test Cache Invalidation
-
-```php
-$user = User::factory()->create();
-
-// Cache user
-$cacheService->put(CacheKey::user($user->id), $user, 3600);
-
-// Update user (triggers observer)
-$user->update(['name' => 'New Name']);
-
-// Assert cache is invalidated
-Cache::assertMissing(CacheKey::user($user->id));
-```
-
-## 📚 10. Related Documentation
-
-- [Configuration & Environment](CONFIG_ENVIRONMENT.md#cache-configuration)
-- [Laravel Cache](https://laravel.com/docs/cache)
-
-## 🔗 Tài liệu tham khảo
-
-- [Laravel Cache](https://laravel.com/docs/cache)
-- [Redis Documentation](https://redis.io/documentation)
-- [Cache Patterns](https://aws.amazon.com/caching/caching-patterns/)
+- [CONFIG_ENVIRONMENT.md](CONFIG_ENVIRONMENT.md) – Cấu hình env, cache.
+- [Laravel Cache](https://laravel.com/docs/cache) – Tài liệu chính thức Laravel.

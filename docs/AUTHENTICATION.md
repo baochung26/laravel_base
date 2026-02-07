@@ -13,7 +13,7 @@ Dự án sử dụng:
 
 ### API Endpoints
 
-All auth endpoints use base path **`/api/v1`**. Response format: `success`, `message`, `meta` (request_id, timestamp), `data` (see [API_RESPONSE_FORMAT.md](API_RESPONSE_FORMAT.md)).
+All auth endpoints use base path **`/api/v1`**. Response format: `success`, `message`, `meta` (request_id, timestamp), `data` (see [API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md)).
 
 #### 1. Register
 

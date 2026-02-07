@@ -472,7 +472,7 @@ Dự án có **18+ documentation files** trong `docs/`:
 6. ✅ `CACHE_STRATEGY.md` - Cache strategy guide
 7. ✅ `CONFIG_ENVIRONMENT.md` - Environment configuration
 8. ✅ `DATABASE_CONVENTIONS.md` - Database conventions
-9. ✅ `EXCEPTION_HANDLING.md` - Exception handling guide
+9. ✅ `API_RESPONSE_AND_ERRORS.md` - Response format & exception handling
 10. ✅ `FILE_STORAGE.md` - File storage guide
 11. ✅ `HEALTH_CHECK.md` - Health check endpoints
 12. ✅ `LOGGING.md` - Logging & monitoring guide
