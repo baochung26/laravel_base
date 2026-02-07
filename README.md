@@ -121,6 +121,7 @@ laravel_base_cursor/
 │   │   │   └── RolePermissionController.php
 │   │   ├── Middleware/    # Custom middleware
 │   │   ├── Requests/     # Form request validation
+│   │   ├── Resources/    # API Resources
 │   │   └── Kernel.php    # HTTP Kernel
 │   ├── Services/         # Business Logic Layer
 │   │   ├── AuthService.php
@@ -162,7 +163,7 @@ laravel_base_cursor/
 ├── Dockerfile            # PHP Dockerfile
 ├── Makefile              # Helper commands
 └── docs/                 # Documentation
-    ├── ARCHITECTURE.md   # Architecture guide
+    ├── API_FOUNDATION.md # API & architecture
     ├── AUTHENTICATION.md # Authentication guide
     └── QUICK_START.md    # Quick start guide
 ```
@@ -176,7 +177,7 @@ Dự án sử dụng **Repository-Service-Controller Pattern** để tách biệ
 - **Controller Layer**: Xử lý HTTP requests/responses (HTTP Layer)
 - **DTOs**: Transfer data type-safe giữa các layers
 
-Xem chi tiết trong file [ARCHITECTURE.md](docs/ARCHITECTURE.md)
+Xem chi tiết trong [API_FOUNDATION.md](docs/API_FOUNDATION.md) và [QUICK_START.md](docs/QUICK_START.md).
 
 ## 🗄️ Cấu hình Database
 
@@ -306,7 +307,7 @@ Hoặc sử dụng: `make cache-clear`
 
 Các tài liệu chi tiết của dự án được lưu trong thư mục [`docs/`](docs/):
 
-- [📐 ARCHITECTURE.md](docs/ARCHITECTURE.md) - Hướng dẫn về kiến trúc và Repository-Service-Controller Pattern
+- [📐 API_FOUNDATION.md](docs/API_FOUNDATION.md) - Nền tảng API và kiến trúc (versioning, response, resources)
 - [🔐 AUTHENTICATION.md](docs/AUTHENTICATION.md) - Hướng dẫn về Authentication & Authorization
 - [👤 USER_MODULE.md](docs/USER_MODULE.md) - Hướng dẫn về User Module (CRUD, Profile, Password)
 - [🔌 API_FOUNDATION.md](docs/API_FOUNDATION.md) - Hướng dẫn về API Foundation (Versioning, Response Format, Resources)
@@ -324,6 +325,7 @@ Các tài liệu chi tiết của dự án được lưu trong thư mục [`docs
 - [🚀 QUICK_START.md](docs/QUICK_START.md) - Hướng dẫn khởi động nhanh dự án
 - [✅ AUTH_CHECKLIST.md](docs/AUTH_CHECKLIST.md) - Checklist các tính năng Auth & Authorization
 - [📋 PROJECT_AUDIT.md](docs/PROJECT_AUDIT.md) - Báo cáo đánh giá và tối ưu dự án
+- [📋 DANH_GIA_PROJECT.md](docs/DANH_GIA_PROJECT.md) - Đánh giá toàn diện (điểm tốt/chưa tốt, đề xuất sửa)
 
 **Note:** File `.env.example` đã có sẵn trong root directory. Template chi tiết có thể được tìm thấy trong `docs/CONFIG_ENV.example`
 

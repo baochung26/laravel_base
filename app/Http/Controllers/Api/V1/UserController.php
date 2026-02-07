@@ -21,27 +21,23 @@ class UserController extends ApiController
     }
 
     /**
-     * Get all users.
+     * Get all users (always paginated).
+     * Query: per_page, page, search.
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->get('per_page', config('constants.app.default_per_page'));
+        $perPage = (int) $request->get('per_page', config('constants.app.default_per_page'));
+        $perPage = max(1, min($perPage, config('constants.app.max_per_page', 100)));
         $search = $request->get('search');
+        $columns = ['id', 'name', 'email', 'avatar', 'created_at'];
 
-        if ($search) {
-            $users = $this->userService->search($search, $perPage);
-            return $this->resourcePaginatedResponse(
-                UserResource::collection($users->items()),
-                $users,
-                'Users retrieved successfully'
-            );
-        }
+        $users = $search
+            ? $this->userService->search($search, $perPage)
+            : $this->userService->paginate($perPage, $columns);
 
-        // getAll() now automatically eager loads roles
-        $users = $this->userService->getAll(['id', 'name', 'email', 'avatar', 'created_at']);
-        
-        return $this->successResponse(
-            UserResource::collection($users),
+        return $this->resourcePaginatedResponse(
+            UserResource::collection($users->items()),
+            $users,
             'Users retrieved successfully'
         );
     }

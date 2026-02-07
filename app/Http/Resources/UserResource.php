@@ -16,7 +16,7 @@ class UserResource extends BaseResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'avatar' => $this->storageUrl($this->avatar),
+            'avatar' => $this->storageUrl($this->avatar, config('constants.uploads.avatar_disk')),
             'email_verified_at' => $this->iso($this->email_verified_at),
             'created_at' => $this->iso($this->created_at),
             'updated_at' => $this->iso($this->updated_at),

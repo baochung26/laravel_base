@@ -6,8 +6,6 @@ use App\Repositories\Contracts\RepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\UserRepository;
 use Illuminate\Support\ServiceProvider;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,10 +26,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register Spatie Permission package
-        if (! $this->app->runningInConsole()) {
-            $this->app->make(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
-        }
+        // Spatie Permission: cache is used by default. Clear only when roles/permissions
+        // change (e.g. in seeders or admin UI); do not clear on every request.
 
         // Register User Observer for cache invalidation
         \App\Models\User::observe(\App\Observers\UserObserver::class);
