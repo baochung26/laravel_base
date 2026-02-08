@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Repositories\Contracts\RepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\UserRepository;
+use App\View\Composers\DashboardSidebarComposer;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,5 +33,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Register User Observer for cache invalidation
         \App\Models\User::observe(\App\Observers\UserObserver::class);
+
+        View::composer('layouts.app', DashboardSidebarComposer::class);
     }
 }

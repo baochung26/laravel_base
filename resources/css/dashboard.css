@@ -1,3 +1,5 @@
+@import '_shared.css';
+
 html {
     font-size: 14px;
 }
@@ -36,6 +38,14 @@ html {
 .dash-body select optgroup {
     color: #0f172a;
     background: #ffffff;
+}
+
+:root {
+    --app-shared-line: var(--dash-line);
+    --app-shared-surface: var(--dash-surface);
+    --app-shared-text: var(--dash-text);
+    --app-shared-btn: #e5e7eb;
+    --app-shared-btn-text: #0f172a;
 }
 
 .dash-shell {
@@ -459,13 +469,13 @@ html {
     color: var(--dash-muted);
 }
 
-.dash-users-action {
+.dash-users-actions-dropdown .dash-users-action {
     border: 0;
     background: transparent;
     color: #dbeafe;
     cursor: pointer;
     min-width: 30px;
-    font-size: 18px !important;
+    font-size: 18px;
     line-height: 1;
 }
 
@@ -617,10 +627,10 @@ html[data-theme="light"] .dash-users-filters input:-webkit-autofill:active {
     margin-top: 14px;
 }
 
-.dash-users-empty {
-    text-align: center !important;
+.dash-users-table .dash-users-empty {
+    text-align: center;
     color: var(--dash-muted);
-    padding: 22px 10px !important;
+    padding: 22px 10px;
 }
 
 .dash-users-pagination {
@@ -694,89 +704,6 @@ html[data-theme="light"] .dash-users-filters input:-webkit-autofill:active {
     color: #0f172a;
     padding: 0 10px;
     cursor: pointer;
-}
-
-.app-swal-popup {
-    border-radius: 14px;
-    border: 1px solid var(--dash-line);
-    background: var(--dash-surface);
-    color: var(--dash-text);
-}
-
-.app-swal-confirm,
-.app-swal-cancel {
-    border: 0;
-    border-radius: 10px;
-    padding: 10px 18px;
-    font-weight: 700;
-}
-
-.app-swal-confirm {
-    background: #e5e7eb;
-    color: #0f172a;
-}
-
-.app-swal-cancel {
-    background: rgba(148, 163, 184, 0.2);
-    color: var(--dash-text);
-}
-
-.swal2-popup.swal2-toast.app-toast-popup {
-    border-radius: 12px;
-    border: 1px solid var(--dash-line) !important;
-    background: var(--dash-surface) !important;
-    color: var(--dash-text) !important;
-}
-
-.swal2-popup.swal2-toast.app-toast-popup .swal2-title,
-.swal2-popup.swal2-toast.app-toast-popup .swal2-html-container {
-    color: var(--dash-text) !important;
-}
-
-.app-loading-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 2000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(2, 8, 24, 0.45);
-    backdrop-filter: blur(2px);
-}
-
-.app-loading-overlay.is-active {
-    display: flex;
-}
-
-.app-loading-box {
-    min-width: 190px;
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 1px solid var(--dash-line);
-    background: var(--dash-surface);
-    color: var(--dash-text);
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.app-loading-spinner {
-    width: 18px;
-    height: 18px;
-    border-radius: 999px;
-    border: 2px solid rgba(148, 163, 184, 0.25);
-    border-top-color: #f1f5f9;
-    animation: app-loading-spin 0.8s linear infinite;
-}
-
-.app-loading-text {
-    font-weight: 600;
-}
-
-@keyframes app-loading-spin {
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 .panel {
@@ -953,51 +880,54 @@ html[data-theme="light"] .dash-users-filters input:-webkit-autofill:active {
     }
 }
 
-/* Dashboard typography scale */
-.dash-body,
-.dash-body p,
-.dash-body a,
-.dash-body button,
-.dash-body span,
-.dash-body li,
-.dash-body td,
-.dash-body th,
-.dash-body input,
-.dash-body select {
-    font-size: 14px !important;
+/* Dashboard typography scale - high specificity to avoid !important */
+.dash-body .dash-content,
+.dash-body .dash-content p,
+.dash-body .dash-content a,
+.dash-body .dash-content button,
+.dash-body .dash-content span,
+.dash-body .dash-content li,
+.dash-body .dash-content td,
+.dash-body .dash-content th,
+.dash-body .dash-content input,
+.dash-body .dash-content select,
+.dash-body .dash-sidebar,
+.dash-body .dash-sidebar a,
+.dash-body .dash-sidebar button {
+    font-size: 14px;
 }
 
-.dash-logo,
-.dash-topbar h1,
-.dash-title,
-.panel h2,
-.dash-users-panel-head h3 {
-    font-size: 24px !important;
+.dash-body .dash-logo,
+.dash-body .dash-topbar h1,
+.dash-body .dash-title,
+.dash-body .panel h2,
+.dash-body .dash-users-panel-head h3 {
+    font-size: 24px;
 }
 
-.dash-subtitle,
-.panel .panel-subtitle,
-.stat-change,
-.dash-users-panel-head p,
-.dash-users-stat-card span,
-.dash-user-meta span,
-.activity-main strong,
-.dash-users-user-cell small {
-    font-size: 14px !important;
+.dash-body .dash-subtitle,
+.dash-body .panel .panel-subtitle,
+.dash-body .stat-change,
+.dash-body .dash-users-panel-head p,
+.dash-body .dash-users-stat-card span,
+.dash-body .dash-user-meta span,
+.dash-body .activity-main strong,
+.dash-body .dash-users-user-cell small {
+    font-size: 14px;
 }
 
-/* Dashboard: normalize text weight (no bold) */
-.dash-body h1,
-.dash-body h2,
-.dash-body h3,
-.dash-body h4,
-.dash-body h5,
-.dash-body h6,
-.dash-body p,
-.dash-body a,
-.dash-body button,
-.dash-body span,
-.dash-body strong,
-.dash-body li {
-    font-weight: 400 !important;
+/* Dashboard: normalize text weight */
+.dash-body .dash-content h1,
+.dash-body .dash-content h2,
+.dash-body .dash-content h3,
+.dash-body .dash-content h4,
+.dash-body .dash-content h5,
+.dash-body .dash-content h6,
+.dash-body .dash-content p,
+.dash-body .dash-content a,
+.dash-body .dash-content button,
+.dash-body .dash-content span,
+.dash-body .dash-content strong,
+.dash-body .dash-content li {
+    font-weight: 400;
 }

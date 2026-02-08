@@ -14,7 +14,7 @@
   - `resources/css/dashboard.css`
 - JS:
   - `resources/js/app.js`
-  - `resources/js/pages/auth-login.js`
+  - `resources/js/pages/auth.js`
 - Build config:
   - `vite.config.js`
   - `package.json`

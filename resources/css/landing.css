@@ -1,4 +1,5 @@
 @import "bootstrap/dist/css/bootstrap.min.css";
+@import '_shared.css';
 
 html {
     font-size: 14px;
@@ -20,9 +21,19 @@ html[data-theme="dark"] {
     --landing-register-text: #0f172a;
     --landing-avatar-bg: #f8fafc;
     --landing-avatar-text: #0f172a;
+    --app-shared-line: var(--landing-line);
+    --app-shared-surface: var(--landing-bg);
+    --app-shared-text: var(--landing-heading);
+    --app-shared-btn: var(--landing-register-bg);
+    --app-shared-btn-text: var(--landing-register-text);
 }
 
 html[data-theme="light"] {
+    --app-shared-line: rgba(71, 85, 105, 0.22);
+    --app-shared-surface: #ffffff;
+    --app-shared-text: #0f172a;
+    --app-shared-btn: var(--landing-register-bg);
+    --app-shared-btn-text: var(--landing-register-text);
     --landing-bg: #edf3ff;
     --landing-bg-alt: #dfeafc;
     --landing-text: #273449;
@@ -478,100 +489,6 @@ html[data-theme="light"] .theme-icon-sun {
 
 .profile-input.is-invalid {
     border-color: #f87171;
-}
-
-.app-swal-popup {
-    border-radius: 14px;
-    border: 1px solid var(--landing-line);
-    background: var(--landing-bg);
-    color: var(--landing-heading);
-}
-
-.app-swal-confirm,
-.app-swal-cancel {
-    border: 0;
-    border-radius: 10px;
-    padding: 10px 18px;
-    font-weight: 700;
-}
-
-.app-swal-confirm {
-    background: var(--landing-register-bg);
-    color: var(--landing-register-text);
-}
-
-.app-swal-cancel {
-    background: rgba(148, 163, 184, 0.18);
-    color: var(--landing-heading);
-}
-
-.swal2-popup.swal2-toast.app-toast-popup {
-    border-radius: 12px;
-    border: 1px solid var(--landing-line) !important;
-    background: var(--landing-bg) !important;
-    color: var(--landing-heading) !important;
-}
-
-.swal2-popup.swal2-toast.app-toast-popup .swal2-title,
-.swal2-popup.swal2-toast.app-toast-popup .swal2-html-container {
-    color: var(--landing-heading) !important;
-}
-
-html[data-theme="light"] .swal2-popup.swal2-toast.app-toast-popup {
-    background: #ffffff;
-    border-color: rgba(71, 85, 105, 0.22) !important;
-    color: #0f172a !important;
-}
-
-html[data-theme="light"] .swal2-popup.swal2-toast.app-toast-popup .swal2-title,
-html[data-theme="light"] .swal2-popup.swal2-toast.app-toast-popup .swal2-html-container {
-    color: #0f172a !important;
-}
-
-.app-loading-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 2000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(2, 8, 24, 0.45);
-    backdrop-filter: blur(2px);
-}
-
-.app-loading-overlay.is-active {
-    display: flex;
-}
-
-.app-loading-box {
-    min-width: 190px;
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 1px solid var(--landing-line);
-    background: var(--landing-bg);
-    color: var(--landing-heading);
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.app-loading-spinner {
-    width: 18px;
-    height: 18px;
-    border-radius: 999px;
-    border: 2px solid rgba(148, 163, 184, 0.25);
-    border-top-color: var(--landing-heading);
-    animation: app-loading-spin 0.8s linear infinite;
-}
-
-.app-loading-text {
-    font-weight: 600;
-}
-
-@keyframes app-loading-spin {
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 @media (max-width: 991.98px) {

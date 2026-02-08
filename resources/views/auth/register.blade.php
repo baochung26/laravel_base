@@ -42,5 +42,5 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/pages/auth-register.js')
+    @vite('resources/js/pages/auth.js')
 @endpush

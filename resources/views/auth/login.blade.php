@@ -23,8 +23,8 @@
         </div>
 
         <div class="auth-row">
-            <label style="display:flex;align-items:center;gap:8px;color:#9db0c9;">
-                <input type="checkbox" name="remember" style="width:16px;height:16px;">
+            <label class="auth-remember-label">
+                <input type="checkbox" name="remember" class="auth-remember-checkbox">
                 Ghi nhớ đăng nhập
             </label>
             <a class="auth-forgot" href="{{ route('password.request') }}">Quên mật khẩu?</a>
@@ -70,8 +70,5 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/pages/auth-login.js')
-    @if (filled(config('services.google.client_id')))
-        <script src="https://accounts.google.com/gsi/client" async defer></script>
-    @endif
+    @vite('resources/js/pages/auth.js')
 @endpush

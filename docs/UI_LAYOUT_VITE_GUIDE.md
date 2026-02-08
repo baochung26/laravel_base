@@ -61,7 +61,7 @@ Mỗi layout dùng entry CSS riêng qua `@vite(...)` để tránh CSS bleed.
 
 - `resources/js/bootstrap.js` (axios global)
 - `resources/js/app.js` (bootstrap js bundle)
-- `resources/js/pages/auth-login.js` (logic submit/login Google cho trang login)
+- `resources/js/pages/auth.js` (logic submit cho login/register, Google Sign-In cho login)
 
 ### 3.3 Vite config
 
@@ -82,7 +82,7 @@ Page script riêng:
 
 ```blade
 @push('scripts')
-    @vite('resources/js/pages/auth-login.js')
+    @vite('resources/js/pages/auth.js')
 @endpush
 ```
 

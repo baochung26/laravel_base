@@ -14,63 +14,18 @@
     @if (session('status'))
         data-alert-type="success"
         data-alert-message="{{ session('status') }}"
+    @elseif (session('error'))
+        data-alert-type="error"
+        data-alert-message="{{ session('error') }}"
     @endif
 >
-@php
-    $sidebarMenu = config('dashboard.menu', []);
-    $sidebarFooter = config('dashboard.footer', []);
-    $currentUser = auth()->user();
-
-    $canViewMenuItem = function (array $item) use ($currentUser): bool {
-        if (! $currentUser) {
-            return false;
-        }
-
-        $roles = $item['roles'] ?? [];
-        $permissions = $item['permissions'] ?? [];
-
-        // If both are defined, allow when user matches role OR permission.
-        if (! empty($roles) && ! empty($permissions)) {
-            return $currentUser->hasAnyRole($roles) || $currentUser->hasAnyPermission($permissions);
-        }
-
-        if (! empty($roles)) {
-            return $currentUser->hasAnyRole($roles);
-        }
-
-        if (! empty($permissions)) {
-            return $currentUser->hasAnyPermission($permissions);
-        }
-
-        return true;
-    };
-
-    $itemUrl = function (array $item): string {
-        if (! empty($item['route']) && \Illuminate\Support\Facades\Route::has($item['route'])) {
-            return route($item['route']);
-        }
-
-        return (string) ($item['url'] ?? '#');
-    };
-
-    $isMenuItemActive = function (array $item): bool {
-        $patterns = $item['active'] ?? [];
-        if (empty($patterns) && ! empty($item['route'])) {
-            $patterns = [$item['route']];
-        }
-
-        return ! empty($patterns) ? request()->routeIs($patterns) : false;
-    };
-@endphp
-
 <div class="dash-shell">
     <aside class="dash-sidebar">
         <h2 class="dash-logo">Dashboard</h2>
 
         <nav class="dash-nav">
-            @foreach ($sidebarMenu as $item)
-                @continue(! $canViewMenuItem($item))
-                <a href="{{ $itemUrl($item) }}" class="dash-nav-item {{ $isMenuItemActive($item) ? 'active' : '' }}">
+            @foreach ($sidebarMenu ?? [] as $item)
+                <a href="{{ $item['url'] ?? '#' }}" class="dash-nav-item {{ ($item['is_active'] ?? false) ? 'active' : '' }}">
                     <x-dashboard.icon :name="$item['icon'] ?? 'circle'" class="dash-nav-icon" />
                     {{ $item['label'] ?? 'Menu' }}
                 </a>
@@ -78,9 +33,8 @@
         </nav>
 
         <div class="dash-sidebar-bottom">
-            @foreach ($sidebarFooter as $item)
-                @continue(! $canViewMenuItem($item))
-                <a href="{{ $itemUrl($item) }}" class="dash-ghost-link">
+            @foreach ($sidebarFooter ?? [] as $item)
+                <a href="{{ $item['url'] ?? '#' }}" class="dash-ghost-link">
                     <x-dashboard.icon :name="$item['icon'] ?? 'circle'" class="dash-nav-icon" />
                     {{ $item['label'] ?? 'Link' }}
                 </a>

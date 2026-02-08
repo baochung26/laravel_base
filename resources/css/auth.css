@@ -1,3 +1,5 @@
+@import '_shared.css';
+
 html {
     font-size: 14px;
 }
@@ -16,6 +18,11 @@ html {
     --danger-border: rgba(248, 113, 113, 0.45);
     --status-bg: rgba(21, 128, 61, 0.16);
     --status-border: rgba(134, 239, 172, 0.5);
+    --app-shared-line: var(--line);
+    --app-shared-surface: #020f29;
+    --app-shared-text: var(--text);
+    --app-shared-btn: var(--btn);
+    --app-shared-btn-text: var(--btn-text);
 }
 
 * {
@@ -145,6 +152,18 @@ html {
     margin: 2px 0 14px;
 }
 
+.auth-remember-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+}
+
+.auth-remember-checkbox {
+    width: 16px;
+    height: 16px;
+}
+
 .auth-forgot {
     color: #dbe8fb;
     text-decoration: none;
@@ -233,89 +252,6 @@ html {
 
 .g_id_signin > div {
     width: 100% !important;
-}
-
-.app-swal-popup {
-    border-radius: 14px;
-    border: 1px solid var(--line);
-    background: #020f29;
-    color: var(--text);
-}
-
-.app-swal-confirm,
-.app-swal-cancel {
-    border: 0;
-    border-radius: 10px;
-    padding: 10px 18px;
-    font-weight: 700;
-}
-
-.app-swal-confirm {
-    background: var(--btn);
-    color: var(--btn-text);
-}
-
-.app-swal-cancel {
-    background: rgba(148, 163, 184, 0.2);
-    color: var(--text);
-}
-
-.swal2-popup.swal2-toast.app-toast-popup {
-    border-radius: 12px;
-    border: 1px solid var(--line) !important;
-    background: #020f29 !important;
-    color: var(--text) !important;
-}
-
-.swal2-popup.swal2-toast.app-toast-popup .swal2-title,
-.swal2-popup.swal2-toast.app-toast-popup .swal2-html-container {
-    color: var(--text) !important;
-}
-
-.app-loading-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 2000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(2, 8, 24, 0.45);
-    backdrop-filter: blur(2px);
-}
-
-.app-loading-overlay.is-active {
-    display: flex;
-}
-
-.app-loading-box {
-    min-width: 190px;
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    background: #020f29;
-    color: var(--text);
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.app-loading-spinner {
-    width: 18px;
-    height: 18px;
-    border-radius: 999px;
-    border: 2px solid rgba(148, 163, 184, 0.25);
-    border-top-color: #f1f5f9;
-    animation: app-loading-spin 0.8s linear infinite;
-}
-
-.app-loading-text {
-    font-weight: 600;
-}
-
-@keyframes app-loading-spin {
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 @media (max-width: 640px) {

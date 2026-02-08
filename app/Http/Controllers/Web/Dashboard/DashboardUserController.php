@@ -15,8 +15,6 @@ class DashboardUserController extends Controller
 {
     public function create(Request $request): View
     {
-        $this->ensureAdmin($request);
-
         return view('dashboard.users-create', [
             'roles' => Role::query()->orderBy('name')->pluck('name'),
         ]);
@@ -24,8 +22,6 @@ class DashboardUserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $this->ensureAdmin($request);
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
@@ -48,8 +44,6 @@ class DashboardUserController extends Controller
 
     public function index(Request $request): View
     {
-        $this->ensureAdmin($request);
-
         $filters = [
             'q' => trim((string) $request->query('q', '')),
             'role' => trim((string) $request->query('role', '')),
@@ -93,29 +87,25 @@ class DashboardUserController extends Controller
 
         $users = $usersQuery->paginate(10)->withQueryString();
 
-        $totalUsers = User::query()->count();
-        $activeUsers = User::query()->whereNotNull('email_verified_at')->count();
-        $adminUsers = User::query()
-            ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('name', 'admin'))
+        $stats = [
+            'total' => User::query()->count(),
+            'active' => User::query()->whereNotNull('email_verified_at')->count(),
+        ];
+        $stats['inactive'] = max($stats['total'] - $stats['active'], 0);
+        $stats['admin'] = User::query()
+            ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
             ->count();
 
         return view('dashboard.users', [
             'users' => $users,
             'filters' => $filters,
             'roles' => Role::query()->orderBy('name')->pluck('name'),
-            'stats' => [
-                'total' => $totalUsers,
-                'active' => $activeUsers,
-                'inactive' => max($totalUsers - $activeUsers, 0),
-                'admin' => $adminUsers,
-            ],
+            'stats' => $stats,
         ]);
     }
 
     public function edit(Request $request, User $user): View
     {
-        $this->ensureAdmin($request);
-
         return view('dashboard.users-edit', [
             'targetUser' => $user->load('roles'),
             'roles' => Role::query()->orderBy('name')->pluck('name'),
@@ -124,8 +114,6 @@ class DashboardUserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        $this->ensureAdmin($request);
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
@@ -146,7 +134,7 @@ class DashboardUserController extends Controller
 
     public function updateStatus(Request $request, User $user): RedirectResponse
     {
-        $actor = $this->ensureAdmin($request);
+        $actor = $request->user();
 
         $validated = $request->validate([
             'status' => ['required', Rule::in(['active', 'inactive'])],
@@ -169,7 +157,7 @@ class DashboardUserController extends Controller
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
-        $actor = $this->ensureAdmin($request);
+        $actor = $request->user();
 
         if ($actor->id === $user->id) {
             return $this->redirectBackToUsersList($request)->withErrors([
@@ -180,18 +168,6 @@ class DashboardUserController extends Controller
         $user->delete();
 
         return $this->redirectBackToUsersList($request, 'Xóa người dùng thành công.');
-    }
-
-    protected function ensureAdmin(Request $request): User
-    {
-        $user = $request->user();
-
-        abort_unless(
-            $user && (method_exists($user, 'hasRole') ? $user->hasRole('admin') : false),
-            403
-        );
-
-        return $user;
     }
 
     protected function redirectBackToUsersList(Request $request, ?string $status = null): RedirectResponse
