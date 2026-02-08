@@ -282,7 +282,8 @@ const initLoadingEvents = () => {
         }
 
         const method = (form.getAttribute('method') || 'get').toLowerCase();
-        if (method === 'get') {
+        const shouldForceLoading = form.hasAttribute('data-loading');
+        if (method === 'get' && !shouldForceLoading) {
             return;
         }
 
@@ -303,6 +304,42 @@ const initLoadingEvents = () => {
     window.addEventListener('pageshow', hideLoading);
 };
 
+const initAutoSubmitForms = () => {
+    document.querySelectorAll('form[data-auto-submit]').forEach((form) => {
+        let timer = null;
+
+        const submitNow = () => {
+            if (timer) {
+                clearTimeout(timer);
+            }
+            form.requestSubmit();
+        };
+
+        form.querySelectorAll('select').forEach((field) => {
+            field.addEventListener('change', submitNow);
+        });
+
+        form.querySelectorAll('input[type="text"], input[type="search"], input[type="email"]').forEach((field) => {
+            field.addEventListener('input', () => {
+                if (timer) {
+                    clearTimeout(timer);
+                }
+
+                timer = setTimeout(() => {
+                    form.requestSubmit();
+                }, 450);
+            });
+
+            field.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    submitNow();
+                }
+            });
+        });
+    });
+};
+
 window.AppUI = {
     config: UI_CONFIG,
     toast: showToast,
@@ -318,6 +355,7 @@ const initUi = () => {
     initFormValidation();
     initConfirmActions();
     initLoadingEvents();
+    initAutoSubmitForms();
 };
 
 initUi();
