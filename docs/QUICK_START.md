@@ -52,10 +52,16 @@ docker-compose exec app php artisan db:seed --class=DemoSeeder
 
 | Dịch vụ | URL |
 |--------|-----|
-| **API / App** | http://localhost:8000 |
-| **phpMyAdmin** | http://localhost:8080 |
+| **API / App** | http://localhost:${WEB_PORT} (mặc định `8000`) |
+| **phpMyAdmin** | http://localhost:${PHPMYADMIN_PORT} (mặc định `8080`) |
 
-API base path: **`http://localhost:8000/api/v1`**.
+API base path: **`http://localhost:${WEB_PORT}/api/v1`**.
+
+Nếu đổi port trong `.env`, chạy lại:
+
+```bash
+docker-compose up -d --force-recreate
+```
 
 ---
 

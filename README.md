@@ -28,9 +28,6 @@ docker-compose up -d
 ```bash
 # Cài đặt Composer packages
 docker-compose exec app composer install
-
-# Cài đặt NPM packages (tùy chọn)
-docker-compose exec app npm install
 ```
 
 ### Bước 4: Cấu hình môi trường
@@ -59,8 +56,8 @@ docker-compose exec app php artisan db:seed --class=RolePermissionSeeder
 ### Bước 7: Truy cập ứng dụng
 
 Mở trình duyệt và truy cập:
-- **Application:** http://localhost:8000
-- **phpMyAdmin:** http://localhost:8080
+- **Application:** http://localhost:${WEB_PORT} (mặc định `8000`)
+- **phpMyAdmin:** http://localhost:${PHPMYADMIN_PORT} (mặc định `8080`)
 
 ## 🛠️ Các lệnh hữu ích
 
@@ -77,7 +74,6 @@ make shell         # Mở shell trong container app
 make db-shell      # Mở MySQL shell
 make artisan CMD="migrate"  # Chạy artisan command
 make composer CMD="install" # Chạy composer command
-make npm CMD="install"      # Chạy npm command
 make fresh         # Fresh migration với seeding
 make cache-clear   # Xóa tất cả cache
 ```
@@ -99,9 +95,6 @@ docker-compose exec app php artisan migrate
 
 # Chạy composer commands
 docker-compose exec app composer install
-
-# Chạy npm commands
-docker-compose exec app npm install
 
 # Truy cập shell trong container
 docker-compose exec app bash
@@ -147,11 +140,8 @@ laravel_base_cursor/
 │   └── seeders/          # Database seeders
 ├── public/               # Public assets
 ├── resources/
-│   ├── views/            # Blade templates
-│   ├── css/              # CSS files
-│   └── js/               # JavaScript files
+│   └── views/            # Email templates
 ├── routes/               # Route definitions
-│   ├── web.php           # Web routes
 │   ├── console.php       # Artisan commands
 │   └── api/v1/           # API v1 (prefix: /api/v1)
 │       └── routes.php    # Auth, users, files, health, etc.
@@ -237,10 +227,15 @@ FROM php:8.3-fpm
 
 ### Thay đổi port
 
-Chỉnh sửa `docker-compose.yml`:
-- Application port (8000): Thay đổi `"8000:80"` trong service `webserver`
-- phpMyAdmin port (8080): Thay đổi `"8080:80"` trong service `phpmyadmin`
-- MySQL port (3306): Thay đổi `"3306:3306"` trong service `db`
+Chỉnh sửa file `.env` (không cần sửa `docker-compose.yml`):
+- `WEB_PORT=8000` (port host cho web app)
+- `PHPMYADMIN_PORT=8080` (port host cho phpMyAdmin)
+- `DB_FORWARD_PORT=3306` (port host forward tới MySQL container)
+
+Sau khi đổi port, chạy lại:
+```bash
+docker-compose up -d --force-recreate
+```
 
 ### Thay đổi cấu hình PHP
 
@@ -312,6 +307,7 @@ Tài liệu chi tiết nằm trong [`docs/`](docs/). **Mục lục:** [docs/READ
 | Nhóm | Tài liệu chính |
 |------|----------------|
 | **Bắt đầu** | [QUICK_START.md](docs/QUICK_START.md) |
+| **Swagger / OpenAPI** | [SWAGGER_USAGE.md](docs/SWAGGER_USAGE.md) |
 | **API** | [API_FOUNDATION.md](docs/API_FOUNDATION.md), [API_RESPONSE_AND_ERRORS.md](docs/API_RESPONSE_AND_ERRORS.md), [API_VERSIONING_STRATEGY.md](docs/API_VERSIONING_STRATEGY.md) |
 | **Auth & User** | [AUTHENTICATION.md](docs/AUTHENTICATION.md), [AUTH_CHECKLIST.md](docs/AUTH_CHECKLIST.md), [USER_MODULE.md](docs/USER_MODULE.md) |
 | **Hạ tầng** | [CONFIG_ENVIRONMENT.md](docs/CONFIG_ENVIRONMENT.md), [HEALTH_CHECK.md](docs/HEALTH_CHECK.md), [REDIS_SETUP.md](docs/REDIS_SETUP.md), [QUEUE_SCHEDULER.md](docs/QUEUE_SCHEDULER.md), [CACHE_STRATEGY.md](docs/CACHE_STRATEGY.md) |
@@ -329,6 +325,8 @@ Dự án sử dụng API Foundation với các tính năng:
 - **Response Format:** Standardized success/error responses
 - **Pagination:** Standardized pagination format
 - **API Resources:** Transformers cho data formatting
+- **Swagger UI:** `GET /api/v1/docs`
+- **OpenAPI Spec:** `GET /api/v1/openapi.yaml`
 
 Xem chi tiết trong file [API_FOUNDATION.md](docs/API_FOUNDATION.md)
 

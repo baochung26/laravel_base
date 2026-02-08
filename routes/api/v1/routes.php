@@ -7,7 +7,6 @@ use App\Http\Controllers\Api\V1\PasswordController;
 use App\Http\Controllers\Api\V1\FileController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\RolePermissionController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +19,56 @@ use Illuminate\Support\Facades\Route;
 | prefix and "api" middleware group.
 |
 */
+
+Route::get('/openapi.yaml', function () {
+    $path = base_path('docs/openapi.yaml');
+
+    if (! file_exists($path)) {
+        abort(404, 'OpenAPI specification not found.');
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'application/x-yaml; charset=UTF-8',
+    ]);
+})->name('v1.openapi');
+
+Route::get('/docs', function () {
+    $specUrl = route('v1.openapi');
+
+    $html = <<<'HTML'
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Documentation</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <style>
+    html, body { margin: 0; padding: 0; }
+    body { background: #fafafa; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    window.addEventListener('load', function () {
+      window.SwaggerUIBundle({
+        url: __SPEC_URL__,
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        displayRequestDuration: true,
+        persistAuthorization: true,
+      });
+    });
+  </script>
+</body>
+</html>
+HTML;
+
+    return response(str_replace('__SPEC_URL__', json_encode($specUrl, JSON_UNESCAPED_SLASHES), $html))
+        ->header('Content-Type', 'text/html; charset=UTF-8');
+})->name('v1.docs');
 
 /*
 |--------------------------------------------------------------------------

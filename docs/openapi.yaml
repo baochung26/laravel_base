@@ -1,0 +1,1754 @@
+openapi: 3.0.3
+info:
+  title: Laravel Base API
+  version: 1.0.0
+  description: |
+    OpenAPI specification for Laravel backend (API v1).
+    All endpoints are prefixed with `/api/v1`.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+tags:
+  - name: Health
+  - name: Auth
+  - name: Password
+  - name: Profile
+  - name: Users
+  - name: Roles & Permissions
+  - name: Files
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Combined health check
+      responses:
+        '200':
+          description: OK or degraded (still HTTP 200)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /health/live:
+    get:
+      tags: [Health]
+      summary: Liveness probe
+      responses:
+        '200':
+          description: App process is alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthLiveResponse'
+  /health/ready:
+    get:
+      tags: [Health]
+      summary: Readiness probe
+      responses:
+        '200':
+          description: Dependencies are ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthReadyResponse'
+        '503':
+          description: Dependencies are unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterSuccessResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /login:
+    post:
+      tags: [Auth]
+      summary: Login by email/password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /login/google:
+    post:
+      tags: [Auth]
+      summary: Login/register with Google ID token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleLoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleLoginSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /logout:
+    post:
+      tags: [Auth]
+      summary: Logout current user (revoke user tokens)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh token pair
+      description: Requires `refresh_token` in Bearer token header.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Tokens refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /me:
+    get:
+      tags: [Auth]
+      summary: Get authenticated user context
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /password/forgot:
+    post:
+      tags: [Password]
+      summary: Send password reset email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: Reset link sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForgotPasswordSuccessResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /password/reset:
+    post:
+      tags: [Password]
+      summary: Reset password by token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPasswordSuccessResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /password/change:
+    post:
+      tags: [Password]
+      summary: Change current password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangePasswordSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /profile:
+    get:
+      tags: [Profile]
+      summary: Get own profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    put:
+      tags: [Profile]
+      summary: Update own profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /profile/avatar:
+    post:
+      tags: [Profile]
+      summary: Upload own avatar
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [avatar]
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Profile]
+      summary: Delete own avatar
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Avatar deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List users (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Search'
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersIndexSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      tags: [Users]
+      summary: Create user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StoreUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user detail
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: User detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      tags: [Users]
+      summary: Update user
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Users]
+      summary: Delete user
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDeletedSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /users/{id}/avatar:
+    post:
+      tags: [Users]
+      summary: Upload user avatar
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [avatar]
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Users]
+      summary: Delete user avatar
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Avatar deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /roles-permissions/roles:
+    get:
+      tags: [Roles & Permissions]
+      summary: List roles
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Roles list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RolesListSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /roles-permissions/permissions:
+    get:
+      tags: [Roles & Permissions]
+      summary: List permissions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Permissions list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionsListSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /roles-permissions/assign-role:
+    post:
+      tags: [Roles & Permissions]
+      summary: Assign role to user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRoleRequest'
+      responses:
+        '200':
+          description: Role assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleUserMutationSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /roles-permissions/remove-role:
+    post:
+      tags: [Roles & Permissions]
+      summary: Remove role from user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRoleRequest'
+      responses:
+        '200':
+          description: Role removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleUserMutationSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /roles-permissions/sync-roles:
+    post:
+      tags: [Roles & Permissions]
+      summary: Sync user roles
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncRolesRequest'
+      responses:
+        '200':
+          description: Roles synced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleUserMutationSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /roles-permissions/give-permission:
+    post:
+      tags: [Roles & Permissions]
+      summary: Assign permission to user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GivePermissionRequest'
+      responses:
+        '200':
+          description: Permission assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleUserMutationSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /roles-permissions/revoke-permission:
+    post:
+      tags: [Roles & Permissions]
+      summary: Revoke permission from user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GivePermissionRequest'
+      responses:
+        '200':
+          description: Permission revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleUserMutationSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /files/upload:
+    post:
+      tags: [Files]
+      summary: Upload single file
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadFileRequest'
+      responses:
+        '201':
+          description: File uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /files/upload-multiple:
+    post:
+      tags: [Files]
+      summary: Upload multiple files
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadMultipleFilesRequest'
+      responses:
+        '201':
+          description: Files uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadMultipleSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /files/download:
+    get:
+      tags: [Files]
+      summary: Download file
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Disk'
+        - $ref: '#/components/parameters/FilePath'
+      responses:
+        '200':
+          description: File binary stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /files:
+    delete:
+      tags: [Files]
+      summary: Delete file
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Disk'
+        - $ref: '#/components/parameters/FilePath'
+      responses:
+        '200':
+          description: File deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileDeleteSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /files/list:
+    get:
+      tags: [Files]
+      summary: List files in folder
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Disk'
+        - $ref: '#/components/parameters/Folder'
+        - $ref: '#/components/parameters/Recursive'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Files listed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileListSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /files/stats:
+    get:
+      tags: [Files]
+      summary: File statistics
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Disk'
+        - $ref: '#/components/parameters/Folder'
+        - $ref: '#/components/parameters/Recursive'
+      responses:
+        '200':
+          description: File statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStatsSuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum
+
+  parameters:
+    UserIdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    PerPage:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+    Search:
+      name: search
+      in: query
+      schema:
+        type: string
+    Disk:
+      name: disk
+      in: query
+      schema:
+        type: string
+        enum: [public, private]
+    FilePath:
+      name: path
+      in: query
+      required: true
+      schema:
+        type: string
+        maxLength: 1024
+    Folder:
+      name: folder
+      in: query
+      schema:
+        type: string
+        maxLength: 255
+    Recursive:
+      name: recursive
+      in: query
+      schema:
+        type: boolean
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
+
+  responses:
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ForbiddenError:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFoundError:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+  schemas:
+    ApiMeta:
+      type: object
+      properties:
+        request_id:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        current_page:
+          type: integer
+          nullable: true
+        per_page:
+          type: integer
+          nullable: true
+        total:
+          type: integer
+          nullable: true
+        last_page:
+          type: integer
+          nullable: true
+        from:
+          type: integer
+          nullable: true
+        to:
+          type: integer
+          nullable: true
+      additionalProperties: true
+    SuccessEnvelope:
+      type: object
+      required: [success, message, meta]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Success
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+        data:
+          nullable: true
+          oneOf:
+            - type: object
+            - type: array
+            - type: string
+            - type: number
+            - type: boolean
+        links:
+          type: object
+          additionalProperties:
+            type: string
+            nullable: true
+    ErrorEnvelope:
+      type: object
+      required: [success, message, meta]
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Error
+        meta:
+          $ref: '#/components/schemas/ApiMeta'
+        errors:
+          type: object
+          nullable: true
+          additionalProperties: true
+
+    ResponseMeta:
+      type: object
+      required: [request_id, timestamp]
+      properties:
+        request_id:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        status_code:
+          type: integer
+          nullable: true
+
+    PaginationMeta:
+      allOf:
+        - $ref: '#/components/schemas/ResponseMeta'
+        - type: object
+          required: [current_page, per_page, total, last_page]
+          properties:
+            current_page:
+              type: integer
+            per_page:
+              type: integer
+            total:
+              type: integer
+            last_page:
+              type: integer
+            from:
+              type: integer
+              nullable: true
+            to:
+              type: integer
+              nullable: true
+
+    PaginationLinks:
+      type: object
+      required: [first, last, prev, next]
+      properties:
+        first:
+          type: string
+          nullable: true
+        last:
+          type: string
+          nullable: true
+        prev:
+          type: string
+          nullable: true
+        next:
+          type: string
+          nullable: true
+
+    HealthCheckItem:
+      type: object
+      required: [ok, duration_ms]
+      properties:
+        ok:
+          type: boolean
+        message:
+          type: string
+          nullable: true
+        duration_ms:
+          type: integer
+
+    HealthChecks:
+      type: object
+      required: [db, redis]
+      properties:
+        db:
+          $ref: '#/components/schemas/HealthCheckItem'
+        redis:
+          $ref: '#/components/schemas/HealthCheckItem'
+
+    HealthResponseData:
+      type: object
+      required: [overall_status, timestamp, checks]
+      properties:
+        overall_status:
+          type: string
+          enum: [ok, degraded]
+        timestamp:
+          type: string
+          format: date-time
+        checks:
+          $ref: '#/components/schemas/HealthChecks'
+
+    HealthLiveResponseData:
+      type: object
+      required: [status, timestamp]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        timestamp:
+          type: string
+          format: date-time
+
+    HealthReadyResponseData:
+      type: object
+      required: [status, timestamp, checks]
+      properties:
+        status:
+          type: string
+          enum: [ready]
+        timestamp:
+          type: string
+          format: date-time
+        checks:
+          $ref: '#/components/schemas/HealthChecks'
+
+    AuthSuccessData:
+      type: object
+      required: [user, token, access_token, refresh_token, permissions, roles, login_type]
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+          description: Backward-compatible alias of access_token.
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            type: string
+        login_type:
+          type: string
+          enum: [password, google]
+
+    RefreshSuccessData:
+      type: object
+      required: [token, access_token, refresh_token]
+      properties:
+        token:
+          type: string
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+
+    MeSuccessData:
+      type: object
+      required: [user, permissions, roles]
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            type: string
+
+    RoleListData:
+      type: object
+      required: [roles]
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+
+    PermissionListData:
+      type: object
+      required: [permissions]
+      properties:
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+
+    RoleUserMutationData:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+
+    FileMetadata:
+      type: object
+      required: [disk, path, name, directory, size_bytes, size_human, mime_type, last_modified]
+      properties:
+        disk:
+          type: string
+        path:
+          type: string
+        name:
+          type: string
+        directory:
+          type: string
+        size_bytes:
+          type: integer
+        size_human:
+          type: string
+        mime_type:
+          type: string
+          nullable: true
+        last_modified:
+          type: string
+          format: date-time
+        url:
+          type: string
+          nullable: true
+
+    FileListData:
+      type: object
+      required: [count, files]
+      properties:
+        count:
+          type: integer
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileMetadata'
+
+    FileStatsData:
+      type: object
+      required: [disk, folder, total_files, total_size_bytes, total_size_human]
+      properties:
+        disk:
+          type: string
+        folder:
+          type: string
+        total_files:
+          type: integer
+        total_size_bytes:
+          type: integer
+        total_size_human:
+          type: string
+
+    SuccessNoDataResponse:
+      type: object
+      required: [success, message, meta]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    HealthResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: OK
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/HealthResponseData'
+
+    HealthLiveResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: OK
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/HealthLiveResponseData'
+
+    HealthReadyResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: OK
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/HealthReadyResponseData'
+
+    RegisterSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: User registered successfully
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/AuthSuccessData'
+
+    LoginSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Login successful
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/AuthSuccessData'
+
+    GoogleLoginSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Google login successful
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/AuthSuccessData'
+
+    LogoutSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessNoDataResponse'
+        - type: object
+          properties:
+            message:
+              type: string
+              example: Logged out successfully
+
+    RefreshSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Token refreshed successfully
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/RefreshSuccessData'
+
+    MeSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Success
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/MeSuccessData'
+
+    ForgotPasswordSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessNoDataResponse'
+        - type: object
+          properties:
+            message:
+              type: string
+              example: Password reset link sent to your email.
+
+    ResetPasswordSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessNoDataResponse'
+        - type: object
+          properties:
+            message:
+              type: string
+              example: Password reset successfully. You can now login with your new password.
+
+    ChangePasswordSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessNoDataResponse'
+        - type: object
+          properties:
+            message:
+              type: string
+              example: Password changed successfully
+
+    ProfileSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/User'
+
+    UsersIndexSuccessResponse:
+      type: object
+      required: [success, message, meta, data, links]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Users retrieved successfully
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
+
+    UserSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/User'
+
+    UserDeletedSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessNoDataResponse'
+        - type: object
+          properties:
+            message:
+              type: string
+              example: User deleted successfully
+
+    RolesListSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Roles retrieved successfully
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/RoleListData'
+
+    PermissionsListSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Permissions retrieved successfully
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/PermissionListData'
+
+    RoleUserMutationSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/RoleUserMutationData'
+
+    FileUploadSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: File uploaded successfully
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/FileMetadata'
+
+    FileUploadMultipleSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Files uploaded successfully
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/FileListData'
+
+    FileDeleteSuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessNoDataResponse'
+        - type: object
+          properties:
+            message:
+              type: string
+              example: File deleted successfully
+
+    FileListSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Files retrieved successfully
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/FileListData'
+
+    FileStatsSuccessResponse:
+      type: object
+      required: [success, message, meta, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: File statistics retrieved successfully
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/FileStatsData'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        avatar:
+          type: string
+          nullable: true
+        email_verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        roles:
+          type: array
+          items:
+            type: string
+        permissions:
+          type: array
+          items:
+            type: string
+
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        guard_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        permissions:
+          type: array
+          items:
+            type: string
+
+    Permission:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        guard_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    RegisterRequest:
+      type: object
+      required: [name, email, password, password_confirmation]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          format: password
+        password_confirmation:
+          type: string
+          format: password
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    GoogleLoginRequest:
+      type: object
+      required: [id_token]
+      properties:
+        id_token:
+          type: string
+          maxLength: 4096
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    ResetPasswordRequest:
+      type: object
+      required: [email, token, password, password_confirmation]
+      properties:
+        email:
+          type: string
+          format: email
+        token:
+          type: string
+        password:
+          type: string
+          format: password
+        password_confirmation:
+          type: string
+          format: password
+    ChangePasswordRequest:
+      type: object
+      required: [current_password, password, password_confirmation]
+      properties:
+        current_password:
+          type: string
+          format: password
+        password:
+          type: string
+          format: password
+        password_confirmation:
+          type: string
+          format: password
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        avatar:
+          type: string
+          format: binary
+    StoreUserRequest:
+      type: object
+      required: [name, email, password, password_confirmation]
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          format: password
+        password_confirmation:
+          type: string
+          format: password
+        avatar:
+          type: string
+          format: binary
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        avatar:
+          type: string
+          format: binary
+    AssignRoleRequest:
+      type: object
+      required: [user_id, role]
+      properties:
+        user_id:
+          type: integer
+        role:
+          type: string
+    SyncRolesRequest:
+      type: object
+      required: [user_id, roles]
+      properties:
+        user_id:
+          type: integer
+        roles:
+          type: array
+          items:
+            type: string
+    GivePermissionRequest:
+      type: object
+      required: [user_id, permission]
+      properties:
+        user_id:
+          type: integer
+        permission:
+          type: string
+    UploadFileRequest:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+        disk:
+          type: string
+          enum: [public, private]
+        folder:
+          type: string
+          maxLength: 255
+    UploadMultipleFilesRequest:
+      type: object
+      required: [files]
+      properties:
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+        disk:
+          type: string
+          enum: [public, private]
+        folder:
+          type: string
+          maxLength: 255

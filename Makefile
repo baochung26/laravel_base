@@ -1,4 +1,4 @@
-.PHONY: help install up down restart logs shell composer npm artisan queue-logs scheduler-logs workers-restart ps
+.PHONY: help install up down restart logs shell composer artisan queue-logs scheduler-logs workers-restart ps
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -8,7 +8,6 @@ help: ## Show this help message
 
 install: ## Install project dependencies
 	docker-compose exec app composer install
-	docker-compose exec app npm install
 
 up: ## Start Docker containers
 	docker-compose up -d
@@ -30,9 +29,6 @@ shell: ## Open shell in app container
 
 composer: ## Run composer command (usage: make composer CMD="install package")
 	docker-compose exec app composer $(CMD)
-
-npm: ## Run npm command (usage: make npm CMD="install")
-	docker-compose exec app npm $(CMD)
 
 artisan: ## Run artisan command (usage: make artisan CMD="migrate")
 	docker-compose exec app php artisan $(CMD)
