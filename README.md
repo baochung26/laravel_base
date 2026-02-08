@@ -23,6 +23,8 @@ cd laravel_base_cursor
 docker-compose up -d
 ```
 
+Lệnh trên sẽ khởi động luôn service `node` chạy Vite dev server tại `http://localhost:5173`.
+
 ### Bước 3: Cài đặt dependencies
 
 ```bash
@@ -57,6 +59,7 @@ docker-compose exec app php artisan db:seed --class=RolePermissionSeeder
 
 Mở trình duyệt và truy cập:
 - **Application:** http://localhost:${WEB_PORT} (mặc định `8000`)
+- **Vite Dev Server:** http://localhost:${VITE_PORT} (mặc định `5173`)
 - **phpMyAdmin:** http://localhost:${PHPMYADMIN_PORT} (mặc định `8080`)
 
 ## 🛠️ Các lệnh hữu ích
@@ -76,6 +79,10 @@ make artisan CMD="migrate"  # Chạy artisan command
 make composer CMD="install" # Chạy composer command
 make fresh         # Fresh migration với seeding
 make cache-clear   # Xóa tất cả cache
+make npm-install   # Cài dependencies frontend (Vite)
+make npm-build     # Build assets frontend
+make npm-dev       # Chạy Vite dev server (port 5173)
+make up-build      # Build frontend trước rồi start backend containers
 ```
 
 ### Hoặc sử dụng Docker Compose trực tiếp

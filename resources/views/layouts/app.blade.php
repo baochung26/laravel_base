@@ -1,86 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Laravel') }}</title>
-    <style>
-        :root {
-            --bg: #f8fafc;
-            --text: #0f172a;
-            --muted: #475569;
-            --primary: #0f766e;
-            --line: #e2e8f0;
-            --white: #ffffff;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(180deg, #eff6ff 0, #f8fafc 120px);
-            color: var(--text);
-        }
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 24px;
-            border-bottom: 1px solid var(--line);
-            background: var(--white);
-        }
-        .brand { font-weight: 700; text-decoration: none; color: var(--text); }
-        .nav-links { display: flex; align-items: center; gap: 14px; }
-        .nav-links a { color: var(--primary); text-decoration: none; font-weight: 600; }
-        .logout-btn {
-            border: 1px solid var(--line);
-            background: #fff;
-            border-radius: 8px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .container {
-            max-width: 1100px;
-            margin: 28px auto;
-            padding: 0 20px;
-        }
-        .panel {
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            background: var(--white);
-            padding: 24px;
-            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
-        }
-        .muted { color: var(--muted); }
-        .status {
-            margin-bottom: 14px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid #bbf7d0;
-            background: #f0fdf4;
-            color: #166534;
-            font-size: 0.9rem;
-        }
-    </style>
+    <title>@yield('title', config('app.name', 'Laravel').' Dashboard')</title>
+    @vite(['resources/css/dashboard.css', 'resources/js/app.js'])
 </head>
-<body>
-<nav class="nav">
-    <a class="brand" href="{{ route('dashboard') }}">{{ config('app.name', 'Laravel') }}</a>
-    <div class="nav-links">
-        <span class="muted">{{ auth()->user()->name ?? '' }}</span>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="logout-btn">Logout</button>
-        </form>
-    </div>
-</nav>
-<main class="container">
-    @if (session('status'))
-        <div class="status">{{ session('status') }}</div>
-    @endif
+<body class="dash-body">
+@php
+    $sidebarMenu = config('dashboard.menu', []);
+    $sidebarFooter = config('dashboard.footer', []);
+    $currentUser = auth()->user();
 
-    @yield('content')
-</main>
+    $canViewMenuItem = function (array $item) use ($currentUser): bool {
+        if (! $currentUser) {
+            return false;
+        }
+
+        $roles = $item['roles'] ?? [];
+        $permissions = $item['permissions'] ?? [];
+
+        // If both are defined, allow when user matches role OR permission.
+        if (! empty($roles) && ! empty($permissions)) {
+            return $currentUser->hasAnyRole($roles) || $currentUser->hasAnyPermission($permissions);
+        }
+
+        if (! empty($roles)) {
+            return $currentUser->hasAnyRole($roles);
+        }
+
+        if (! empty($permissions)) {
+            return $currentUser->hasAnyPermission($permissions);
+        }
+
+        return true;
+    };
+
+    $itemUrl = function (array $item): string {
+        if (! empty($item['route']) && \Illuminate\Support\Facades\Route::has($item['route'])) {
+            return route($item['route']);
+        }
+
+        return (string) ($item['url'] ?? '#');
+    };
+
+    $isMenuItemActive = function (array $item): bool {
+        $patterns = $item['active'] ?? [];
+        if (empty($patterns) && ! empty($item['route'])) {
+            $patterns = [$item['route']];
+        }
+
+        return ! empty($patterns) ? request()->routeIs($patterns) : false;
+    };
+@endphp
+
+<div class="dash-shell">
+    <aside class="dash-sidebar">
+        <h2 class="dash-logo">Dashboard</h2>
+
+        <nav class="dash-nav">
+            @foreach ($sidebarMenu as $item)
+                @continue(! $canViewMenuItem($item))
+                <a href="{{ $itemUrl($item) }}" class="dash-nav-item {{ $isMenuItemActive($item) ? 'active' : '' }}">
+                    <x-dashboard.icon :name="$item['icon'] ?? 'circle'" class="dash-nav-icon" />
+                    {{ $item['label'] ?? 'Menu' }}
+                </a>
+            @endforeach
+        </nav>
+
+        <div class="dash-sidebar-bottom">
+            @foreach ($sidebarFooter as $item)
+                @continue(! $canViewMenuItem($item))
+                <a href="{{ $itemUrl($item) }}" class="dash-ghost-link">
+                    <x-dashboard.icon :name="$item['icon'] ?? 'circle'" class="dash-nav-icon" />
+                    {{ $item['label'] ?? 'Link' }}
+                </a>
+            @endforeach
+
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="dash-logout-btn">
+                    <x-dashboard.icon name="logout" class="dash-nav-icon" />
+                    Đăng xuất
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <section class="dash-main">
+        <header class="dash-topbar">
+            <h1>@yield('page_title', 'Tổng quan')</h1>
+            <div class="dash-topbar-right">
+                <a href="{{ route('welcome') }}" class="dash-home-link">← Về trang chủ</a>
+                <div class="dash-user">
+                    <div class="dash-avatar">{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</div>
+                    <div class="dash-user-meta">
+                        <strong>{{ auth()->user()->name ?? 'User' }}</strong>
+                        <span>{{ auth()->user()->email ?? '' }}</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            @if (session('status'))
+                <div class="dash-status">{{ session('status') }}</div>
+            @endif
+            @yield('content')
+        </main>
+    </section>
+</div>
+@stack('scripts')
 </body>
 </html>

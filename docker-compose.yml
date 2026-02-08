@@ -1,5 +1,41 @@
 
 services:
+  # Frontend Dev Server (Vite)
+  node:
+    image: node:20-alpine
+    container_name: laravel_node
+    restart: unless-stopped
+    working_dir: /var/www
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./:/var/www
+      - node_modules:/var/www/node_modules
+    command: >
+      sh -lc "if [ ! -d node_modules ] || [ -z \"$(ls -A node_modules 2>/dev/null)\" ]; then npm install; fi
+      && npm run dev -- --host 0.0.0.0 --port ${VITE_PORT:-5173}"
+    networks:
+      - laravel
+
+  # Frontend Build Service (for deploy/start flow)
+  node_build:
+    image: node:20-alpine
+    container_name: laravel_node_build
+    restart: "no"
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - node_modules:/var/www/node_modules
+    command: >
+      sh -lc "if [ ! -d node_modules ] || [ -z \"$(ls -A node_modules 2>/dev/null)\" ]; then npm install; fi
+      && npm run build"
+    networks:
+      - laravel
+    profiles:
+      - build
+
   # PHP Laravel Application
   app:
     build:
@@ -12,6 +48,7 @@ services:
     volumes:
       - ./:/var/www
       - vendor:/var/www/vendor
+      - bootstrap_cache:/var/www/bootstrap/cache
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
       - laravel
@@ -30,6 +67,7 @@ services:
     volumes:
       - ./:/var/www
       - vendor:/var/www/vendor
+      - bootstrap_cache:/var/www/bootstrap/cache
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
       - laravel
@@ -50,6 +88,7 @@ services:
     volumes:
       - ./:/var/www
       - vendor:/var/www/vendor
+      - bootstrap_cache:/var/www/bootstrap/cache
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
       - laravel
@@ -137,4 +176,8 @@ volumes:
   redisdata:
     driver: local
   vendor:
+    driver: local
+  node_modules:
+    driver: local
+  bootstrap_cache:
     driver: local

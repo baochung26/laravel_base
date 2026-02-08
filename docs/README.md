@@ -19,6 +19,7 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 | Database, migrations, queries | [DATABASE_CONVENTIONS.md](DATABASE_CONVENTIONS.md), [QUERY_OPTIMIZATION.md](QUERY_OPTIMIZATION.md) |
 | Files, storage, S3 | [FILE_STORAGE.md](FILE_STORAGE.md) |
 | Logging, exceptions | [LOGGING.md](LOGGING.md), [API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md) |
+| Web template/layout | [WEB_TEMPLATE_STRUCTURE.md](WEB_TEMPLATE_STRUCTURE.md), [UI_LAYOUT_VITE_GUIDE.md](UI_LAYOUT_VITE_GUIDE.md) |
 
 ---
 
@@ -60,6 +61,11 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 - **[LOGGING.md](LOGGING.md)** – JSON logs, request ID, slow queries.
 - **[QUEUE_SCHEDULER.md](QUEUE_SCHEDULER.md)** – Queues, jobs, scheduler.
 - **[SECURITY.md](SECURITY.md)** – Headers, CORS, best practices.
+
+### Web UI
+
+- **[WEB_TEMPLATE_STRUCTURE.md](WEB_TEMPLATE_STRUCTURE.md)** – Cấu trúc layout/partials và cách quản lý CSS cho landing page.
+- **[UI_LAYOUT_VITE_GUIDE.md](UI_LAYOUT_VITE_GUIDE.md)** – Hướng dẫn chi tiết UI layout + Vite + Docker workflow.
 
 ---
 
