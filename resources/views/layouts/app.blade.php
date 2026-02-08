@@ -5,9 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name', 'Laravel').' Dashboard')</title>
+    <script>window.AppUIConfig = @json(config('ui.web', []));</script>
     @vite(['resources/css/dashboard.css', 'resources/js/app.js'])
 </head>
-<body class="dash-body">
+<body
+    class="dash-body"
+    @if (session('status'))
+        data-alert-type="success"
+        data-alert-message="{{ session('status') }}"
+    @elseif ($errors->any())
+        data-alert-type="error"
+        data-alert-message="{{ $errors->first() }}"
+    @endif
+>
 @php
     $sidebarMenu = config('dashboard.menu', []);
     $sidebarFooter = config('dashboard.footer', []);
@@ -78,7 +88,13 @@
                 </a>
             @endforeach
 
-            <form method="POST" action="{{ route('logout') }}">
+            <form
+                method="POST"
+                action="{{ route('logout') }}"
+                data-confirm
+                data-confirm-title="Đăng xuất"
+                data-confirm-message="Bạn có chắc chắn muốn đăng xuất?"
+            >
                 @csrf
                 <button type="submit" class="dash-logout-btn">
                     <x-dashboard.icon name="logout" class="dash-nav-icon" />
@@ -103,12 +119,7 @@
             </div>
         </header>
 
-        <main class="dash-content">
-            @if (session('status'))
-                <div class="dash-status">{{ session('status') }}</div>
-            @endif
-            @yield('content')
-        </main>
+        <main class="dash-content">@yield('content')</main>
     </section>
 </div>
 @stack('scripts')

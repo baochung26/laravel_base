@@ -37,6 +37,7 @@ export default defineConfig(({ mode }) => {
                     'resources/css/dashboard.css',
                     'resources/js/app.js',
                     'resources/js/pages/auth-login.js',
+                    'resources/js/pages/auth-register.js',
                 ],
                 refresh: true,
             }),

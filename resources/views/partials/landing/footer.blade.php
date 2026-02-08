@@ -1,29 +1,47 @@
 <footer id="footer" class="landing-footer">
     <div class="container landing-container py-5">
-        <div class="row g-4 pb-4 border-bottom border-light border-opacity-10">
-            <div class="col-12 col-lg-4">
-                <h5 class="text-white fw-semibold mb-3">{{ config('app.name', 'NextApp') }}</h5>
-                <p class="mb-0 text-secondary">Ứng dụng Laravel hiện đại với authentication đầy đủ và cấu trúc API chuẩn production.</p>
+        <div class="row landing-footer-grid g-4 pb-4 border-bottom border-light border-opacity-10">
+            <div class="col-12 col-md-6 col-xl-3">
+                <h5 class="landing-footer-title">{{ config('app.name', 'NextApp') }}</h5>
+                <p class="landing-footer-about mb-0">Ứng dụng Laravel hiện đại với authentication đầy đủ và cấu trúc API chuẩn production.</p>
             </div>
-            <div class="col-6 col-lg-2">
-                <h6 class="text-white mb-3">Liên kết nhanh</h6>
-                <ul class="list-unstyled m-0 d-grid gap-2">
-                    <li><a href="#top">Trang chủ</a></li>
-                    <li><a href="#gioi-thieu">Giới thiệu</a></li>
-                    <li><a href="#tinh-nang">Tính năng</a></li>
+            <div class="col-12 col-md-6 col-xl-3">
+                <h6 class="landing-footer-heading">Liên kết nhanh</h6>
+                <ul class="list-unstyled m-0 d-grid gap-2 landing-footer-links">
+                    <li><a href="{{ route('welcome') }}#top">Trang chủ</a></li>
+                    <li><a href="{{ route('welcome') }}#gioi-thieu">Giới thiệu</a></li>
+                    <li><a href="{{ route('welcome') }}#tinh-nang">Tính năng</a></li>
                 </ul>
             </div>
-            <div class="col-6 col-lg-3">
-                <h6 class="text-white mb-3">Tài khoản</h6>
-                <ul class="list-unstyled m-0 d-grid gap-2">
-                    <li><a href="{{ route('login') }}">Đăng nhập</a></li>
-                    <li><a href="{{ route('register') }}">Đăng ký</a></li>
-                    <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
+            <div class="col-12 col-md-6 col-xl-3">
+                <h6 class="landing-footer-heading">Tài khoản</h6>
+                <ul class="list-unstyled m-0 d-grid gap-2 landing-footer-links">
+                    @auth
+                        <li><a href="{{ route('profile.show') }}">Hồ sơ</a></li>
+                        @if (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('admin'))
+                            <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                        @endif
+                        <li>
+                            <form
+                                action="{{ route('logout') }}"
+                                method="POST"
+                                data-confirm
+                                data-confirm-title="Đăng xuất"
+                                data-confirm-message="Bạn có chắc chắn muốn đăng xuất?"
+                            >
+                                @csrf
+                                <button class="landing-footer-link-btn" type="submit">Đăng xuất</button>
+                            </form>
+                        </li>
+                    @else
+                        <li><a href="{{ route('login') }}">Đăng nhập</a></li>
+                        <li><a href="{{ route('register') }}">Đăng ký</a></li>
+                    @endauth
                 </ul>
             </div>
-            <div class="col-12 col-lg-3">
-                <h6 class="text-white mb-3">Tài nguyên</h6>
-                <ul class="list-unstyled m-0 d-grid gap-2">
+            <div class="col-12 col-md-6 col-xl-3">
+                <h6 class="landing-footer-heading">Tài nguyên</h6>
+                <ul class="list-unstyled m-0 d-grid gap-2 landing-footer-links">
                     <li><a href="{{ url('/api/v1/docs') }}">Swagger Docs</a></li>
                     <li><a href="{{ url('/api/v1/openapi.yaml') }}">OpenAPI YAML</a></li>
                     <li><a href="{{ url('/up') }}">Health Check</a></li>

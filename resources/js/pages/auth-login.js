@@ -2,7 +2,11 @@ const form = document.getElementById('login-form');
 const submitBtn = document.getElementById('submit-btn');
 
 if (form && submitBtn) {
-    form.addEventListener('submit', () => {
+    form.addEventListener('submit', (event) => {
+        if (event.defaultPrevented) {
+            return;
+        }
+
         submitBtn.disabled = true;
         submitBtn.textContent = submitBtn.dataset.loadingText || 'Loading...';
     });

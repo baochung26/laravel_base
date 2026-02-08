@@ -36,7 +36,9 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()
+            ->intended(route('dashboard', absolute: false))
+            ->with('status', 'Đăng nhập thành công.');
     }
 
     public function google(GoogleLoginRequest $request): RedirectResponse
@@ -92,7 +94,9 @@ class AuthenticatedSessionController extends Controller
             Auth::guard('web')->login($user);
             $request->session()->regenerate();
 
-            return redirect()->intended(route('dashboard', absolute: false));
+            return redirect()
+                ->intended(route('dashboard', absolute: false))
+                ->with('status', 'Đăng nhập Google thành công.');
         } catch (ValidationException $exception) {
             throw $exception;
         } catch (UnauthorizedException $exception) {
@@ -115,6 +119,6 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect()->route('login')->with('status', 'Đăng xuất thành công.');
     }
 }

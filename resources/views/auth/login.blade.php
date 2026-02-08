@@ -9,17 +9,17 @@
     <h2 class="auth-title">Đăng nhập</h2>
     <p class="auth-subtitle">Nhập thông tin của bạn để đăng nhập vào tài khoản.</p>
 
-    <form method="POST" action="{{ route('login') }}" id="login-form">
+    <form method="POST" action="{{ route('login') }}" id="login-form" data-validate novalidate>
         @csrf
 
         <div class="field">
             <label for="email">Email</label>
-            <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="admin@example.com">
+            <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="admin@example.com" data-label="Email">
         </div>
 
         <div class="field">
             <label for="password">Mật khẩu</label>
-            <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+            <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••" data-label="Mật khẩu" data-min-length="8">
         </div>
 
         <div class="auth-row">
@@ -52,7 +52,7 @@
                  data-width="100%">
             </div>
 
-            <form id="google-login-form" method="POST" action="{{ route('login.google') }}" style="display:none;">
+            <form id="google-login-form" method="POST" action="{{ route('login.google') }}" style="display:none;" novalidate>
                 @csrf
                 <input type="hidden" name="id_token" id="google-id-token">
             </form>
