@@ -27,9 +27,9 @@
                 <div class="col-12 col-lg-4">
                     <article class="profile-card profile-summary-card">
                         <div class="profile-avatar-wrap">
-                            @if ($user->avatar)
+                            @if ($user->avatar_url)
                                 <img
-                                    src="{{ Storage::disk('public')->url($user->avatar) }}"
+                                    src="{{ $user->avatar_url }}"
                                     alt="Avatar {{ $user->name }}"
                                     class="profile-avatar-image"
                                 >

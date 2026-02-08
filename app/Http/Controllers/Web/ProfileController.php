@@ -5,12 +5,17 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\Profile\UpdatePasswordRequest;
 use App\Http\Requests\Web\Profile\UpdateProfileRequest;
+use App\Services\Storage\StorageService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        protected StorageService $storageService
+    ) {
+    }
+
     public function show(): View
     {
         $user = auth()->user();
@@ -31,12 +36,13 @@ class ProfileController extends Controller
         ];
 
         if ($request->hasFile('avatar')) {
-            $path = $request->file('avatar')->store('avatars', 'public');
+            $disk = (string) config('constants.uploads.avatar_disk', 'public');
+            $path = $this->storageService->storeAvatar($request->file('avatar'), (int) $user->id, $disk);
             $oldAvatar = $user->avatar;
 
             $updateData['avatar'] = $path;
-            if ($oldAvatar && Storage::disk('public')->exists($oldAvatar)) {
-                Storage::disk('public')->delete($oldAvatar);
+            if (is_string($oldAvatar) && $oldAvatar !== '') {
+                $this->storageService->delete($oldAvatar, $disk);
             }
         }
 

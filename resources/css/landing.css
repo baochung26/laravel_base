@@ -209,6 +209,11 @@ html[data-theme="light"] {
     line-height: 1;
 }
 
+.landing-user-avatar-image {
+    object-fit: cover;
+    display: inline-block;
+}
+
 .landing-user-meta {
     display: inline-flex;
     flex-direction: column;

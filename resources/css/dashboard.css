@@ -65,8 +65,32 @@ html {
     margin: 0;
     padding: 26px 24px 20px;
     border-bottom: 1px solid var(--dash-line);
-    font-size: 2rem;
-    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #eef4ff;
+}
+
+.dash-logo:hover,
+.dash-logo:focus {
+    color: #ffffff;
+}
+
+.dash-logo-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    background: #e5e7eb;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.dash-logo-text {
+    font-size: 24px;
     letter-spacing: -0.02em;
 }
 
@@ -151,6 +175,42 @@ html {
     background: rgba(2, 12, 30, 0.95);
 }
 
+.dash-topbar-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+}
+
+.dash-topbar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #eef4ff;
+}
+
+.dash-topbar-brand:hover,
+.dash-topbar-brand:focus {
+    color: #ffffff;
+}
+
+.dash-topbar-brand-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    background: #e5e7eb;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.dash-topbar-brand-text {
+    font-size: 18px;
+}
+
 .dash-topbar h1 {
     margin: 0;
     font-size: 2.7rem;
@@ -184,6 +244,11 @@ html {
     font-weight: 800;
     display: grid;
     place-items: center;
+}
+
+.dash-avatar-image {
+    object-fit: cover;
+    display: inline-block;
 }
 
 .dash-user-meta {

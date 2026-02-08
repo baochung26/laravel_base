@@ -15,4 +15,7 @@ mkdir -p bootstrap/cache \
     storage/logs
 chmod -R 777 bootstrap/cache storage || true
 
+# Ensure public storage symlink exists for uploaded files (avatars, etc.)
+php artisan storage:link --no-interaction >/dev/null 2>&1 || true
+
 exec "$@"

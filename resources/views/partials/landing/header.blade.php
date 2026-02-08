@@ -67,7 +67,15 @@
                             data-bs-auto-close="outside"
                             aria-expanded="false"
                         >
-                            <span class="landing-user-avatar">{{ $initials ?: 'U' }}</span>
+                            @if ($user->avatar_url)
+                                <img
+                                    src="{{ $user->avatar_url }}"
+                                    alt="Avatar {{ $user->name }}"
+                                    class="landing-user-avatar landing-user-avatar-image"
+                                >
+                            @else
+                                <span class="landing-user-avatar">{{ $initials ?: 'U' }}</span>
+                            @endif
                             <span class="landing-user-meta">
                                 <strong>{{ $user->name }}</strong>
                                 <small>{{ $user->email }}</small>

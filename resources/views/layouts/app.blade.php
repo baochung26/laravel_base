@@ -21,7 +21,14 @@
 >
 <div class="dash-shell">
     <aside class="dash-sidebar">
-        <h2 class="dash-logo">Dashboard</h2>
+        @php
+            $appName = config('app.name', 'Laravel');
+            $appInitial = strtoupper(mb_substr($appName, 0, 1));
+        @endphp
+        <a class="dash-logo" href="{{ route('welcome') }}">
+            <span class="dash-logo-mark">{{ $appInitial }}</span>
+            <span class="dash-logo-text">{{ $appName }}</span>
+        </a>
 
         <nav class="dash-nav">
             @foreach ($sidebarMenu ?? [] as $item)
@@ -58,11 +65,25 @@
 
     <section class="dash-main">
         <header class="dash-topbar">
-            <h1>@yield('page_title', 'Tổng quan')</h1>
+            <div class="dash-topbar-left">
+                <a class="dash-topbar-brand" href="{{ route('welcome') }}">
+                    <span class="dash-topbar-brand-mark">{{ $appInitial }}</span>
+                    <span class="dash-topbar-brand-text">{{ $appName }}</span>
+                </a>
+                <h1>@yield('page_title', 'Tổng quan')</h1>
+            </div>
             <div class="dash-topbar-right">
                 <a href="{{ route('welcome') }}" class="dash-home-link">← Về trang chủ</a>
                 <div class="dash-user">
-                    <div class="dash-avatar">{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</div>
+                    @if (auth()->user()?->avatar_url)
+                        <img
+                            src="{{ auth()->user()->avatar_url }}"
+                            alt="Avatar {{ auth()->user()->name }}"
+                            class="dash-avatar dash-avatar-image"
+                        >
+                    @else
+                        <div class="dash-avatar">{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</div>
+                    @endif
                     <div class="dash-user-meta">
                         <strong>{{ auth()->user()->name ?? 'User' }}</strong>
                         <span>{{ auth()->user()->email ?? '' }}</span>
