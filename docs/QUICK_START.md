@@ -52,10 +52,16 @@ docker-compose exec app php artisan db:seed --class=DemoSeeder
 
 | Dịch vụ | URL |
 |--------|-----|
-| **API / App** | http://localhost:8000 |
-| **phpMyAdmin** | http://localhost:8080 |
+| **API / App** | http://localhost:${WEB_PORT} (mặc định `8000`) |
+| **phpMyAdmin** | http://localhost:${PHPMYADMIN_PORT} (mặc định `8080`) |
 
-API base path: **`http://localhost:8000/api/v1`**.
+API base path: **`http://localhost:${WEB_PORT}/api/v1`**.
+
+Nếu đổi port trong `.env`, chạy lại:
+
+```bash
+docker-compose up -d --force-recreate
+```
 
 ---
 
@@ -160,4 +166,4 @@ Routes được định nghĩa trong `routes/api/v1/routes.php`, prefix `api/v1`
 - **Public:** `POST /register`, `POST /login`, `POST /login/google`, `POST /password/forgot`, `POST /password/reset`, `GET /health`, `GET /health/live`, `GET /health/ready`
 - **Auth (Bearer):** `POST /logout`, `POST /refresh`, `GET /me`, `GET|PUT /profile/*`, `POST /password/change`, `GET|POST|PUT|DELETE /users/*`, `GET|POST .../roles-permissions/*`, `POST|GET|DELETE .../files/*`
 
-Chi tiết từng nhóm: [AUTHENTICATION.md](AUTHENTICATION.md), [USER_MODULE.md](USER_MODULE.md), [API_FOUNDATION.md](API_FOUNDATION.md).
+Chi tiết từng nhóm: [AUTHENTICATION.md](AUTHENTICATION.md), [API_FOUNDATION.md](API_FOUNDATION.md).

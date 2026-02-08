@@ -6,15 +6,16 @@ use App\DTOs\UserDTO;
 use App\Exceptions\ValidationException;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
+use App\Services\Storage\StorageService;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends ApiController
 {
     public function __construct(
-        protected UserService $userService
+        protected UserService $userService,
+        protected StorageService $storageService
     ) {
     }
 
@@ -43,14 +44,11 @@ class ProfileController extends ApiController
 
             // Handle avatar upload
             if ($request->hasFile('avatar')) {
-                // Delete old avatar if exists
                 $currentUser = $this->userService->getById($user->id);
-                if ($currentUser->avatar && Storage::disk('public')->exists($currentUser->avatar)) {
-                    Storage::disk('public')->delete($currentUser->avatar);
+                if ($currentUser->avatar) {
+                    $this->storageService->delete($currentUser->avatar, config('constants.uploads.avatar_disk'));
                 }
-
-                // Upload new avatar
-                $avatarPath = $request->file('avatar')->store('avatars', 'public');
+                $avatarPath = $this->storageService->storeAvatar($request->file('avatar'), $user->id);
                 $data['avatar'] = $avatarPath;
             }
 
@@ -83,18 +81,11 @@ class ProfileController extends ApiController
             ]);
 
             $user = $request->user();
-
-            // Delete old avatar if exists
             $currentUser = $this->userService->getById($user->id);
-            if ($currentUser->avatar && Storage::disk('public')->exists($currentUser->avatar)) {
-                Storage::disk('public')->delete($currentUser->avatar);
+            if ($currentUser->avatar) {
+                $this->storageService->delete($currentUser->avatar, config('constants.uploads.avatar_disk'));
             }
-
-            // Upload new avatar
-            $avatarPath = $request->file('avatar')->store(
-                config('constants.uploads.avatar_dir'),
-                config('constants.uploads.avatar_disk')
-            );
+            $avatarPath = $this->storageService->storeAvatar($request->file('avatar'), $user->id);
             $this->userService->updateAvatar($user->id, $avatarPath);
             $userModel = $this->userService->getModelByIdWithRelations($user->id);
 

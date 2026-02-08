@@ -9,7 +9,8 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 | Goal | Start here |
 |------|------------|
 | Run the project locally | [QUICK_START.md](QUICK_START.md) |
-| Call the API (auth, users, files) | [API_FOUNDATION.md](API_FOUNDATION.md), [AUTHENTICATION.md](AUTHENTICATION.md), [USER_MODULE.md](USER_MODULE.md) |
+| Swagger / OpenAPI docs | [SWAGGER_USAGE.md](SWAGGER_USAGE.md) |
+| Call the API (auth, users, files) | [API_FOUNDATION.md](API_FOUNDATION.md), [AUTHENTICATION.md](AUTHENTICATION.md) |
 | Response/error format | [API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md) |
 | API versioning & breaking changes | [API_VERSIONING_STRATEGY.md](API_VERSIONING_STRATEGY.md) |
 | Health checks (K8s, monitoring) | [HEALTH_CHECK.md](HEALTH_CHECK.md) |
@@ -18,7 +19,6 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 | Database, migrations, queries | [DATABASE_CONVENTIONS.md](DATABASE_CONVENTIONS.md), [QUERY_OPTIMIZATION.md](QUERY_OPTIMIZATION.md) |
 | Files, storage, S3 | [FILE_STORAGE.md](FILE_STORAGE.md) |
 | Logging, exceptions | [LOGGING.md](LOGGING.md), [API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md) |
-| Project evaluation & roadmap | [PROJECT_EVALUATION.md](PROJECT_EVALUATION.md) |
 
 ---
 
@@ -30,6 +30,7 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 
 ### API
 
+- **[SWAGGER_USAGE.md](SWAGGER_USAGE.md)** – Cách dùng Swagger UI (`/api/v1/docs`) và OpenAPI spec (`/api/v1/openapi.yaml`).
 - **[API_FOUNDATION.md](API_FOUNDATION.md)** – Versioning (`/api/v1`), response format, pagination, resources.
 - **[API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md)** – Response format (success/error/paginated) and exception handling.
 - **[API_VERSIONING_STRATEGY.md](API_VERSIONING_STRATEGY.md)** – Version lifecycle, deprecation policy.
@@ -38,7 +39,6 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 
 - **[AUTHENTICATION.md](AUTHENTICATION.md)** – Register, login, logout, refresh token, Google login, RBAC.
 - **[AUTH_CHECKLIST.md](AUTH_CHECKLIST.md)** – Checklist of auth features.
-- **[USER_MODULE.md](USER_MODULE.md)** – User CRUD, profile, password, avatar (all under `/api/v1`).
 
 ### Infrastructure & config
 
@@ -52,7 +52,7 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 - **[DATABASE_CONVENTIONS.md](DATABASE_CONVENTIONS.md)** – Migrations, soft deletes, indexes.
 - **[QUERY_OPTIMIZATION.md](QUERY_OPTIMIZATION.md)** – Eager loading, indexing, performance.
 - **[CACHE_STRATEGY.md](CACHE_STRATEGY.md)** – Cache keys, invalidation.
-- **[FILE_STORAGE.md](FILE_STORAGE.md)** – Local, S3, public/private files.
+- **[FILE_STORAGE.md](FILE_STORAGE.md)** – Làm việc với file: service/helper (FileManagerService, StorageService, FileHelper, StoragePath), API, demo đầy đủ (tiếng Việt).
 - **[EMAIL_USAGE.md](EMAIL_USAGE.md)** – Mail config and usage.
 
 ### Reliability & operations
@@ -61,16 +61,13 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 - **[QUEUE_SCHEDULER.md](QUEUE_SCHEDULER.md)** – Queues, jobs, scheduler.
 - **[SECURITY.md](SECURITY.md)** – Headers, CORS, best practices.
 
-### Reference & evaluation
-
-- **[PROJECT_AUDIT.md](PROJECT_AUDIT.md)** – Legacy audit report.
-- **[PROJECT_EVALUATION.md](PROJECT_EVALUATION.md)** – Current evaluation, strengths, issues, roadmap.
-
 ---
 
 ## Quick API examples (base URL: `http://localhost:8000/api/v1`)
 
 ```bash
+# Swagger UI: http://localhost:8000/api/v1/docs
+
 # Health
 curl http://localhost:8000/api/v1/health
 

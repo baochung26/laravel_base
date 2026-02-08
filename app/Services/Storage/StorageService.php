@@ -2,10 +2,10 @@
 
 namespace App\Services\Storage;
 
+use App\Helpers\FileHelper;
 use App\Helpers\StoragePath;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class StorageService
 {
@@ -110,6 +110,30 @@ class StorageService
         }
 
         return Storage::disk($disk)->deleteDirectory($path);
+    }
+
+    /**
+     * Lấy metadata file (disk, path, name, size, mime, last_modified...).
+     * Trả về mảng giống FileManagerService::fileMetadata để dùng trong command/cron hoặc ngoài API.
+     */
+    public function getMetadata(string $path, ?string $disk = null): ?array
+    {
+        $disk = $disk ?? config('filesystems.default');
+        if (! Storage::disk($disk)->exists($path)) {
+            return null;
+        }
+        $fs = Storage::disk($disk);
+        return [
+            'disk' => $disk,
+            'path' => $path,
+            'name' => basename($path),
+            'directory' => dirname($path) === '.' ? '' : dirname($path),
+            'size_bytes' => (int) $fs->size($path),
+            'size_human' => FileHelper::formatBytes((int) $fs->size($path)),
+            'mime_type' => $fs->mimeType($path),
+            'last_modified' => date(DATE_ATOM, (int) $fs->lastModified($path)),
+            'url' => $disk === 'public' ? $fs->url($path) : null,
+        ];
     }
 
     /**

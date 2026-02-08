@@ -1,415 +1,360 @@
-# Hướng Dẫn Sử Dụng File Storage Module (Laravel)
+# Hướng dẫn làm việc với File Storage
 
-## 📋 Mục lục
+Tài liệu tiếng Việt: cấu hình, service/helper, API và demo đầy đủ.
 
-- [Tổng quan](#tổng-quan)
+## Mục lục
+
+- [Tổng quan và đánh giá](#tổng-quan-và-đánh-giá)
+- [Khi nào dùng Service / Helper nào](#khi-nào-dùng-service--helper-nào)
 - [Cấu hình](#cấu-hình)
-- [Service & Kiến trúc](#service--kiến-trúc)
+- [Service và Helper](#service-và-helper)
 - [API Endpoints](#api-endpoints)
-- [File Upload](#file-upload)
-- [Security](#security)
-- [Best Practices](#best-practices)
-- [Troubleshooting](#troubleshooting)
-- [Ví dụ sử dụng trong Laravel](#ví-dụ-sử-dụng-trong-laravel)
+- [Demo: gọi từ code Laravel](#demo-gọi-từ-code-laravel)
+- [Bảo mật](#bảo-mật)
+- [Khuyến nghị](#khuyến-nghị)
+- [Xử lý lỗi thường gặp](#xử-lý-lỗi-thường-gặp)
+- [Tài liệu liên quan](#tài-liệu-liên-quan)
 
-## 🎯 Tổng quan
+---
 
-Module xử lý file cho project Laravel hỗ trợ:
+## Tổng quan và đánh giá
 
-- ✅ Local file storage
-- ✅ File upload (single & multiple)
-- ✅ File download
-- ✅ File deletion
-- ✅ File validation (size, MIME type)
-- ✅ Subfolder support
-- ✅ File listing và statistics
-- ✅ Security với authentication & authorization
+### Module hiện hỗ trợ
 
-Module đã được tích hợp theo API `v1` với `auth:sanctum` và permission.
+- **Local / public / private disk**: lưu file local hoặc (khi cấu hình) S3.
+- **Upload**: một file hoặc nhiều file qua API, có validation (size, MIME, số lượng).
+- **Download / xóa / liệt kê / thống kê** qua API, có phân quyền theo user và path.
+- **Avatar user**: upload/xóa avatar qua `StorageService` và path chuẩn `avatars/{userId}/...`.
+- **Helper**: tạo path chuẩn (`StoragePath`), format byte và tên file an toàn (`FileHelper`).
 
-## ⚙️ Cấu hình
+### Đánh giá: đã đủ dùng chưa?
 
-### Environment Variables
+| Nội dung | Trạng thái |
+|----------|------------|
+| Service tập trung (upload, download, delete, list, stats) | ✅ Có `FileManagerService` (API, user-scoped) |
+| Service lưu file public/private, URL, metadata | ✅ Có `StorageService` (storePublic, storePrivate, getPublicUrl, getTemporaryUrl, getMetadata, delete, ...) |
+| Helper path (avatar, document, temp, export...) | ✅ Có `StoragePath` |
+| Helper format byte, tên file an toàn | ✅ Có `FileHelper` |
+| Avatar thống nhất qua service | ✅ ProfileController / UserController dùng `StorageService::storeAvatar` |
+| Khi cần chỉ cần gọi service/helper | ✅ Có thể gọi trực tiếp trong controller, command, job |
 
-Thêm/cập nhật trong `.env`:
+**Kết luận:** Phần làm việc với file đã có service và helper rõ ràng; khi cần xử lý file chỉ cần gọi đúng service/helper theo bảng bên dưới.
+
+---
+
+## Khi nào dùng Service / Helper nào
+
+| Nhu cầu | Dùng gì | Ghi chú |
+|--------|---------|--------|
+| Upload/download/delete/list/stats **qua API**, có user + permission + path scope | `FileManagerService` | Controller API file đã dùng; path dạng `users/{id}/...` (trừ khi user có `manage files`) |
+| Lưu file **public** (ảnh, tài liệu có URL) | `StorageService::storePublic()` | Trả về path đã lưu |
+| Lưu file **private** (chỉ xem qua signed URL hoặc download) | `StorageService::storePrivate()` | Trả về path đã lưu |
+| Avatar user | `StorageService::storeAvatar()`, `StorageService::delete()` | Path: `avatars/{userId}/tên_unique.jpg` |
+| Tài liệu theo user | `StorageService::storeUserDocument()` | Path: `documents/users/{userId}/...` |
+| Lấy URL public file | `StorageService::getPublicUrl($path, $disk)` | Disk public |
+| Lấy URL tạm (private) | `StorageService::getTemporaryUrl($path, $expiration, $disk)` | S3 có signed URL; local trả route download |
+| Xóa file / thư mục | `StorageService::delete()`, `StorageService::deleteDirectory()` | Không check user; dùng khi đã biết path an toàn |
+| Metadata file (size, mime, last_modified...) | `StorageService::getMetadata($path, $disk)` | Dùng trong command, cron, báo cáo |
+| Tạo path chuẩn (avatar, document, temp, export...) | `StoragePath::avatar()`, `StoragePath::userDocument()`, `StoragePath::temp()`, ... | Chỉ tạo chuỗi path, không ghi disk |
+| Tên file unique | `StoragePath::uniqueFilename($originalName, $prefix)` | Dùng trước khi lưu |
+| Format dung lượng (1024 → "1 KB") | `FileHelper::formatBytes($bytes)` | Hiển thị UI hoặc log |
+| Tên file an toàn (bỏ ký tự lạ) | `FileHelper::sanitizeFilename($filename)` | Trước khi lưu nếu không dùng uniqueFilename |
+
+---
+
+## Cấu hình
+
+### Biến môi trường (.env)
 
 ```env
-# Filesystem
+# Filesystem mặc định
 FILESYSTEM_DISK=local
 
-# File module
+# Module file (API upload/list/download)
 FILE_DEFAULT_DISK=private
 FILE_MAX_SIZE_KB=10240
 FILE_MAX_FILE_COUNT=10
 FILE_ALLOWED_MIMES=jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,csv,txt,zip
 ```
 
-### Filesystem Disks
+### Disk (config/filesystems.php)
 
-Định nghĩa trong `config/filesystems.php`:
+- `public`: `storage/app/public`, URL qua `php artisan storage:link`.
+- `private`: `storage/app/private`, không có URL công khai.
+- `local`: `storage/app`.
 
-- `public`: `storage/app/public`
-- `private`: `storage/app/private`
-- `local`: `storage/app`
-- `s3`, `s3_private` (nếu dùng object storage)
+### Constants (config/constants.php)
 
-### Constants cho File Module
+- **Avatar**: `uploads.avatar_disk`, `uploads.avatar_dir`, `uploads.max_avatar_kb`, `uploads.allowed_avatar_mimes`.
+- **File API**: `files.default_disk`, `files.max_size_kb`, `files.max_file_count`, `files.allowed_mimes`.
 
-Định nghĩa trong `config/constants.php`:
+---
 
-- `constants.files.default_disk`
-- `constants.files.max_size_kb`
-- `constants.files.max_file_count`
-- `constants.files.allowed_mimes`
+## Service và Helper
 
-## 📦 Service & Kiến trúc
+### FileManagerService (`app/Services/Storage/FileManagerService.php`)
 
-### Service chính
+Dùng cho **API file**: upload/list/download/delete/stats theo user và path.
 
-- `app/Services/Storage/FileManagerService.php`
+| Method | Mô tả |
+|--------|--------|
+| `upload(User $user, UploadedFile $file, string $disk, ?string $folder)` | Upload 1 file; folder mặc định `users/{id}`; trả về mảng metadata. |
+| `uploadMany(User $user, array $files, string $disk, ?string $folder)` | Upload nhiều file. |
+| `download(User $user, string $disk, string $path)` | Stream download; có kiểm tra path thuộc user (hoặc manage files). |
+| `delete(User $user, string $disk, string $path)` | Xóa file; trả về `true/false`. |
+| `list(User $user, string $disk, ?string $folder, bool $recursive, int $limit)` | Liệt kê file trong folder; trả về mảng metadata. |
+| `stats(User $user, string $disk, ?string $folder, bool $recursive)` | Thống kê số file và tổng dung lượng. |
+| `normalizePath(string $path)` | Chuẩn hóa path, chặn `..` và path rỗng. |
+| `authorizePath(User $user, string $path)` | Kiểm tra user được truy cập path (owner hoặc manage files/users). |
 
-Các chức năng chính:
+### StorageService (`app/Services/Storage/StorageService.php`)
 
-- Upload 1 file: `upload()`
-- Upload nhiều file: `uploadMany()`
-- Download: `download()`
-- Delete: `delete()`
-- List files: `list()`
-- Statistics: `stats()`
-- Path sanitize & anti-traversal: `normalizePath()`
-- Authorization theo owner: `authorizePath()`
+Dùng khi **đã có path/disk** (controller, command, job): lưu file, lấy URL, metadata, xóa.
 
-### Controller API
+| Method | Mô tả |
+|--------|--------|
+| `storePublic(UploadedFile $file, string $path, ?string $disk)` | Lưu file public; trả về full path. |
+| `storePrivate(UploadedFile $file, string $path, ?string $disk)` | Lưu file private. |
+| `storeAvatar(UploadedFile $file, int $userId, ?string $disk)` | Lưu avatar vào `avatars/{userId}/unique.jpg`. |
+| `storeUserDocument(UploadedFile $file, int $userId, ?string $disk)` | Lưu tài liệu vào `documents/users/{userId}/...`. |
+| `getPublicUrl(string $path, ?string $disk)` | URL public (disk public). |
+| `getTemporaryUrl(string $path, int $expiration, ?string $disk)` | URL tạm (S3 signed; local trả route download). |
+| `getMetadata(string $path, ?string $disk)` | Mảng metadata (path, size, mime, last_modified, ...). |
+| `delete(string $path, ?string $disk)` | Xóa file. |
+| `deleteDirectory(string $path, ?string $disk)` | Xóa thư mục đệ quy. |
+| `exists`, `size`, `mimeType`, `copy`, `move` | Thao tác cơ bản trên file. |
 
-- `app/Http/Controllers/Api/V1/FileController.php`
+### FileHelper (`app/Helpers/FileHelper.php`)
 
-Controller nhận request đã validate, gọi service, trả về chuẩn `ApiResponse`.
+| Method | Mô tả |
+|--------|--------|
+| `formatBytes(int $bytes)` | Ví dụ: `1024` → `"1.00 KB"`. |
+| `sanitizeFilename(string $filename)` | Chỉ giữ chữ, số, `_`, `-`, dấu chấm. |
+| `getSafeExtension(string $filename)` | Extension chữ thường, chỉ [a-z0-9]. |
 
-### Request Validation
+### StoragePath (`app/Helpers/StoragePath.php`)
 
-- `app/Http/Requests/File/UploadFileRequest.php`
-- `app/Http/Requests/File/UploadMultipleFilesRequest.php`
-- `app/Http/Requests/File/FilePathRequest.php`
-- `app/Http/Requests/File/FileListRequest.php`
+Chỉ **tạo chuỗi path**, không ghi disk.
 
-## 🌐 API Endpoints
+| Method | Ví dụ |
+|--------|--------|
+| `StoragePath::avatar($userId)` | `avatars/1` |
+| `StoragePath::avatar($userId, 'x.jpg')` | `avatars/1/x.jpg` |
+| `StoragePath::userDocument($userId)` | `documents/users/1` |
+| `StoragePath::upload($category)` | `uploads/{category}` |
+| `StoragePath::temp()` | `temp` |
+| `StoragePath::export($category)` | `exports/{category}` |
+| `StoragePath::import($category)` | `imports/{category}` |
+| `StoragePath::uniqueFilename('file.pdf', 'doc')` | `doc_file_1234567890_abc12def.pdf` |
 
-Base URL:
+---
 
-```text
-http://localhost:8000/api/v1/files
-```
+## API Endpoints
 
-Tất cả endpoint bên dưới yêu cầu:
+Base: `http://localhost:8000/api/v1/files`. Tất cả cần `Authorization: Bearer <token>` và `Accept: application/json`.
 
-- `Authorization: Bearer <SANCTUM_TOKEN>`
-- `Accept: application/json`
+| Method | Endpoint | Mô tả |
+|--------|----------|--------|
+| POST | `/files/upload` | Upload 1 file (form: `file`, `disk`, `folder`) |
+| POST | `/files/upload-multiple` | Upload nhiều file (`files[]`, `disk`, `folder`) |
+| GET | `/files/download?disk=...&path=...` | Download file (stream) |
+| DELETE | `/files` | Xóa file (body JSON: `disk`, `path`) |
+| GET | `/files/list?disk=...&folder=...&recursive=&limit=` | Liệt kê file |
+| GET | `/files/stats?disk=...&folder=...&recursive=` | Thống kê dung lượng |
 
-### 1) Upload Single File
+### Demo cURL nhanh
 
-```http
-POST /api/v1/files/upload
-Content-Type: multipart/form-data
-```
-
-Fields:
-
-- `file` (required)
-- `disk` (`public|private`, optional)
-- `folder` (optional)
-
-Ví dụ:
+**Upload một file:**
 
 ```bash
 curl -X POST "http://localhost:8000/api/v1/files/upload" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Accept: application/json" \
   -F "disk=private" \
-  -F "folder=docs/contracts" \
-  -F "file=@/absolute/path/to/contract.pdf"
+  -F "folder=docs" \
+  -F "file=@/path/to/document.pdf"
 ```
 
-### 2) Upload Multiple Files
-
-```http
-POST /api/v1/files/upload-multiple
-Content-Type: multipart/form-data
-```
-
-Fields:
-
-- `files[]` (required)
-- `disk` (`public|private`, optional)
-- `folder` (optional)
-
-Ví dụ:
+**Liệt kê file:**
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/files/upload-multiple" \
+curl -X GET "http://localhost:8000/api/v1/files/list?disk=private&folder=docs&limit=50" \
   -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Accept: application/json" \
-  -F "disk=private" \
-  -F "folder=docs/contracts" \
-  -F "files[]=@/absolute/path/to/contract-1.pdf" \
-  -F "files[]=@/absolute/path/to/contract-2.pdf"
+  -H "Accept: application/json"
 ```
 
-### 3) Download File
-
-```http
-GET /api/v1/files/download?disk=private&path=users/1/docs/contracts/contract.pdf
-```
-
-Ví dụ:
+**Download:**
 
 ```bash
-curl -X GET "http://localhost:8000/api/v1/files/download?disk=private&path=users/1/docs/contracts/contract.pdf" \
+curl -X GET "http://localhost:8000/api/v1/files/download?disk=private&path=users/1/docs/file_123.pdf" \
   -H "Authorization: Bearer YOUR_TOKEN" \
-  -o contract.pdf
+  -o file_123.pdf
 ```
 
-### 4) Delete File
-
-```http
-DELETE /api/v1/files
-Content-Type: application/json
-```
-
-Body:
-
-```json
-{
-  "disk": "private",
-  "path": "users/1/docs/contracts/contract.pdf"
-}
-```
-
-Ví dụ:
+**Xóa file:**
 
 ```bash
 curl -X DELETE "http://localhost:8000/api/v1/files" \
   -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Accept: application/json" \
   -H "Content-Type: application/json" \
-  -d "{\"disk\":\"private\",\"path\":\"users/1/docs/contracts/contract.pdf\"}"
+  -d '{"disk":"private","path":"users/1/docs/file_123.pdf"}'
 ```
 
-### 5) List Files
+---
 
-```http
-GET /api/v1/files/list?disk=private&folder=docs/contracts&recursive=true&limit=50
+## Demo: gọi từ code Laravel
+
+### 1. Upload avatar (trong controller)
+
+Đã dùng trong `ProfileController` và `UserController`:
+
+```php
+use App\Services\Storage\StorageService;
+
+// Trong controller, inject StorageService
+public function __construct(
+    protected StorageService $storageService
+) {}
+
+// Upload avatar (ghi đè avatar cũ nếu có)
+if ($currentUser->avatar) {
+    $this->storageService->delete($currentUser->avatar, config('constants.uploads.avatar_disk'));
+}
+$avatarPath = $this->storageService->storeAvatar($request->file('avatar'), $user->id);
+$this->userService->updateAvatar($user->id, $avatarPath);
 ```
 
-Ví dụ:
+### 2. Lưu tài liệu private theo user
 
-```bash
-curl -X GET "http://localhost:8000/api/v1/files/list?disk=private&folder=docs/contracts&recursive=true&limit=50" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Accept: application/json"
+```php
+use App\Services\Storage\StorageService;
+
+$path = $this->storageService->storeUserDocument($request->file('document'), $user->id);
+// Lưu $path vào DB nếu cần (vd: bảng user_documents)
 ```
 
-### 6) Get Storage Statistics
+### 3. Lưu file public với path tùy chọn
 
-```http
-GET /api/v1/files/stats?disk=private&folder=docs/contracts&recursive=true
+```php
+use App\Helpers\StoragePath;
+use App\Services\Storage\StorageService;
+
+$folder = StoragePath::upload('contracts');
+$fullPath = $this->storageService->storePublic($request->file('file'), $folder);
+// $fullPath = uploads/contracts/name_1234567890_abc12.pdf
+$url = $this->storageService->getPublicUrl($fullPath);
 ```
 
-Ví dụ:
+### 4. Lấy URL tạm cho file private (vd. S3)
 
-```bash
-curl -X GET "http://localhost:8000/api/v1/files/stats?disk=private&folder=docs/contracts&recursive=true" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Accept: application/json"
+```php
+$url = $this->storageService->getTemporaryUrl($path, 3600); // 1 giờ
+// Local disk: trả route download thay vì signed URL
 ```
 
-## 📤 File Upload
+### 5. Lấy metadata file (command, cron, báo cáo)
 
-### Quy tắc upload
+```php
+use App\Services\Storage\StorageService;
 
-- Module tự generate filename an toàn, unique.
-- User thường sẽ được scope vào `users/{auth_user_id}/...`.
-- User có `manage files` hoặc `manage users` có thể truyền folder tuyệt đối (ví dụ `users/2/contracts`).
+$meta = $this->storageService->getMetadata('users/1/docs/file.pdf', 'private');
+if ($meta) {
+    echo $meta['size_human'];   // "125.50 KB"
+    echo $meta['mime_type'];   // "application/pdf"
+    echo $meta['last_modified'];
+}
+```
 
-### Validation mặc định
+### 6. Upload/list/download qua FileManagerService (có user + permission)
 
-- Kích thước tối đa theo `FILE_MAX_SIZE_KB`
-- Số lượng file tối đa theo `FILE_MAX_FILE_COUNT`
-- MIME/extension theo `FILE_ALLOWED_MIMES`
+```php
+use App\Services\Storage\FileManagerService;
 
-## 🔐 Security
+// Upload (user được scope vào users/{id}/... nếu không có manage files)
+$metadata = $this->fileManagerService->upload(
+    $request->user(),
+    $request->file('file'),
+    'private',
+    'docs/contracts'
+);
 
-### Authentication
+// List
+$files = $this->fileManagerService->list($request->user(), 'private', 'docs', true, 100);
 
-- Tất cả route `files/*` nằm trong group `auth:sanctum`
-- Route định nghĩa tại `routes/api/v1/routes.php`
+// Download (đã check authorizePath)
+return $this->fileManagerService->download($request->user(), 'private', $path);
+```
 
-### Authorization
+### 7. Dùng Helper path và format
 
-2 lớp bảo vệ:
+```php
+use App\Helpers\StoragePath;
+use App\Helpers\FileHelper;
 
-1. Permission theo action trong `FileController`:
-- `upload files`
-- `view files`
-- `delete files`
-- fallback cho `manage files` và `manage users`
+$avatarDir = StoragePath::avatar($userId);           // avatars/1
+$exportPath = StoragePath::export('reports');        // exports/reports
+$filename = StoragePath::uniqueFilename('báo cáo.xlsx', 'report');
+$humanSize = FileHelper::formatBytes(1024 * 1024);    // "1.00 MB"
+$safeName = FileHelper::sanitizeFilename('Tệp có dấu & ký tự.docx'); // T_p_c_d_u___k_t_.docx
+```
 
-2. Ownership check theo path trong `FileManagerService::authorizePath()`:
-- User thường chỉ được thao tác path thuộc `users/{id}/...`
+### 8. Export file tạm rồi xóa (vd. queue job)
 
-### Permission seed
+```php
+use App\Helpers\StoragePath;
+use App\Services\Storage\StorageService;
 
-Trong `database/seeders/RolePermissionSeeder.php` đã có:
+$path = StoragePath::export('orders') . '/' . StoragePath::uniqueFilename('orders.csv');
+// Ghi nội dung vào disk (hoặc dùng storePublic/storePrivate với nội dung)
+Storage::disk('private')->put($path, $csvContent);
+// Gửi link tạm hoặc đính kèm email...
+$this->storageService->delete($path, 'private');
+```
 
-- `view files`
-- `upload files`
-- `delete files`
-- `manage files`
+---
 
-Sau khi cập nhật permission:
+## Bảo mật
+
+- **API file**: Mọi route trong group `auth:sanctum`; permission `upload files`, `view files`, `delete files` (hoặc `manage files` / `manage users`).
+- **Path**: `FileManagerService::authorizePath()` giới hạn user thường chỉ truy cập `users/{id}/...`.
+- **Path traversal**: `normalizePath()` chặn `..` và path rỗng.
+- **Validation**: Kích thước, MIME, số lượng file theo config; avatar theo `constants.uploads`.
+
+Sau khi thêm/sửa permission, chạy:
 
 ```bash
 php artisan db:seed --class=RolePermissionSeeder
 ```
 
-## 💡 Best Practices
+---
 
-### 1) Tổ chức subfolder theo domain
+## Khuyến nghị
 
-```text
-users/{userId}/documents
-users/{userId}/avatars
-users/{userId}/exports
-```
+1. **Tổ chức folder**: `users/{id}/documents`, `users/{id}/exports`, v.v.
+2. **Mặc định private**: Chỉ dùng disk public khi cần URL công khai.
+3. **Không ghép path thủ công**: Dùng `StoragePath` và service đã chuẩn hóa path.
+4. **File lớn / xử lý hậu kỳ**: Đẩy upload hoặc xử lý vào queue.
+5. **File từ user**: Cân nhắc quét virus trước khi lưu hoặc mở.
+6. **Dung lượng**: Dùng API stats + monitoring để tránh đầy disk.
 
-### 2) Mặc định dùng private disk
+---
 
-- Chỉ dùng `public` khi file cần public URL.
-- File nhạy cảm nên giữ `private`.
+## Xử lý lỗi thường gặp
 
-### 3) Không tin tưởng input path
+| Lỗi | Nguyên nhân thường gặp | Cách xử lý |
+|-----|------------------------|------------|
+| 422 khi upload | Vượt size, MIME không cho phép, vượt số file | Kiểm tra `.env` và `config/constants.php`; `php artisan config:clear` |
+| 403 | Thiếu permission hoặc path không thuộc user | Gán role/permission; kiểm tra path `users/{auth_id}/...` |
+| 404 download/delete | Sai disk/path hoặc file đã xóa | Gọi list trước để lấy path chính xác |
+| Không ghi được local | Quyền thư mục | `chmod -R 775 storage bootstrap/cache`; với Docker chạy trong container |
 
-- Module đã sanitize path và chặn `..`.
-- Không tự ghép path thủ công ngoài service.
+---
 
-### 4) Upload bất đồng bộ cho file nặng
+## Tài liệu liên quan
 
-- Với file lớn hoặc xử lý hậu kỳ (resize, OCR), đẩy qua queue.
-
-### 5) Bổ sung antivirus scanning
-
-- Với file từ user/public, nên scan trước khi dùng.
-
-### 6) Theo dõi dung lượng
-
-- Dùng endpoint stats + monitoring định kỳ để tránh đầy disk.
-
-## 🐛 Troubleshooting
-
-### 1) Lỗi 422 khi upload
-
-Nguyên nhân thường gặp:
-- Vượt `FILE_MAX_SIZE_KB`
-- MIME không nằm trong `FILE_ALLOWED_MIMES`
-- Vượt `FILE_MAX_FILE_COUNT`
-
-Khắc phục:
-- Kiểm tra lại env và request payload
-- Chạy `php artisan config:clear`
-
-### 2) Lỗi 403
-
-Nguyên nhân thường gặp:
-- Thiếu permission (`upload files`, `view files`, `delete files`)
-- Path không thuộc owner (`users/{auth_user_id}/...`)
-
-Khắc phục:
-- Reseed permission
-- Kiểm tra role/permission của user hiện tại
-- Kiểm tra path truyền lên
-
-### 3) Lỗi 404 khi download/delete
-
-Nguyên nhân:
-- Sai `disk`
-- Sai `path`
-- File đã bị xóa
-
-Khắc phục:
-- Gọi endpoint list trước để lấy path chính xác
-
-### 4) Không ghi được file local
-
-Khắc phục:
-
-```bash
-chmod -R 775 storage bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
-```
-
-Trong Docker, có thể chạy từ container `app`.
-
-## 🧪 Demo response mẫu
-
-### Upload thành công (`201`)
-
-```json
-{
-  "success": true,
-  "message": "File uploaded successfully",
-  "meta": {
-    "request_id": "req_123",
-    "timestamp": "2026-02-07T12:00:00Z"
-  },
-  "data": {
-    "disk": "private",
-    "path": "users/1/docs/contracts/contract_1700000000_abcd1234.pdf",
-    "name": "contract_1700000000_abcd1234.pdf",
-    "directory": "users/1/docs/contracts",
-    "size_bytes": 231231,
-    "size_human": "225.81 KB",
-    "mime_type": "application/pdf",
-    "last_modified": "2026-02-07T12:00:00+00:00",
-    "url": null
-  }
-}
-```
-
-### Validation lỗi (`422`)
-
-```json
-{
-  "success": false,
-  "message": "The given data was invalid.",
-  "errors": {
-    "file": [
-      "The file field is required."
-    ]
-  }
-}
-```
-
-### Unauthorized (`403`)
-
-```json
-{
-  "message": "You are not authorized to access this path."
-}
-```
-
-## 🧭 End-to-end flow đề xuất
-
-1. Login lấy token qua `/api/v1/login`
-2. Upload file vào `folder=docs/contracts`
-3. Lấy `data.path` từ response upload
-4. Gọi `list` để kiểm tra file
-5. Gọi `stats` để kiểm tra dung lượng
-6. Download file bằng `path`
-7. Delete file
-8. Gọi lại `list` để confirm đã xóa
-
-## 🔗 Tài liệu liên quan
-
-- `docs/SECURITY.md`
-- `docs/EMAIL_USAGE.md`
-- `routes/api/v1/routes.php`
-- `app/Services/Storage/FileManagerService.php`
+- [API Response & Errors](API_RESPONSE_AND_ERRORS.md)
+- [Security](SECURITY.md)
+- [Swagger / OpenAPI](SWAGGER_USAGE.md)
+- Route API: `routes/api/v1/routes.php`
+- Service: `app/Services/Storage/FileManagerService.php`, `app/Services/Storage/StorageService.php`
+- Helper: `app/Helpers/FileHelper.php`, `app/Helpers/StoragePath.php`

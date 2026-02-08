@@ -1,13 +1,13 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\DocsController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\PasswordController;
 use App\Http\Controllers\Api\V1\FileController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\RolePermissionController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +20,9 @@ use Illuminate\Support\Facades\Route;
 | prefix and "api" middleware group.
 |
 */
+
+Route::get('/openapi.yaml', [DocsController::class, 'openapi'])->name('v1.openapi');
+Route::get('/docs', [DocsController::class, 'docs'])->name('v1.docs');
 
 /*
 |--------------------------------------------------------------------------

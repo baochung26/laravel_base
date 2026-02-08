@@ -3,6 +3,7 @@
 namespace App\Repositories\Eloquent;
 
 use App\Repositories\Contracts\RepositoryInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -72,12 +73,7 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function all(array $columns = ['*']): Collection
     {
-        $this->applyCriteria();
-
-        $query = $this->model;
-        if (! empty($this->with)) {
-            $query = $query->with($this->with);
-        }
+        $query = $this->applyCriteria();
         $result = $query->get($columns);
 
         $this->resetModel();
@@ -90,12 +86,7 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function find(int $id, array $columns = ['*']): ?Model
     {
-        $this->applyCriteria();
-
-        $query = $this->model;
-        if (! empty($this->with)) {
-            $query = $query->with($this->with);
-        }
+        $query = $this->applyCriteria();
         $result = $query->find($id, $columns);
 
         $this->resetModel();
@@ -108,12 +99,7 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function findOrFail(int $id, array $columns = ['*']): Model
     {
-        $this->applyCriteria();
-
-        $query = $this->model;
-        if (! empty($this->with)) {
-            $query = $query->with($this->with);
-        }
+        $query = $this->applyCriteria();
         $result = $query->findOrFail($id, $columns);
 
         $this->resetModel();
@@ -126,9 +112,8 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function findBy(string $field, $value, array $columns = ['*']): ?Model
     {
-        $this->applyCriteria();
-
-        $result = $this->model->where($field, $value)->first($columns);
+        $query = $this->applyCriteria();
+        $result = $query->where($field, $value)->first($columns);
 
         $this->resetModel();
 
@@ -140,9 +125,8 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function findAllBy(string $field, $value, array $columns = ['*']): Collection
     {
-        $this->applyCriteria();
-
-        $result = $this->model->where($field, $value)->get($columns);
+        $query = $this->applyCriteria();
+        $result = $query->where($field, $value)->get($columns);
 
         $this->resetModel();
 
@@ -166,9 +150,8 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function update(int $id, array $data): bool
     {
-        $this->applyCriteria();
-
-        $result = $this->model->findOrFail($id)->update($data);
+        $query = $this->applyCriteria();
+        $result = $query->findOrFail($id)->update($data);
 
         $this->resetModel();
 
@@ -192,9 +175,8 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function delete(int $id): bool
     {
-        $this->applyCriteria();
-
-        $result = $this->model->findOrFail($id)->delete();
+        $query = $this->applyCriteria();
+        $result = $query->findOrFail($id)->delete();
 
         $this->resetModel();
 
@@ -206,12 +188,7 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function paginate(int $perPage = 15, array $columns = ['*']): LengthAwarePaginator
     {
-        $this->applyCriteria();
-
-        $query = $this->model;
-        if (! empty($this->with)) {
-            $query = $query->with($this->with);
-        }
+        $query = $this->applyCriteria();
         $result = $query->paginate($perPage, $columns);
 
         $this->resetModel();
@@ -259,9 +236,8 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function get(array $columns = ['*']): Collection
     {
-        $this->applyCriteria();
-
-        $result = $this->model->get($columns);
+        $query = $this->applyCriteria();
+        $result = $query->get($columns);
 
         $this->resetModel();
 
@@ -271,21 +247,25 @@ abstract class BaseRepository implements RepositoryInterface
     /**
      * Apply all criteria to the model.
      */
-    protected function applyCriteria(): void
+    protected function applyCriteria(): Builder
     {
+        $query = $this->model->newQuery();
+
         // Apply eager loading
         if (! empty($this->with)) {
-            $this->model = $this->model->with($this->with);
+            $query = $query->with($this->with);
         }
 
         // Apply where conditions
         foreach ($this->wheres as $where) {
-            $this->model = $this->model->where($where['column'], $where['operator'], $where['value']);
+            $query = $query->where($where['column'], $where['operator'], $where['value']);
         }
 
         // Apply order by
         foreach ($this->orderBy as $order) {
-            $this->model = $this->model->orderBy($order['column'], $order['direction']);
+            $query = $query->orderBy($order['column'], $order['direction']);
         }
+
+        return $query;
     }
 }
