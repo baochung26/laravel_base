@@ -10,7 +10,7 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 |------|------------|
 | Run the project locally | [QUICK_START.md](QUICK_START.md) |
 | Swagger / OpenAPI docs | [SWAGGER_USAGE.md](SWAGGER_USAGE.md) |
-| Call the API (auth, users, files) | [API_FOUNDATION.md](API_FOUNDATION.md), [AUTHENTICATION.md](AUTHENTICATION.md), [USER_MODULE.md](USER_MODULE.md) |
+| Call the API (auth, users, files) | [API_FOUNDATION.md](API_FOUNDATION.md), [AUTHENTICATION.md](AUTHENTICATION.md) |
 | Response/error format | [API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md) |
 | API versioning & breaking changes | [API_VERSIONING_STRATEGY.md](API_VERSIONING_STRATEGY.md) |
 | Health checks (K8s, monitoring) | [HEALTH_CHECK.md](HEALTH_CHECK.md) |
@@ -19,7 +19,6 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 | Database, migrations, queries | [DATABASE_CONVENTIONS.md](DATABASE_CONVENTIONS.md), [QUERY_OPTIMIZATION.md](QUERY_OPTIMIZATION.md) |
 | Files, storage, S3 | [FILE_STORAGE.md](FILE_STORAGE.md) |
 | Logging, exceptions | [LOGGING.md](LOGGING.md), [API_RESPONSE_AND_ERRORS.md](API_RESPONSE_AND_ERRORS.md) |
-| Project evaluation & roadmap | [PROJECT_EVALUATION.md](PROJECT_EVALUATION.md) |
 
 ---
 
@@ -40,7 +39,6 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 
 - **[AUTHENTICATION.md](AUTHENTICATION.md)** – Register, login, logout, refresh token, Google login, RBAC.
 - **[AUTH_CHECKLIST.md](AUTH_CHECKLIST.md)** – Checklist of auth features.
-- **[USER_MODULE.md](USER_MODULE.md)** – User CRUD, profile, password, avatar (all under `/api/v1`).
 
 ### Infrastructure & config
 
@@ -62,11 +60,6 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 - **[LOGGING.md](LOGGING.md)** – JSON logs, request ID, slow queries.
 - **[QUEUE_SCHEDULER.md](QUEUE_SCHEDULER.md)** – Queues, jobs, scheduler.
 - **[SECURITY.md](SECURITY.md)** – Headers, CORS, best practices.
-
-### Reference & evaluation
-
-- **[PROJECT_AUDIT.md](PROJECT_AUDIT.md)** – Legacy audit report.
-- **[PROJECT_EVALUATION.md](PROJECT_EVALUATION.md)** – Current evaluation, strengths, issues, roadmap.
 
 ---
 

@@ -166,4 +166,4 @@ Routes được định nghĩa trong `routes/api/v1/routes.php`, prefix `api/v1`
 - **Public:** `POST /register`, `POST /login`, `POST /login/google`, `POST /password/forgot`, `POST /password/reset`, `GET /health`, `GET /health/live`, `GET /health/ready`
 - **Auth (Bearer):** `POST /logout`, `POST /refresh`, `GET /me`, `GET|PUT /profile/*`, `POST /password/change`, `GET|POST|PUT|DELETE /users/*`, `GET|POST .../roles-permissions/*`, `POST|GET|DELETE .../files/*`
 
-Chi tiết từng nhóm: [AUTHENTICATION.md](AUTHENTICATION.md), [USER_MODULE.md](USER_MODULE.md), [API_FOUNDATION.md](API_FOUNDATION.md).
+Chi tiết từng nhóm: [AUTHENTICATION.md](AUTHENTICATION.md), [API_FOUNDATION.md](API_FOUNDATION.md).
