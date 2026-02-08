@@ -56,6 +56,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                message: Service Unavailable
+                meta:
+                  request_id: "laravel-20260207120000-abc12345"
+                  timestamp: "2026-02-07T12:00:00+00:00"
+                errors:
+                  checks:
+                    db: { ok: false, message: "Connection refused", duration_ms: 5 }
+                    redis: { ok: false, message: "Connection refused", duration_ms: 2 }
+                  timestamp: "2026-02-07T12:00:00+00:00"
 
   /register:
     post:
@@ -926,33 +937,48 @@ components:
     ErrorEnvelope:
       type: object
       required: [success, message, meta]
+      description: Mọi lỗi API đều trả về format này. Không có statusCode/path/error ở top-level; khi APP_DEBUG=true có meta.status_code.
       properties:
         success:
           type: boolean
           example: false
         message:
           type: string
-          example: Error
+          example: Unauthenticated
         meta:
           $ref: '#/components/schemas/ApiMeta'
         errors:
           type: object
           nullable: true
           additionalProperties: true
+          description: Có khi validation (field -> array message) hoặc chi tiết lỗi (vd. required_roles).
+      example:
+        success: false
+        message: The email field is required.
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        errors:
+          email: ["The email field is required."]
+          password: ["The password field is required."]
 
     ResponseMeta:
       type: object
       required: [request_id, timestamp]
+      description: Luôn có request_id (khi có middleware), timestamp (ISO 8601). status_code chỉ khi APP_DEBUG=true.
       properties:
         request_id:
           type: string
           nullable: true
+          example: "laravel-20260207120000-abc12345"
         timestamp:
           type: string
           format: date-time
+          example: "2026-02-07T12:00:00+00:00"
         status_code:
           type: integer
           nullable: true
+          description: Chỉ có khi APP_DEBUG=true
 
     PaginationMeta:
       allOf:
@@ -1181,6 +1207,7 @@ components:
     SuccessNoDataResponse:
       type: object
       required: [success, message, meta]
+      description: Success nhưng không trả data (logout, forgot password, delete, v.v.). Key "data" không xuất hiện trong response.
       properties:
         success:
           type: boolean
@@ -1189,6 +1216,12 @@ components:
           type: string
         meta:
           $ref: '#/components/schemas/ResponseMeta'
+      example:
+        success: true
+        message: Logged out successfully
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
 
     HealthResponse:
       type: object
@@ -1204,6 +1237,18 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/HealthResponseData'
+      example:
+        success: true
+        message: OK
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          overall_status: ok
+          timestamp: "2026-02-07T12:00:00+00:00"
+          checks:
+            db: { ok: true, duration_ms: 2 }
+            redis: { ok: true, duration_ms: 1 }
 
     HealthLiveResponse:
       type: object
@@ -1219,6 +1264,15 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/HealthLiveResponseData'
+      example:
+        success: true
+        message: OK
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          status: ok
+          timestamp: "2026-02-07T12:00:00+00:00"
 
     HealthReadyResponse:
       type: object
@@ -1234,6 +1288,18 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/HealthReadyResponseData'
+      example:
+        success: true
+        message: OK
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          status: ready
+          timestamp: "2026-02-07T12:00:00+00:00"
+          checks:
+            db: { ok: true, duration_ms: 2 }
+            redis: { ok: true, duration_ms: 1 }
 
     RegisterSuccessResponse:
       type: object
@@ -1249,6 +1315,29 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/AuthSuccessData'
+      example:
+        success: true
+        message: User registered successfully
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          user:
+            id: 1
+            name: "John Doe"
+            email: "john@example.com"
+            avatar: null
+            email_verified_at: null
+            created_at: "2026-02-07T12:00:00.000000Z"
+            updated_at: "2026-02-07T12:00:00.000000Z"
+            roles: ["user"]
+            permissions: []
+          token: "1|abc..."
+          access_token: "1|abc..."
+          refresh_token: "2|xyz..."
+          permissions: []
+          roles: ["user"]
+          login_type: password
 
     LoginSuccessResponse:
       type: object
@@ -1264,6 +1353,29 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/AuthSuccessData'
+      example:
+        success: true
+        message: Login successful
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          user:
+            id: 1
+            name: "John Doe"
+            email: "john@example.com"
+            avatar: "http://localhost:8000/storage/avatars/1.jpg"
+            email_verified_at: "2026-02-07T12:00:00.000000Z"
+            created_at: "2026-02-07T12:00:00.000000Z"
+            updated_at: "2026-02-07T12:00:00.000000Z"
+            roles: ["user"]
+            permissions: ["view content"]
+          token: "1|abc..."
+          access_token: "1|abc..."
+          refresh_token: "2|xyz..."
+          permissions: ["view content"]
+          roles: ["user"]
+          login_type: password
 
     GoogleLoginSuccessResponse:
       type: object
@@ -1303,6 +1415,16 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/RefreshSuccessData'
+      example:
+        success: true
+        message: Token refreshed successfully
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          token: "3|new..."
+          access_token: "3|new..."
+          refresh_token: "4|new..."
 
     MeSuccessResponse:
       type: object
@@ -1318,6 +1440,25 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/MeSuccessData'
+      example:
+        success: true
+        message: Success
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          user:
+            id: 1
+            name: "John Doe"
+            email: "john@example.com"
+            avatar: "http://localhost:8000/storage/avatars/1.jpg"
+            email_verified_at: "2026-02-07T12:00:00.000000Z"
+            created_at: "2026-02-07T12:00:00.000000Z"
+            updated_at: "2026-02-07T12:00:00.000000Z"
+            roles: ["user"]
+            permissions: ["view content"]
+          permissions: ["view content"]
+          roles: ["user"]
 
     ForgotPasswordSuccessResponse:
       allOf:
@@ -1349,20 +1490,39 @@ components:
     ProfileSuccessResponse:
       type: object
       required: [success, message, meta, data]
+      description: "data là object User (từ UserResource), không bọc trong { user: ... }."
       properties:
         success:
           type: boolean
           example: true
         message:
           type: string
+          example: Profile retrieved successfully
         meta:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/User'
+      example:
+        success: true
+        message: Profile retrieved successfully
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          id: 1
+          name: "John Doe"
+          email: "john@example.com"
+          avatar: "http://localhost:8000/storage/avatars/1.jpg"
+          email_verified_at: "2026-02-07T12:00:00.000000Z"
+          created_at: "2026-02-07T12:00:00.000000Z"
+          updated_at: "2026-02-07T12:00:00.000000Z"
+          roles: ["user"]
+          permissions: ["view content"]
 
     UsersIndexSuccessResponse:
       type: object
       required: [success, message, meta, data, links]
+      description: Luôn phân trang. meta gồm request_id, timestamp và pagination (current_page, per_page, total, last_page, from, to).
       properties:
         success:
           type: boolean
@@ -1378,20 +1538,65 @@ components:
             $ref: '#/components/schemas/User'
         links:
           $ref: '#/components/schemas/PaginationLinks'
+      example:
+        success: true
+        message: Users retrieved successfully
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+          current_page: 1
+          per_page: 15
+          total: 100
+          last_page: 7
+          from: 1
+          to: 15
+        data:
+          - id: 1
+            name: "John Doe"
+            email: "john@example.com"
+            avatar: "http://localhost:8000/storage/avatars/1.jpg"
+            email_verified_at: "2026-02-07T12:00:00.000000Z"
+            created_at: "2026-02-07T12:00:00.000000Z"
+            updated_at: "2026-02-07T12:00:00.000000Z"
+            roles: ["user"]
+            permissions: []
+        links:
+          first: "http://localhost:8000/api/v1/users?page=1"
+          last: "http://localhost:8000/api/v1/users?page=7"
+          prev: null
+          next: "http://localhost:8000/api/v1/users?page=2"
 
     UserSuccessResponse:
       type: object
       required: [success, message, meta, data]
+      description: data là object User (UserResource). Dùng cho GET/PUT /users/{id}, create user, upload/delete avatar.
       properties:
         success:
           type: boolean
           example: true
         message:
           type: string
+          example: User retrieved successfully
         meta:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/User'
+      example:
+        success: true
+        message: User retrieved successfully
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          id: 1
+          name: "John Doe"
+          email: "john@example.com"
+          avatar: "http://localhost:8000/storage/avatars/1.jpg"
+          email_verified_at: "2026-02-07T12:00:00.000000Z"
+          created_at: "2026-02-07T12:00:00.000000Z"
+          updated_at: "2026-02-07T12:00:00.000000Z"
+          roles: ["user"]
+          permissions: ["view content"]
 
     UserDeletedSuccessResponse:
       allOf:
@@ -1416,6 +1621,20 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/RoleListData'
+      example:
+        success: true
+        message: Roles retrieved successfully
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          roles:
+            - id: 1
+              name: admin
+              guard_name: web
+              created_at: "2026-02-07T12:00:00.000000Z"
+              updated_at: "2026-02-07T12:00:00.000000Z"
+              permissions: ["manage users", "manage roles"]
 
     PermissionsListSuccessResponse:
       type: object
@@ -1431,20 +1650,52 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/PermissionListData'
+      example:
+        success: true
+        message: Permissions retrieved successfully
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          permissions:
+            - id: 1
+              name: view content
+              guard_name: web
+              created_at: "2026-02-07T12:00:00.000000Z"
+              updated_at: "2026-02-07T12:00:00.000000Z"
 
     RoleUserMutationSuccessResponse:
       type: object
       required: [success, message, meta, data]
+      description: Assign role, sync roles, assign permission, sync permissions — data.user là User (UserResource).
       properties:
         success:
           type: boolean
           example: true
         message:
           type: string
+          example: Role assigned successfully
         meta:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/RoleUserMutationData'
+      example:
+        success: true
+        message: Role assigned successfully
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          user:
+            id: 1
+            name: "John Doe"
+            email: "john@example.com"
+            avatar: "http://localhost:8000/storage/avatars/1.jpg"
+            email_verified_at: "2026-02-07T12:00:00.000000Z"
+            created_at: "2026-02-07T12:00:00.000000Z"
+            updated_at: "2026-02-07T12:00:00.000000Z"
+            roles: ["user", "editor"]
+            permissions: ["view content"]
 
     FileUploadSuccessResponse:
       type: object
@@ -1460,6 +1711,21 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/FileMetadata'
+      example:
+        success: true
+        message: File uploaded successfully
+        meta:
+          request_id: "laravel-20260207120000-abc12345"
+          timestamp: "2026-02-07T12:00:00+00:00"
+        data:
+          disk: private
+          path: "users/1/document.pdf"
+          name: document.pdf
+          directory: "users/1"
+          size_bytes: 1024
+          size_human: "1 KB"
+          mime_type: application/pdf
+          last_modified: "2026-02-07T12:00:00+00:00"
 
     FileUploadMultipleSuccessResponse:
       type: object
