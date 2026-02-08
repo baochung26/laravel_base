@@ -7,6 +7,7 @@ use App\Exceptions\ValidationException;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Services\Storage\StorageService;
+use App\Support\Validation\AvatarValidation;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -72,12 +73,7 @@ class ProfileController extends ApiController
     {
         try {
             $request->validate([
-                'avatar' => [
-                    'required',
-                    'image',
-                    'mimes:' . implode(',', config('constants.uploads.allowed_avatar_mimes')),
-                    'max:' . config('constants.uploads.max_avatar_kb'),
-                ],
+                'avatar' => AvatarValidation::requiredRules(),
             ]);
 
             $user = $request->user();
