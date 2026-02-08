@@ -172,9 +172,64 @@ const setFieldError = (field, message = '') => {
     return false;
 };
 
+const applyServerValidationErrors = () => {
+    const errors = window.AppFormErrors || {};
+    if (!errors || typeof errors !== 'object') {
+        return;
+    }
+
+    const entries = Object.entries(errors);
+    if (!entries.length) {
+        return;
+    }
+
+    let firstInvalidField = null;
+
+    entries.forEach(([fieldName, messages]) => {
+        const message = Array.isArray(messages) ? messages[0] : messages;
+        if (!message || typeof message !== 'string') {
+            return;
+        }
+
+        const escapedFieldName = window.CSS?.escape
+            ? window.CSS.escape(fieldName)
+            : String(fieldName).replace(/"/g, '\\"');
+        const selector = `[name="${escapedFieldName}"]`;
+        const field = document.querySelector(selector);
+        if (!field) {
+            return;
+        }
+
+        field.dataset.serverError = 'true';
+        field.dataset.serverErrorMessage = message;
+        field.dataset.serverErrorValue = (field.value || '').trim();
+        setFieldError(field, message);
+        if (!firstInvalidField) {
+            firstInvalidField = field;
+        }
+    });
+
+    if (firstInvalidField instanceof HTMLElement) {
+        firstInvalidField.focus();
+    }
+};
+
 const validateField = (field) => {
     if (field.disabled || field.type === 'hidden') {
         return true;
+    }
+
+    if (field.dataset.serverError === 'true') {
+        const currentValue = (field.value || '').trim();
+        const originalValue = field.dataset.serverErrorValue || '';
+
+        if (currentValue === originalValue) {
+            return setFieldError(field, field.dataset.serverErrorMessage || 'Dữ liệu chưa hợp lệ.');
+        }
+
+        delete field.dataset.serverError;
+        delete field.dataset.serverErrorMessage;
+        delete field.dataset.serverErrorValue;
     }
 
     const required = field.dataset.required === 'true' || field.hasAttribute('required');
@@ -223,27 +278,22 @@ const initFormValidation = () => {
 
         form.addEventListener('submit', (event) => {
             let isValid = true;
+            let firstInvalidField = null;
 
             fields.forEach((field) => {
                 const fieldValid = validateField(field);
                 if (!fieldValid) {
                     isValid = false;
+                    if (!firstInvalidField) {
+                        firstInvalidField = field;
+                    }
                 }
             });
 
             if (!isValid) {
                 event.preventDefault();
                 event.stopPropagation();
-                Swal.fire({
-                    icon: 'warning',
-                    text: 'Vui lòng kiểm tra lại thông tin đã nhập.',
-                    confirmButtonText: 'Đã hiểu',
-                    customClass: {
-                        popup: 'app-swal-popup',
-                        confirmButton: 'app-swal-confirm',
-                    },
-                    buttonsStyling: false,
-                });
+                firstInvalidField?.focus();
             }
         });
     });
@@ -353,6 +403,7 @@ const initUi = () => {
     initThemeToggle();
     showAlertFromSession();
     initFormValidation();
+    applyServerValidationErrors();
     initConfirmActions();
     initLoadingEvents();
     initAutoSubmitForms();

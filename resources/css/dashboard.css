@@ -31,6 +31,13 @@ html {
     font-family: inherit;
 }
 
+/* Keep native select dropdown readable across browsers/OS */
+.dash-body select option,
+.dash-body select optgroup {
+    color: #0f172a;
+    background: #ffffff;
+}
+
 .dash-shell {
     min-height: 100vh;
     display: grid;

@@ -55,6 +55,13 @@ html[data-theme="light"] {
     font-family: inherit;
 }
 
+/* Keep native select dropdown readable across browsers/OS */
+.landing-body select option,
+.landing-body select optgroup {
+    color: #0f172a;
+    background: #ffffff;
+}
+
 .landing-body .text-white {
     color: var(--landing-heading) !important;
 }
@@ -206,7 +213,7 @@ html[data-theme="light"] {
 .landing-user-meta small {
     color: var(--landing-muted);
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 400;
 }
 
 .landing-user-menu {
@@ -306,7 +313,7 @@ html[data-theme="light"] .theme-icon-sun {
 
 .landing-btn-login {
     color: var(--landing-heading);
-    font-weight: 700;
+    font-weight: 400;
     text-decoration: none;
     border-radius: 10px;
     padding: 0.55rem 1.1rem;
@@ -320,7 +327,7 @@ html[data-theme="light"] .theme-icon-sun {
 }
 
 .landing-btn-register {
-    font-weight: 700;
+    font-weight: 400;
     border: 0;
     border-radius: 10px;
     padding: 0.55rem 1.15rem;

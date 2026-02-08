@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Laravel') }}</title>
     <script>window.AppUIConfig = @json(config('ui.web', []));</script>
+    <script>window.AppFormErrors = @json($errors->toArray());</script>
     @vite(['resources/css/auth.css', 'resources/js/app.js'])
 </head>
 <body
@@ -13,9 +14,6 @@
     @if (session('status'))
         data-alert-type="success"
         data-alert-message="{{ session('status') }}"
-    @elseif ($errors->any())
-        data-alert-type="error"
-        data-alert-message="{{ $errors->first() }}"
     @endif
 >
     <main class="auth-card">

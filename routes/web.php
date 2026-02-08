@@ -7,8 +7,6 @@ use App\Http\Controllers\Web\Auth\NewPasswordController;
 use App\Http\Controllers\Web\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Web\Auth\RegisteredUserController;
 use App\Http\Controllers\Web\Auth\VerifyEmailController;
-use App\Http\Controllers\Web\DashboardController;
-use App\Http\Controllers\Web\DashboardUserController;
 use App\Http\Controllers\Web\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,14 +40,8 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', DashboardController::class)->name('dashboard');
-    Route::get('/dashboard/users', [DashboardUserController::class, 'index'])->name('dashboard.users.index');
-    Route::get('/dashboard/users/create', [DashboardUserController::class, 'create'])->name('dashboard.users.create');
-    Route::post('/dashboard/users', [DashboardUserController::class, 'store'])->name('dashboard.users.store');
-    Route::get('/dashboard/users/{user}/edit', [DashboardUserController::class, 'edit'])->name('dashboard.users.edit');
-    Route::put('/dashboard/users/{user}', [DashboardUserController::class, 'update'])->name('dashboard.users.update');
-    Route::patch('/dashboard/users/{user}/status', [DashboardUserController::class, 'updateStatus'])->name('dashboard.users.status.update');
-    Route::delete('/dashboard/users/{user}', [DashboardUserController::class, 'destroy'])->name('dashboard.users.destroy');
+    require __DIR__ . '/web/dashboard.php';
+
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');

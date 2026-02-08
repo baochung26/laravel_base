@@ -2,6 +2,13 @@
     border-bottom: 1px solid var(--landing-line);
 }
 
+/* Keep native select dropdown readable across browsers/OS */
+.profile-page select option,
+.profile-page select optgroup {
+    color: #0f172a;
+    background: #ffffff;
+}
+
 .profile-title {
     color: var(--landing-heading);
     font-size: clamp(2rem, 2.6vw, 3rem);

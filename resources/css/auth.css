@@ -43,6 +43,13 @@ html {
     font-family: inherit;
 }
 
+/* Keep native select dropdown readable across browsers/OS */
+.auth-body select option,
+.auth-body select optgroup {
+    color: #0f172a;
+    background: #ffffff;
+}
+
 .auth-card {
     width: 100%;
     max-width: 460px;
