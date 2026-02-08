@@ -2,6 +2,7 @@
 
 namespace App\Services\Storage;
 
+use App\Helpers\FileHelper;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -91,7 +92,7 @@ class FileManagerService
             'folder' => $folder,
             'total_files' => count($files),
             'total_size_bytes' => $totalSize,
-            'total_size_human' => $this->formatBytes($totalSize),
+            'total_size_human' => FileHelper::formatBytes($totalSize),
         ];
     }
 
@@ -155,7 +156,7 @@ class FileManagerService
             'name' => basename($path),
             'directory' => dirname($path) === '.' ? '' : dirname($path),
             'size_bytes' => (int) $fs->size($path),
-            'size_human' => $this->formatBytes((int) $fs->size($path)),
+            'size_human' => FileHelper::formatBytes((int) $fs->size($path)),
             'mime_type' => $fs->mimeType($path),
             'last_modified' => date(DATE_ATOM, (int) $fs->lastModified($path)),
             'url' => $disk === 'public' ? $fs->url($path) : null,
@@ -164,29 +165,9 @@ class FileManagerService
 
     private function generateFilename(UploadedFile $file): string
     {
-        $original = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $original = preg_replace('/[^A-Za-z0-9_\-]/', '_', $original ?? 'file');
-        $original = trim($original, '_');
-        $original = $original !== '' ? $original : 'file';
+        $safe = FileHelper::sanitizeFilename($file->getClientOriginalName());
+        $ext = FileHelper::getSafeExtension($file->getClientOriginalName()) ?: 'bin';
 
-        return $original . '_' . time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . '.' . $file->getClientOriginalExtension();
-    }
-
-    private function formatBytes(int $bytes): string
-    {
-        if ($bytes < 1024) {
-            return $bytes . ' B';
-        }
-
-        $units = ['KB', 'MB', 'GB', 'TB'];
-        $value = $bytes / 1024;
-        $index = 0;
-
-        while ($value >= 1024 && $index < count($units) - 1) {
-            $value /= 1024;
-            $index++;
-        }
-
-        return number_format($value, 2) . ' ' . $units[$index];
+        return pathinfo($safe, PATHINFO_FILENAME) . '_' . time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . '.' . $ext;
     }
 }

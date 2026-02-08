@@ -54,7 +54,7 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 - **[DATABASE_CONVENTIONS.md](DATABASE_CONVENTIONS.md)** – Migrations, soft deletes, indexes.
 - **[QUERY_OPTIMIZATION.md](QUERY_OPTIMIZATION.md)** – Eager loading, indexing, performance.
 - **[CACHE_STRATEGY.md](CACHE_STRATEGY.md)** – Cache keys, invalidation.
-- **[FILE_STORAGE.md](FILE_STORAGE.md)** – Local, S3, public/private files.
+- **[FILE_STORAGE.md](FILE_STORAGE.md)** – Làm việc với file: service/helper (FileManagerService, StorageService, FileHelper, StoragePath), API, demo đầy đủ (tiếng Việt).
 - **[EMAIL_USAGE.md](EMAIL_USAGE.md)** – Mail config and usage.
 
 ### Reliability & operations
