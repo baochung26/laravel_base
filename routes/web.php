@@ -10,7 +10,7 @@ use App\Http\Controllers\Web\Auth\VerifyEmailController;
 use App\Http\Controllers\Web\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('welcome');
+Route::view('/', 'landing.index')->name('welcome');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');

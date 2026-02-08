@@ -15,7 +15,7 @@ class DashboardUserController extends Controller
 {
     public function create(Request $request): View
     {
-        return view('dashboard.users-create', [
+        return view('dashboard.users.create', [
             'roles' => Role::query()->orderBy('name')->pluck('name'),
         ]);
     }
@@ -96,7 +96,7 @@ class DashboardUserController extends Controller
             ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
             ->count();
 
-        return view('dashboard.users', [
+        return view('dashboard.users.index', [
             'users' => $users,
             'filters' => $filters,
             'roles' => Role::query()->orderBy('name')->pluck('name'),
@@ -106,7 +106,7 @@ class DashboardUserController extends Controller
 
     public function edit(Request $request, User $user): View
     {
-        return view('dashboard.users-edit', [
+        return view('dashboard.users.edit', [
             'targetUser' => $user->load('roles'),
             'roles' => Role::query()->orderBy('name')->pluck('name'),
         ]);
