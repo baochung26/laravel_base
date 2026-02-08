@@ -24,6 +24,11 @@ html {
     font-family: Arial, Helvetica, sans-serif;
     background: var(--dash-bg);
     color: var(--dash-text);
+    color-scheme: dark;
+}
+
+html[data-theme="light"] .dash-body {
+    color-scheme: light;
 }
 
 .dash-body input,
@@ -647,9 +652,27 @@ html {
     border-radius: 8px;
     border: 1px solid var(--dash-line);
     background: transparent;
-    color: var(--dash-text);
+    color: var(--dash-text) !important;
+    -webkit-text-fill-color: var(--dash-text);
+    caret-color: var(--dash-text);
     padding: 0 10px;
     width: 100%;
+}
+
+.dash-users-filters input,
+.dash-users-filters select {
+    color: var(--dash-text) !important;
+    -webkit-text-fill-color: var(--dash-text);
+    caret-color: var(--dash-text);
+}
+
+.dash-users-edit-grid input:focus,
+.dash-users-edit-grid select:focus,
+.dash-users-filters input:focus,
+.dash-users-filters select:focus {
+    outline: none;
+    border-color: #35558a;
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
 }
 
 .dash-users-edit-grid input:-webkit-autofill,
@@ -683,9 +706,32 @@ html[data-theme="light"] .dash-users-filters input:-webkit-autofill:active {
     border: 1px solid #cbd5e1 !important;
 }
 
+html[data-theme="light"] .dash-users-edit-grid input,
+html[data-theme="light"] .dash-users-edit-grid select,
+html[data-theme="light"] .dash-users-filters input,
+html[data-theme="light"] .dash-users-filters select {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a;
+    caret-color: #0f172a;
+}
+
 .dash-users-edit-grid input:disabled {
     background: rgba(148, 163, 184, 0.16);
     color: var(--dash-muted);
+}
+
+.dash-users-edit-grid .field-error,
+.dash-users-filters .field-error,
+.dash-body .invalid-feedback {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: #fca5a5 !important;
+}
+
+html[data-theme="light"] .dash-users-edit-grid .field-error,
+html[data-theme="light"] .dash-users-filters .field-error,
+html[data-theme="light"] .dash-body .invalid-feedback {
+    color: #dc2626 !important;
 }
 
 .dash-users-edit-actions {

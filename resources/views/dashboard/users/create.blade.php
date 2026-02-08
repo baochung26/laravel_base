@@ -11,23 +11,23 @@
         </div>
 
         <article class="dash-users-edit-card">
-            <form method="POST" action="{{ route('dashboard.users.store') }}" data-validate novalidate>
+            <form method="POST" action="{{ route('dashboard.users.store') }}" data-validate novalidate autocomplete="off">
                 @csrf
 
                 <div class="dash-users-edit-grid">
                     <div class="dash-filter-field">
                         <label for="create_name">Tên</label>
-                        <input id="create_name" name="name" type="text" value="{{ old('name') }}" required data-label="Tên">
+                        <input id="create_name" name="name" type="text" value="{{ old('name') }}" required data-label="Tên" autocomplete="off">
                     </div>
 
                     <div class="dash-filter-field">
                         <label for="create_email">Email</label>
-                        <input id="create_email" name="email" type="email" value="{{ old('email') }}" required data-label="Email">
+                        <input id="create_email" name="email" type="email" value="{{ old('email') }}" required data-label="Email" autocomplete="new-email">
                     </div>
 
                     <div class="dash-filter-field">
                         <label for="create_password">Mật khẩu</label>
-                        <input id="create_password" name="password" type="password" required data-label="Mật khẩu" data-min-length="8">
+                        <input id="create_password" name="password" type="password" required data-label="Mật khẩu" data-min-length="8" autocomplete="new-password">
                     </div>
 
                     <div class="dash-filter-field">
@@ -39,6 +39,7 @@
                             required
                             data-label="Xác nhận mật khẩu"
                             data-match="#create_password"
+                            autocomplete="new-password"
                         >
                     </div>
 
@@ -69,4 +70,3 @@
         </article>
     </section>
 @endsection
-
