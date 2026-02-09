@@ -58,7 +58,17 @@ class CacheService
      */
     public function forgetPattern(string $pattern): int
     {
-        $keys = Cache::getRedis()->keys(CacheKey::generate('*') . $pattern);
+        $store = Cache::getStore();
+
+        if (!method_exists($store, 'getRedis')) {
+            Log::warning('Cache forget pattern skipped (store does not support getRedis)', [
+                'pattern' => $pattern,
+                'store' => get_class($store),
+            ]);
+            return 0;
+        }
+
+        $keys = $store->getRedis()->keys(CacheKey::generate('*') . $pattern);
         $count = 0;
 
         foreach ($keys as $key) {
