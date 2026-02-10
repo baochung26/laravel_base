@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use App\Exceptions\ValidationException;
+use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class PasswordResetService
 {
@@ -52,5 +55,36 @@ class PasswordResetService
         }
 
         return true;
+    }
+
+    /**
+     * Send password reset link and return status for web flow.
+     */
+    public function sendResetLinkStatus(string $email): string
+    {
+        return Password::sendResetLink(['email' => $email]);
+    }
+
+    /**
+     * Reset password and return status for web flow.
+     */
+    public function resetPasswordWithToken(string $email, string $token, string $password): string
+    {
+        return Password::reset(
+            [
+                'email' => $email,
+                'password' => $password,
+                'password_confirmation' => $password,
+                'token' => $token,
+            ],
+            function (User $user, string $newPassword): void {
+                $user->forceFill([
+                    'password' => Hash::make($newPassword),
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                event(new PasswordReset($user));
+            }
+        );
     }
 }

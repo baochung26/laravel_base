@@ -3,26 +3,30 @@
 namespace App\Http\Controllers\Web\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Web\Auth\ForgotPasswordRequest;
+use App\Services\PasswordResetService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
 {
+    public function __construct(
+        protected PasswordResetService $passwordResetService
+    ) {
+    }
+
     public function create(): View
     {
         return view('auth.forgot-password');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(ForgotPasswordRequest $request): RedirectResponse
     {
-        $request->validate([
-            'email' => ['required', 'email'],
-        ]);
-
-        $status = Password::sendResetLink($request->only('email'));
+        $status = $this->passwordResetService->sendResetLinkStatus(
+            $request->string('email')->toString()
+        );
 
         if ($status === Password::RESET_LINK_SENT) {
             return back()->with('status', __($status));

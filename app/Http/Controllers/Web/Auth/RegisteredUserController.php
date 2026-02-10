@@ -4,14 +4,19 @@ namespace App\Http\Controllers\Web\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\Auth\RegisterRequest;
-use App\Models\User;
-use Illuminate\Auth\Events\Registered;
+use App\Services\WebAuthService;
+use App\DTOs\UserDTO;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    public function __construct(
+        protected WebAuthService $webAuthService
+    ) {
+    }
+
     public function create(): View
     {
         return view('auth.register');
@@ -19,9 +24,8 @@ class RegisteredUserController extends Controller
 
     public function store(RegisterRequest $request): RedirectResponse
     {
-        $user = User::query()->create($request->validated());
-
-        event(new Registered($user));
+        $userDTO = UserDTO::fromArray($request->validated());
+        $user = $this->webAuthService->register($userDTO);
 
         Auth::login($user);
 

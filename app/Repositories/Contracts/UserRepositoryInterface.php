@@ -30,4 +30,18 @@ interface UserRepositoryInterface extends RepositoryInterface
      * Search users by name or email.
      */
     public function search(string $keyword, int $perPage = 15);
+
+    /**
+     * Paginate users for dashboard with filters.
+     *
+     * @param array{q:string,role:string,status:string,sort_by:string,sort_dir:string} $filters
+     */
+    public function paginateForDashboard(array $filters, int $perPage = 10);
+
+    /**
+     * Get dashboard user stats.
+     *
+     * @return array{total:int,active:int,inactive:int,admin:int}
+     */
+    public function dashboardStats(): array;
 }

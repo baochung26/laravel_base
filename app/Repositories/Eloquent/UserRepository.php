@@ -91,4 +91,60 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
     }
+
+    /**
+     * Paginate users for dashboard with filters.
+     *
+     * @param array{q:string,role:string,status:string,sort_by:string,sort_dir:string} $filters
+     */
+    public function paginateForDashboard(array $filters, int $perPage = 10): LengthAwarePaginator
+    {
+        $query = $this->model->newQuery()->with('roles');
+
+        if ($filters['q'] !== '') {
+            $keyword = $filters['q'];
+            $query->where(function ($subQuery) use ($keyword) {
+                $subQuery
+                    ->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('email', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        if ($filters['role'] !== '') {
+            $query->whereHas('roles', function ($roleQuery) use ($filters) {
+                $roleQuery->where('name', $filters['role']);
+            });
+        }
+
+        if ($filters['status'] === 'active') {
+            $query->whereNotNull('email_verified_at');
+        } elseif ($filters['status'] === 'inactive') {
+            $query->whereNull('email_verified_at');
+        }
+
+        return $query
+            ->orderBy($filters['sort_by'], $filters['sort_dir'])
+            ->paginate($perPage);
+    }
+
+    /**
+     * Get dashboard user stats.
+     *
+     * @return array{total:int,active:int,inactive:int,admin:int}
+     */
+    public function dashboardStats(): array
+    {
+        $total = $this->model->newQuery()->count();
+        $active = $this->model->newQuery()->whereNotNull('email_verified_at')->count();
+        $admin = $this->model->newQuery()
+            ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
+            ->count();
+
+        return [
+            'total' => $total,
+            'active' => $active,
+            'inactive' => max($total - $active, 0),
+            'admin' => $admin,
+        ];
+    }
 }

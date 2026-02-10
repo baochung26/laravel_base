@@ -2,42 +2,32 @@
 
 namespace App\Http\Controllers\Web\Auth;
 
-use App\Helpers\PasswordRules;
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Auth\Events\PasswordReset;
+use App\Http\Requests\Web\Auth\ResetPasswordRequest;
+use App\Services\PasswordResetService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class NewPasswordController extends Controller
 {
+    public function __construct(
+        protected PasswordResetService $passwordResetService
+    ) {
+    }
+
     public function create(Request $request): View
     {
         return view('auth.reset-password', ['request' => $request]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(ResetPasswordRequest $request): RedirectResponse
     {
-        $request->validate([
-            'token' => ['required'],
-            'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', PasswordRules::standard()],
-        ]);
-
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user) use ($request): void {
-                $user->forceFill([
-                    'password' => Hash::make($request->string('password')),
-                    'remember_token' => Str::random(60),
-                ])->save();
-
-                event(new PasswordReset($user));
-            }
+        $status = $this->passwordResetService->resetPasswordWithToken(
+            $request->string('email')->toString(),
+            $request->string('token')->toString(),
+            $request->string('password')->toString()
         );
 
         return $status === Password::PASSWORD_RESET
