@@ -6,7 +6,9 @@ use App\DTOs\UserDTO;
 use App\Exceptions\ResourceNotFoundException;
 use App\Exceptions\ValidationException;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Services\Storage\StorageService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -14,7 +16,8 @@ use Spatie\Permission\Models\Role;
 class UserService extends BaseService
 {
     public function __construct(
-        protected UserRepositoryInterface $userRepository
+        protected UserRepositoryInterface $userRepository,
+        protected StorageService $storageService
     ) {
         parent::__construct($userRepository);
     }
@@ -100,6 +103,51 @@ class UserService extends BaseService
     }
 
     /**
+     * Create user with optional avatar file. Returns user model with relations for API resource.
+     */
+    public function createWithAvatar(UserDTO $userDTO, ?UploadedFile $avatarFile = null, ?string $roleName = null)
+    {
+        $created = $this->create($userDTO, $roleName);
+        if ($created->id && $avatarFile) {
+            $this->setAvatarFromFile($created->id, $avatarFile);
+        }
+
+        return $this->getModelByIdWithRelations($created->id);
+    }
+
+    /**
+     * Update user with optional avatar file. Returns user model with relations.
+     */
+    public function updateWithAvatar(int $id, UserDTO $userDTO, ?UploadedFile $avatarFile = null)
+    {
+        $dto = $userDTO;
+        if ($avatarFile) {
+            $user = $this->userRepository->findOrFail($id);
+            if ($user->avatar) {
+                $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
+            }
+            $path = $this->storageService->storeAvatar($avatarFile, $id, config('constants.uploads.avatar_disk'));
+            $dto = UserDTO::fromArray(array_merge($userDTO->toArray(), ['avatar' => $path]));
+        }
+        $this->update($id, $dto);
+
+        return $this->getModelByIdWithRelations($id);
+    }
+
+    /**
+     * Set user avatar from uploaded file (replaces existing avatar).
+     */
+    public function setAvatarFromFile(int $userId, UploadedFile $file): void
+    {
+        $user = $this->userRepository->findOrFail($userId);
+        if ($user->avatar) {
+            $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
+        }
+        $path = $this->storageService->storeAvatar($file, $userId, config('constants.uploads.avatar_disk'));
+        $this->userRepository->update($userId, ['avatar' => $path]);
+    }
+
+    /**
      * Update user.
      */
     public function update(int $id, UserDTO $userDTO): UserDTO
@@ -159,18 +207,11 @@ class UserService extends BaseService
      */
     public function deleteAvatar(int $id): UserDTO
     {
-        // Check if user exists
         $user = $this->userRepository->findOrFail($id);
-
-        // Delete old avatar file if exists
-        if ($user->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->avatar)) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+        if ($user->avatar) {
+            $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
         }
-
-        // Update user to remove avatar
         $this->userRepository->update($id, ['avatar' => null]);
-
-        // Reload user with relations
         $updatedUser = $this->userRepository->withRolesAndPermissions($id);
 
         return UserDTO::fromModel($updatedUser);
@@ -195,22 +236,36 @@ class UserService extends BaseService
             'email' => $userDTO->email,
         ];
 
-        // Update avatar if provided
         if ($userDTO->avatar) {
-            // Delete old avatar if exists
-            if ($user->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->avatar)) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            if ($user->avatar) {
+                $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
             }
             $data['avatar'] = $userDTO->avatar;
         }
 
-        // Update user
         $this->userRepository->update($id, $data);
-
-        // Reload user with relations
         $updatedUser = $this->userRepository->withRolesAndPermissions($id);
 
         return UserDTO::fromModel($updatedUser);
+    }
+
+    /**
+     * Update profile with optional avatar file. Returns user model with relations.
+     */
+    public function updateProfileWithAvatar(int $id, UserDTO $userDTO, ?UploadedFile $avatarFile = null)
+    {
+        $dto = $userDTO;
+        if ($avatarFile) {
+            $user = $this->userRepository->findOrFail($id);
+            if ($user->avatar) {
+                $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
+            }
+            $path = $this->storageService->storeAvatar($avatarFile, $id, config('constants.uploads.avatar_disk'));
+            $dto = UserDTO::fromArray(array_merge($userDTO->toArray(), ['avatar' => $path]));
+        }
+        $this->updateProfile($id, $dto);
+
+        return $this->getModelByIdWithRelations($id);
     }
 
     /**
@@ -235,12 +290,14 @@ class UserService extends BaseService
     }
 
     /**
-     * Delete user.
+     * Delete user and remove avatar file if present.
      */
     public function delete(int $id): bool
     {
-        // Check if user exists
-        $this->findOrFail($id);
+        $user = $this->userRepository->findOrFail($id);
+        if ($user->avatar) {
+            $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
+        }
 
         return $this->deleteRecord($id);
     }

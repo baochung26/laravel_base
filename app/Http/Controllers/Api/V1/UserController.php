@@ -8,7 +8,6 @@ use App\Exceptions\ValidationException;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
-use App\Services\Storage\StorageService;
 use App\Support\Validation\AvatarValidation;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
@@ -17,8 +16,7 @@ use Illuminate\Http\Request;
 class UserController extends ApiController
 {
     public function __construct(
-        protected UserService $userService,
-        protected StorageService $storageService
+        protected UserService $userService
     ) {
     }
 
@@ -31,11 +29,10 @@ class UserController extends ApiController
         $perPage = (int) $request->get('per_page', config('constants.app.default_per_page'));
         $perPage = max(1, min($perPage, config('constants.app.max_per_page', 100)));
         $search = $request->get('search');
-        $columns = ['id', 'name', 'email', 'avatar', 'created_at'];
 
         $users = $search
             ? $this->userService->search($search, $perPage)
-            : $this->userService->paginate($perPage, $columns);
+            : $this->userService->paginate($perPage);
 
         return $this->resourcePaginatedResponse(
             UserResource::collection($users->items()),
@@ -51,20 +48,12 @@ class UserController extends ApiController
     {
         try {
             $data = $request->validated();
-            if ($request->hasFile('avatar')) {
-                unset($data['avatar']);
-            }
+            unset($data['avatar']);
             $userDTO = UserDTO::fromArray($data);
-            $user = $this->userService->create($userDTO);
-            if ($request->hasFile('avatar')) {
-                $avatarPath = $this->storageService->storeAvatar($request->file('avatar'), $user->id);
-                $this->userService->updateAvatar($user->id, $avatarPath);
-            }
-            // Get model with relations for Resource
-            $userModel = $this->userService->getModelByIdWithRelations($user->id);
+            $user = $this->userService->createWithAvatar($userDTO, $request->file('avatar'));
 
             return $this->successResponse(
-                new UserResource($userModel),
+                new UserResource($user),
                 'User created successfully',
                 201
             );
@@ -79,10 +68,10 @@ class UserController extends ApiController
     public function show(int $id): JsonResponse
     {
         try {
-            $userModel = $this->userService->getModelByIdWithRelations($id);
+            $user = $this->userService->getModelByIdWithRelations($id);
 
             return $this->successResponse(
-                new UserResource($userModel),
+                new UserResource($user),
                 'User retrieved successfully'
             );
         } catch (ResourceNotFoundException $e) {
@@ -97,21 +86,12 @@ class UserController extends ApiController
     {
         try {
             $data = $request->validated();
-
-            if ($request->hasFile('avatar')) {
-                $user = $this->userService->getById($id);
-                if ($user->avatar) {
-                    $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
-                }
-                $data['avatar'] = $this->storageService->storeAvatar($request->file('avatar'), $id);
-            }
-
+            unset($data['avatar']);
             $userDTO = UserDTO::fromArray(array_merge($data, ['id' => $id]));
-            $this->userService->update($id, $userDTO);
-            $userModel = $this->userService->getModelByIdWithRelations($id);
+            $user = $this->userService->updateWithAvatar($id, $userDTO, $request->file('avatar'));
 
             return $this->successResponse(
-                new UserResource($userModel),
+                new UserResource($user),
                 'User updated successfully'
             );
         } catch (ValidationException $e) {
@@ -127,10 +107,6 @@ class UserController extends ApiController
     public function destroy(int $id): JsonResponse
     {
         try {
-            $user = $this->userService->getById($id);
-            if ($user->avatar) {
-                $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
-            }
             $this->userService->delete($id);
 
             return $this->successResponse(null, 'User deleted successfully');
@@ -148,17 +124,11 @@ class UserController extends ApiController
             $request->validate([
                 'avatar' => AvatarValidation::requiredRules(),
             ]);
-
-            $user = $this->userService->getById($id);
-            if ($user->avatar) {
-                $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
-            }
-            $avatarPath = $this->storageService->storeAvatar($request->file('avatar'), $id);
-            $this->userService->updateAvatar($id, $avatarPath);
-            $userModel = $this->userService->getModelByIdWithRelations($id);
+            $this->userService->setAvatarFromFile($id, $request->file('avatar'));
+            $user = $this->userService->getModelByIdWithRelations($id);
 
             return $this->successResponse(
-                new UserResource($userModel),
+                new UserResource($user),
                 'Avatar uploaded successfully'
             );
         } catch (ResourceNotFoundException $e) {
@@ -173,10 +143,10 @@ class UserController extends ApiController
     {
         try {
             $this->userService->deleteAvatar($id);
-            $userModel = $this->userService->getModelByIdWithRelations($id);
+            $user = $this->userService->getModelByIdWithRelations($id);
 
             return $this->successResponse(
-                new UserResource($userModel),
+                new UserResource($user),
                 'Avatar deleted successfully'
             );
         } catch (ResourceNotFoundException $e) {

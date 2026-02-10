@@ -10,13 +10,15 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
+use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AuthController extends ApiController
 {
     public function __construct(
-        protected AuthService $authService
+        protected AuthService $authService,
+        protected UserService $userService
     ) {
     }
 
@@ -77,7 +79,7 @@ class AuthController extends ApiController
     public function me(Request $request): JsonResponse
     {
         $userDTO = $this->authService->me();
-        $userModel = app(\App\Services\UserService::class)->getModelByIdWithRelations($userDTO->id);
+        $userModel = $this->userService->getModelByIdWithRelations($userDTO->id);
 
         return $this->successResponse([
             'user' => new UserResource($userModel),
@@ -98,7 +100,7 @@ class AuthController extends ApiController
 
     private function authResponse(array $result, string $message, int $statusCode = 200): JsonResponse
     {
-        $userModel = app(\App\Services\UserService::class)->getModelByIdWithRelations($result['user']->id);
+        $userModel = $this->userService->getModelByIdWithRelations($result['user']->id);
 
         return $this->successResponse([
             'user' => new UserResource($userModel),
