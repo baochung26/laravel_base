@@ -4,8 +4,9 @@ namespace App\Repositories\Contracts;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
-interface RepositoryInterface
+interface CrudRepositoryInterface
 {
     /**
      * Get all models.
@@ -55,25 +56,5 @@ interface RepositoryInterface
     /**
      * Get paginated models.
      */
-    public function paginate(int $perPage = 15, array $columns = ['*']);
-
-    /**
-     * Get models with relationships.
-     */
-    public function with(array $relations): self;
-
-    /**
-     * Apply where clause.
-     */
-    public function where(string $column, $operator = null, $value = null): self;
-
-    /**
-     * Apply order by clause.
-     */
-    public function orderBy(string $column, string $direction = 'asc'): self;
-
-    /**
-     * Get the query result.
-     */
-    public function get(array $columns = ['*']): Collection;
+    public function paginate(int $perPage = 15, array $columns = ['*']): LengthAwarePaginator;
 }

@@ -44,7 +44,7 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
     /**
      * Get all users with roles.
      */
-    public function getAllWithRoles(array $columns = ['*'])
+    public function getAllWithRoles(array $columns = ['*']): \Illuminate\Database\Eloquent\Collection
     {
         return $this->with(['roles'])
             ->all($columns);
@@ -53,7 +53,7 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
     /**
      * Get all users with roles and permissions.
      */
-    public function getAllWithRelations(array $columns = ['*'])
+    public function getAllWithRelations(array $columns = ['*']): \Illuminate\Database\Eloquent\Collection
     {
         return $this->with(['roles', 'permissions'])
             ->all($columns);
@@ -99,11 +99,11 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
      */
     public function paginateForDashboard(array $filters, int $perPage = 10): LengthAwarePaginator
     {
-        $query = $this->model->newQuery()->with('roles');
+        $query = $this->with(['roles']);
 
         if ($filters['q'] !== '') {
             $keyword = $filters['q'];
-            $query->where(function ($subQuery) use ($keyword) {
+            $query = $query->whereNested(function ($subQuery) use ($keyword) {
                 $subQuery
                     ->where('name', 'like', '%' . $keyword . '%')
                     ->orWhere('email', 'like', '%' . $keyword . '%');
@@ -111,15 +111,15 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
         }
 
         if ($filters['role'] !== '') {
-            $query->whereHas('roles', function ($roleQuery) use ($filters) {
+            $query = $query->whereHas('roles', function ($roleQuery) use ($filters) {
                 $roleQuery->where('name', $filters['role']);
             });
         }
 
         if ($filters['status'] === 'active') {
-            $query->whereNotNull('email_verified_at');
+            $query = $query->whereNotNull('email_verified_at');
         } elseif ($filters['status'] === 'inactive') {
-            $query->whereNull('email_verified_at');
+            $query = $query->whereNull('email_verified_at');
         }
 
         return $query
@@ -134,11 +134,27 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
      */
     public function dashboardStats(): array
     {
-        $total = $this->model->newQuery()->count();
-        $active = $this->model->newQuery()->whereNotNull('email_verified_at')->count();
-        $admin = $this->model->newQuery()
-            ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
-            ->count();
+        $table = $this->model->getTable();
+        $tables = config('permission.table_names');
+        $rolesTable = $tables['roles'] ?? 'roles';
+        $modelHasRolesTable = $tables['model_has_roles'] ?? 'model_has_roles';
+
+        $summary = $this->model->newQuery()
+            ->selectRaw(
+                'COUNT(*) as total,
+                SUM(CASE WHEN ' . $table . '.email_verified_at IS NOT NULL THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN EXISTS (
+                    SELECT 1 FROM ' . $modelHasRolesTable . ' mhr
+                    JOIN ' . $rolesTable . ' r ON r.id = mhr.role_id
+                    WHERE mhr.model_type = ? AND mhr.model_id = ' . $table . '.id AND r.name = ?
+                ) THEN 1 ELSE 0 END) as admin',
+                [User::class, 'admin']
+            )
+            ->first();
+
+        $total = (int) ($summary->total ?? 0);
+        $active = (int) ($summary->active ?? 0);
+        $admin = (int) ($summary->admin ?? 0);
 
         return [
             'total' => $total,
