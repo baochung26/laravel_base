@@ -15,6 +15,7 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 | API versioning & breaking changes | [API_VERSIONING_STRATEGY.md](API_VERSIONING_STRATEGY.md) |
 | Health checks (K8s, monitoring) | [HEALTH_CHECK.md](HEALTH_CHECK.md) |
 | Security, CORS, rate limits | [SECURITY.md](SECURITY.md), [AUTHENTICATION.md](AUTHENTICATION.md) |
+| Google login web (session) | [WEB_GOOGLE_LOGIN.md](WEB_GOOGLE_LOGIN.md) |
 | Config, env, cache, queue | [CONFIG_ENVIRONMENT.md](CONFIG_ENVIRONMENT.md), [CACHE_STRATEGY.md](CACHE_STRATEGY.md), [QUEUE_SCHEDULER.md](QUEUE_SCHEDULER.md) |
 | Database, migrations, queries | [DATABASE_CONVENTIONS.md](DATABASE_CONVENTIONS.md), [QUERY_OPTIMIZATION.md](QUERY_OPTIMIZATION.md) |
 | Files, storage, S3 | [FILE_STORAGE.md](FILE_STORAGE.md) |
@@ -40,6 +41,7 @@ Documentation for the Laravel API base project. All API examples use the **`/api
 
 - **[AUTHENTICATION.md](AUTHENTICATION.md)** – Register, login, logout, refresh token, Google login, RBAC.
 - **[AUTH_CHECKLIST.md](AUTH_CHECKLIST.md)** – Checklist of auth features.
+- **[WEB_GOOGLE_LOGIN.md](WEB_GOOGLE_LOGIN.md)** – Luồng đăng nhập Google cho web (session) và hướng dẫn setup.
 
 ### Infrastructure & config
 
