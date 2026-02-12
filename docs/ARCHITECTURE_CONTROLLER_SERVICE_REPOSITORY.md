@@ -76,39 +76,7 @@ Validation được đưa ra Form Request thay vì viết trong controller:
 
 Controller chỉ gọi `$request->validated()` và truyền xuống service.
 
-## 6. Repository Criteria (Query Builder)
-
-BaseRepository hỗ trợ gom criteria theo thứ tự gọi, giúp chain lọc/sắp xếp nhất quán:
-
-```php
-$users = $userRepository
-    ->with(['roles'])
-    ->where('status', 'active')
-    ->whereNested(function ($q) {
-        $q->where('name', 'like', '%john%')
-          ->orWhere('email', 'like', '%john%');
-    })
-    ->orderBy('created_at', 'desc')
-    ->paginate(10);
-```
-
-Hỗ trợ các criteria chính: `where`, `orWhere`, `whereIn`, `whereNull`, `whereNotNull`, `whereHas`, `whereNested`, `orderBy`, `with`.
-
-Khi cần truy vấn phức tạp, có thể dùng `query()` để lấy Builder đã áp criteria:
-
-```php
-$query = $userRepository->where('status', 'active')->query();
-$results = $query->whereHas('roles', fn ($q) => $q->where('name', 'admin'))->get();
-```
-
-Lưu ý: `query()` **không reset criteria**. Nếu cần tránh dính state, dùng `queryAndReset()` hoặc gọi `resetCriteria()` sau khi dùng:
-
-```php
-$query = $userRepository->where('status', 'active')->queryAndReset();
-$results = $query->get();
-```
-
-## 7. Lợi ích
+## 6. Lợi ích
 
 - **Controller mỏng**: dễ đọc, dễ viết test API (chỉ cần assert service được gọi đúng và response format).
 - **Service tái sử dụng**: logic user/role/permission/avatar có thể dùng từ API, Artisan, Job, Filament, …

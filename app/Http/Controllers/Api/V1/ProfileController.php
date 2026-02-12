@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\DTOs\UserDTO;
 use App\Exceptions\ValidationException;
-use App\Http\Requests\Profile\UploadAvatarRequest;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
+use App\Support\Validation\AvatarValidation;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -55,9 +55,12 @@ class ProfileController extends ApiController
     /**
      * Upload avatar for authenticated user.
      */
-    public function uploadAvatar(UploadAvatarRequest $request): JsonResponse
+    public function uploadAvatar(Request $request): JsonResponse
     {
         try {
+            $request->validate([
+                'avatar' => AvatarValidation::requiredRules(),
+            ]);
             $user = $request->user();
             $this->userService->setAvatarFromFile($user->id, $request->file('avatar'));
             $userModel = $this->userService->getModelByIdWithRelations($user->id);

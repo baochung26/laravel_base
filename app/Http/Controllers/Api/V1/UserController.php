@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\DTOs\UserDTO;
 use App\Exceptions\ResourceNotFoundException;
 use App\Exceptions\ValidationException;
-use App\Http\Requests\User\UploadAvatarRequest;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
+use App\Support\Validation\AvatarValidation;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -118,9 +118,12 @@ class UserController extends ApiController
     /**
      * Upload avatar for user.
      */
-    public function uploadAvatar(UploadAvatarRequest $request, int $id): JsonResponse
+    public function uploadAvatar(Request $request, int $id): JsonResponse
     {
         try {
+            $request->validate([
+                'avatar' => AvatarValidation::requiredRules(),
+            ]);
             $this->userService->setAvatarFromFile($id, $request->file('avatar'));
             $user = $this->userService->getModelByIdWithRelations($id);
 
