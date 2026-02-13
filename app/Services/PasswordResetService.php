@@ -22,7 +22,7 @@ class PasswordResetService
         $status = Password::sendResetLink(['email' => $email]);
 
         if ($status !== Password::RESET_LINK_SENT) {
-            throw new ValidationException('Unable to send password reset link. Please try again later.');
+            throw new ValidationException(__('messages.errors.password_reset_failed'));
         }
 
         return $status;
@@ -48,7 +48,7 @@ class PasswordResetService
         );
 
         if ($status !== Password::PASSWORD_RESET) {
-            throw new ValidationException('Invalid or expired reset token.');
+            throw new ValidationException(__('messages.errors.reset_token_invalid'));
         }
 
         return true;

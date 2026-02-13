@@ -29,7 +29,7 @@ class RolePermissionController extends ApiController
 
         return $this->successResponse([
             'roles' => RoleResource::collection($roles),
-        ], 'Roles retrieved successfully');
+        ], __('messages.success.roles_retrieved'));
     }
 
     /**
@@ -41,7 +41,7 @@ class RolePermissionController extends ApiController
 
         return $this->successResponse([
             'permissions' => PermissionResource::collection($permissions),
-        ], 'Permissions retrieved successfully');
+        ], __('messages.success.permissions_retrieved'));
     }
 
     /**
@@ -57,7 +57,7 @@ class RolePermissionController extends ApiController
 
         return $this->successResponse([
             'user' => new UserResource($user),
-        ], 'Role assigned successfully');
+        ], __('messages.success.role_assigned'));
     }
 
     /**
@@ -73,7 +73,7 @@ class RolePermissionController extends ApiController
 
         return $this->successResponse([
             'user' => new UserResource($user),
-        ], 'Role removed successfully');
+        ], __('messages.success.role_removed'));
     }
 
     /**
@@ -89,7 +89,7 @@ class RolePermissionController extends ApiController
 
         return $this->successResponse([
             'user' => new UserResource($user),
-        ], 'Roles synced successfully');
+        ], __('messages.success.roles_synced'));
     }
 
     /**
@@ -105,7 +105,7 @@ class RolePermissionController extends ApiController
 
         return $this->successResponse([
             'user' => new UserResource($user),
-        ], 'Permission assigned successfully');
+        ], __('messages.success.permission_assigned'));
     }
 
     /**
@@ -121,6 +121,6 @@ class RolePermissionController extends ApiController
 
         return $this->successResponse([
             'user' => new UserResource($user),
-        ], 'Permission revoked successfully');
+        ], __('messages.success.permission_revoked'));
     }
 }

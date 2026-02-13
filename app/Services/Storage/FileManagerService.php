@@ -44,7 +44,7 @@ class FileManagerService
         $this->authorizePath($user, $path);
 
         if (! Storage::disk($disk)->exists($path)) {
-            abort(404, 'File not found.');
+            abort(404, __('messages.errors.file_not_found'));
         }
 
         return Storage::disk($disk)->download($path);
@@ -122,7 +122,7 @@ class FileManagerService
         $segments = array_filter(explode('/', $path), fn ($segment) => $segment !== '');
         foreach ($segments as $segment) {
             if ($segment === '.' || $segment === '..') {
-                abort(422, 'Invalid path.');
+                abort(422, __('messages.errors.invalid_path'));
             }
         }
 

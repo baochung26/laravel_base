@@ -8,9 +8,24 @@ use App\Http\Controllers\Web\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Web\Auth\RegisteredUserController;
 use App\Http\Controllers\Web\Auth\VerifyEmailController;
 use App\Http\Controllers\Web\ProfileController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'landing.index')->name('welcome');
+
+Route::post('/locale', function (Request $request) {
+    $available = config('app.available_locales', ['en', 'vi']);
+    $locale = $request->string('locale')->toString();
+
+    if (! in_array($locale, $available, true)) {
+        $locale = config('app.locale');
+    }
+
+    $request->session()->put('locale', $locale);
+    app()->setLocale($locale);
+
+    return redirect()->back();
+})->name('locale.switch');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');

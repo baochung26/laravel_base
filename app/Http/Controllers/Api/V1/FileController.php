@@ -29,7 +29,7 @@ class FileController extends ApiController
             $request->input('folder')
         );
 
-        return $this->successResponse($metadata, 'File uploaded successfully', 201);
+        return $this->successResponse($metadata, __('messages.success.file_uploaded'), 201);
     }
 
     public function uploadMultiple(UploadMultipleFilesRequest $request): JsonResponse
@@ -49,7 +49,7 @@ class FileController extends ApiController
         return $this->successResponse([
             'count' => count($uploaded),
             'files' => $uploaded,
-        ], 'Files uploaded successfully', 201);
+        ], __('messages.success.files_uploaded'), 201);
     }
 
     public function download(FilePathRequest $request): StreamedResponse
@@ -77,10 +77,10 @@ class FileController extends ApiController
         );
 
         if (! $deleted) {
-            return $this->notFoundResponse('File not found');
+            return $this->notFoundResponse(__('messages.errors.file_not_found'));
         }
 
-        return $this->successResponse(null, 'File deleted successfully');
+        return $this->successResponse(null, __('messages.success.file_deleted'));
     }
 
     public function list(FileListRequest $request): JsonResponse
@@ -99,7 +99,7 @@ class FileController extends ApiController
         return $this->successResponse([
             'count' => count($files),
             'files' => $files,
-        ], 'Files retrieved successfully');
+        ], __('messages.success.files_retrieved'));
     }
 
     public function stats(FileListRequest $request): JsonResponse
@@ -114,7 +114,7 @@ class FileController extends ApiController
             (bool) $request->boolean('recursive', true)
         );
 
-        return $this->successResponse($stats, 'File statistics retrieved successfully');
+        return $this->successResponse($stats, __('messages.success.file_stats_retrieved'));
     }
 
     private function authorizeAbility($user, string $permission): void
@@ -124,7 +124,7 @@ class FileController extends ApiController
             ! $user->can('manage files') &&
             ! $user->can('manage users')
         ) {
-            abort(403, 'You are not authorized for this action.');
+            abort(403, __('messages.errors.unauthorized_action'));
         }
     }
 }

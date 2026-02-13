@@ -27,7 +27,7 @@ class ProfileController extends ApiController
 
         return $this->successResponse(
             new UserResource($user),
-            'Profile retrieved successfully'
+            __('messages.success.profile_retrieved')
         );
     }
 
@@ -43,10 +43,10 @@ class ProfileController extends ApiController
             $userDTO = UserDTO::fromArray(array_merge($data, ['id' => $user->id]));
             $userModel = $this->userService->updateProfileWithAvatar($user->id, $userDTO, $request->file('avatar'));
 
-            return $this->successResponse(
-                new UserResource($userModel),
-                'Profile updated successfully'
-            );
+        return $this->successResponse(
+            new UserResource($userModel),
+            __('messages.success.profile_updated')
+        );
         } catch (ValidationException $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
@@ -65,10 +65,10 @@ class ProfileController extends ApiController
             $this->userService->setAvatarFromFile($user->id, $request->file('avatar'));
             $userModel = $this->userService->getModelByIdWithRelations($user->id);
 
-            return $this->successResponse(
-                new UserResource($userModel),
-                'Avatar uploaded successfully'
-            );
+        return $this->successResponse(
+            new UserResource($userModel),
+            __('messages.success.avatar_uploaded')
+        );
         } catch (ValidationException $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
@@ -84,10 +84,10 @@ class ProfileController extends ApiController
             $this->userService->deleteAvatar($user->id);
             $userModel = $this->userService->getModelByIdWithRelations($user->id);
 
-            return $this->successResponse(
-                new UserResource($userModel),
-                'Avatar deleted successfully'
-            );
+        return $this->successResponse(
+            new UserResource($userModel),
+            __('messages.success.avatar_deleted')
+        );
         } catch (ValidationException $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }

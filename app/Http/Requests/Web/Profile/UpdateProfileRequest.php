@@ -28,14 +28,4 @@ class UpdateProfileRequest extends FormRequest
         ];
     }
 
-    /**
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'name.required' => 'Tên là bắt buộc.',
-            ...AvatarValidation::messages('avatar', 'vi'),
-        ];
-    }
 }

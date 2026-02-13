@@ -161,6 +161,37 @@ html[data-theme="light"] {
     margin-left: auto;
 }
 
+.landing-lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.landing-lang-btn {
+    border: 1px solid var(--landing-line);
+    background: transparent;
+    color: var(--landing-header-link);
+    padding: 0.25rem 0.6rem;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: all 0.2s ease;
+}
+
+.landing-lang-btn:hover,
+.landing-lang-btn:focus {
+    color: var(--landing-header-link-hover);
+    border-color: var(--landing-header-link-hover);
+}
+
+.landing-lang-btn.is-active {
+    background: var(--landing-register-bg);
+    color: var(--landing-register-text);
+    border-color: transparent;
+}
+
 .landing-mobile-menu {
     width: 100%;
 }

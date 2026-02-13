@@ -18,13 +18,13 @@ class EnsureAdmin
         if (! $user || ! (method_exists($user, 'hasRole') && $user->hasRole('admin'))) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Forbidden. You do not have the required role.',
+                    'message' => __('messages.errors.forbidden_role'),
                 ], 403);
             }
 
             return redirect()
                 ->route('dashboard')
-                ->with('error', 'Bạn không có quyền truy cập tính năng này.');
+                ->with('error', __('messages.errors.forbidden_feature'));
         }
 
         return $next($request);

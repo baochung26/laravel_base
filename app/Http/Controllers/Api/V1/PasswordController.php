@@ -34,7 +34,7 @@ class PasswordController extends ApiController
                 $data['password']
             );
 
-            return $this->successResponse(null, 'Password changed successfully');
+            return $this->successResponse(null, __('messages.success.password_changed'));
         } catch (ValidationException $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
@@ -49,7 +49,7 @@ class PasswordController extends ApiController
             $data = $request->validated();
             $this->passwordResetService->sendResetLink($data['email']);
 
-            return $this->successResponse(null, 'Password reset link sent to your email.');
+            return $this->successResponse(null, __('messages.success.password_reset_link_sent'));
         } catch (ValidationException $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
@@ -68,7 +68,7 @@ class PasswordController extends ApiController
                 $data['password']
             );
 
-            return $this->successResponse(null, 'Password reset successfully. You can now login with your new password.');
+            return $this->successResponse(null, __('messages.success.password_reset_success'));
         } catch (ValidationException $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }

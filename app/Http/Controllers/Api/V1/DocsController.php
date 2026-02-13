@@ -13,7 +13,7 @@ class DocsController extends ApiController
         $path = base_path('docs/openapi.yaml');
 
         if (! file_exists($path)) {
-            abort(404, 'OpenAPI specification not found.');
+            abort(404, __('messages.errors.openapi_not_found'));
         }
 
         return response()->file($path, [

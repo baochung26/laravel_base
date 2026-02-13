@@ -18,12 +18,12 @@ class CheckPermission
     public function handle(Request $request, Closure $next, string $permission): Response
     {
         if (! $request->user()) {
-            return ApiResponse::error('Unauthenticated.', 401);
+            return ApiResponse::error(__('messages.errors.unauthenticated'), 401);
         }
 
         if (! $request->user()->can($permission)) {
             return ApiResponse::error(
-                'Forbidden. You do not have the required permission.',
+                __('messages.errors.forbidden_permission'),
                 403,
                 [
                     'required_permission' => [$permission],

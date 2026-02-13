@@ -58,7 +58,7 @@ class UserService extends BaseService
         $user = $this->userRepository->withRolesAndPermissions($id);
 
         if (! $user) {
-            throw new ResourceNotFoundException("User with ID {$id} not found");
+            throw new ResourceNotFoundException(__('messages.errors.user_not_found', ['id' => $id]));
         }
 
         return UserDTO::fromModel($user);
@@ -81,7 +81,7 @@ class UserService extends BaseService
     {
         // Check if email already exists
         if ($this->userRepository->existsByEmail($userDTO->email)) {
-            throw new ValidationException('Email already exists');
+            throw new ValidationException(__('messages.errors.email_exists'));
         }
 
         // Hash password if provided
@@ -188,7 +188,7 @@ class UserService extends BaseService
 
         // Check if email is being changed and if it's already taken
         if ($userDTO->email !== $user->email && $this->userRepository->existsByEmail($userDTO->email)) {
-            throw new ValidationException('Email already exists');
+            throw new ValidationException(__('messages.errors.email_exists'));
         }
 
         // Prepare update data
@@ -258,7 +258,7 @@ class UserService extends BaseService
 
         // Check if email is being changed and if it's already taken
         if ($userDTO->email !== $user->email && $this->userRepository->existsByEmail($userDTO->email)) {
-            throw new ValidationException('Email already exists');
+            throw new ValidationException(__('messages.errors.email_exists'));
         }
 
         // Prepare update data
@@ -316,7 +316,7 @@ class UserService extends BaseService
 
         // Verify current password
         if (! Hash::check($currentPassword, $user->password)) {
-            throw new ValidationException('Current password is incorrect');
+            throw new ValidationException(__('messages.errors.current_password_incorrect'));
         }
 
         // Update password
@@ -355,12 +355,12 @@ class UserService extends BaseService
     {
         $user = $this->userRepository->withRolesAndPermissions($userId);
         if (! $user) {
-            throw new ResourceNotFoundException("User with ID {$userId} not found");
+            throw new ResourceNotFoundException(__('messages.errors.user_not_found', ['id' => $userId]));
         }
 
         $role = Role::where('name', $roleName)->first();
         if (! $role) {
-            throw new ValidationException("Role '{$roleName}' not found");
+            throw new ValidationException(__('messages.errors.role_not_found', ['role' => $roleName]));
         }
 
         $user->assignRole($role);
@@ -376,7 +376,7 @@ class UserService extends BaseService
     {
         $user = $this->userRepository->withRolesAndPermissions($userId);
         if (! $user) {
-            throw new ResourceNotFoundException("User with ID {$userId} not found");
+            throw new ResourceNotFoundException(__('messages.errors.user_not_found', ['id' => $userId]));
         }
 
         $user->removeRole($roleName);
@@ -392,13 +392,13 @@ class UserService extends BaseService
     {
         $user = $this->userRepository->withRolesAndPermissions($userId);
         if (! $user) {
-            throw new ResourceNotFoundException("User with ID {$userId} not found");
+            throw new ResourceNotFoundException(__('messages.errors.user_not_found', ['id' => $userId]));
         }
 
         // Validate all roles exist
         $roles = Role::whereIn('name', $roleNames)->get();
         if ($roles->count() !== count($roleNames)) {
-            throw new ValidationException('One or more roles not found');
+            throw new ValidationException(__('messages.errors.roles_not_found'));
         }
 
         $user->syncRoles($roleNames);
@@ -422,7 +422,7 @@ class UserService extends BaseService
     {
         $user = $this->userRepository->withRolesAndPermissions($id);
         if (! $user) {
-            throw new ResourceNotFoundException("User with ID {$id} not found");
+            throw new ResourceNotFoundException(__('messages.errors.user_not_found', ['id' => $id]));
         }
 
         return $user;
@@ -536,7 +536,7 @@ class UserService extends BaseService
     public function updateDashboardUserStatus(int $actorId, int $userId, string $status): void
     {
         if ($actorId === $userId) {
-            throw new ValidationException('Bạn không thể tự thay đổi trạng thái của chính mình.');
+            throw new ValidationException(__('messages.errors.cannot_change_own_status'));
         }
 
         $emailVerifiedAt = $status === 'active' ? now() : null;
@@ -552,7 +552,7 @@ class UserService extends BaseService
     public function deleteDashboardUser(int $actorId, int $userId): void
     {
         if ($actorId === $userId) {
-            throw new ValidationException('Bạn không thể tự xóa chính mình.');
+            throw new ValidationException(__('messages.errors.cannot_delete_self'));
         }
 
         $this->delete($userId);
@@ -565,12 +565,12 @@ class UserService extends BaseService
     {
         $user = $this->userRepository->withRolesAndPermissions($userId);
         if (! $user) {
-            throw new ResourceNotFoundException("User with ID {$userId} not found");
+            throw new ResourceNotFoundException(__('messages.errors.user_not_found', ['id' => $userId]));
         }
 
         $permission = \Spatie\Permission\Models\Permission::where('name', $permissionName)->first();
         if (! $permission) {
-            throw new ValidationException("Permission '{$permissionName}' not found");
+            throw new ValidationException(__('messages.errors.permission_not_found', ['permission' => $permissionName]));
         }
 
         $user->givePermissionTo($permission);
@@ -586,7 +586,7 @@ class UserService extends BaseService
     {
         $user = $this->userRepository->withRolesAndPermissions($userId);
         if (! $user) {
-            throw new ResourceNotFoundException("User with ID {$userId} not found");
+            throw new ResourceNotFoundException(__('messages.errors.user_not_found', ['id' => $userId]));
         }
 
         $user->revokePermissionTo($permissionName);

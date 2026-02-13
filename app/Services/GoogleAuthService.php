@@ -29,7 +29,7 @@ class GoogleAuthService
 
         if (! $googleProfile['email_verified']) {
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'google' => 'Google account email is not verified.',
+                'google' => __('messages.errors.google_email_not_verified'),
             ]);
         }
 

@@ -14,8 +14,8 @@
                     @auth
                         <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('dashboard') }}">Đi tới Dashboard</a>
                     @else
-                        <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('register') }}">Bắt đầu ngay</a>
-                        <a class="btn btn-outline-light btn-lg px-4" href="{{ route('login') }}">Đăng nhập</a>
+                        <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('register') }}">{{ __('ui.nav.register') }}</a>
+                        <a class="btn btn-outline-light btn-lg px-4" href="{{ route('login') }}">{{ __('ui.nav.login') }}</a>
                     @endauth
                 </div>
             </div>
@@ -81,8 +81,8 @@
                 @auth
                     <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('dashboard') }}">Mở Dashboard</a>
                 @else
-                    <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('register') }}">Đăng ký miễn phí</a>
-                    <a class="btn btn-outline-light btn-lg px-4" href="{{ route('login') }}">Đã có tài khoản? Đăng nhập</a>
+                    <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('register') }}">{{ __('ui.nav.register') }}</a>
+                    <a class="btn btn-outline-light btn-lg px-4" href="{{ route('login') }}">{{ __('ui.nav.login') }}</a>
                 @endauth
             </div>
         </div>

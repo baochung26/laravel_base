@@ -43,7 +43,7 @@ class ProfileController extends Controller
         return redirect()
             ->route('profile.show')
             ->with('active_profile_tab', 'profile')
-            ->with('status', 'Cập nhật thông tin cá nhân thành công.');
+            ->with('status', __('messages.success.profile_updated'));
     }
 
     public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
@@ -65,6 +65,6 @@ class ProfileController extends Controller
         return redirect()
             ->route('profile.show')
             ->with('active_profile_tab', 'password')
-            ->with('status', 'Đổi mật khẩu thành công.');
+            ->with('status', __('messages.success.password_changed'));
     }
 }

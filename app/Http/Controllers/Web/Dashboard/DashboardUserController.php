@@ -36,7 +36,7 @@ class DashboardUserController extends Controller
             $userDTO = UserDTO::fromArray($validated);
             $this->userService->createDashboardUser($userDTO, $validated['role'], $validated['status']);
 
-            return redirect()->route('dashboard.users.index')->with('status', 'Tạo người dùng thành công.');
+            return redirect()->route('dashboard.users.index')->with('status', __('messages.success.dashboard_user_created'));
         } catch (ValidationException $exception) {
             return back()
                 ->withErrors(['email' => $exception->getMessage()])
@@ -73,7 +73,7 @@ class DashboardUserController extends Controller
             $userDTO = UserDTO::fromArray($validated);
             $this->userService->updateDashboardUser($user->id, $userDTO, $validated['role'] ?? null);
 
-            return $this->redirectBackToUsersList($request, 'Cập nhật người dùng thành công.');
+            return $this->redirectBackToUsersList($request, __('messages.success.dashboard_user_updated'));
         } catch (ValidationException $exception) {
             return $this->redirectBackToUsersList($request)
                 ->withErrors(['email' => $exception->getMessage()]);
@@ -88,7 +88,7 @@ class DashboardUserController extends Controller
 
             $this->userService->updateDashboardUserStatus($actor->id, $user->id, $validated['status']);
 
-            return $this->redirectBackToUsersList($request, 'Cập nhật trạng thái người dùng thành công.');
+            return $this->redirectBackToUsersList($request, __('messages.success.dashboard_user_status_updated'));
         } catch (ValidationException $exception) {
             return $this->redirectBackToUsersList($request)->withErrors([
                 'status' => $exception->getMessage(),
@@ -102,7 +102,7 @@ class DashboardUserController extends Controller
             $actor = $request->user();
             $this->userService->deleteDashboardUser($actor->id, $user->id);
 
-            return $this->redirectBackToUsersList($request, 'Xóa người dùng thành công.');
+            return $this->redirectBackToUsersList($request, __('messages.success.dashboard_user_deleted'));
         } catch (ValidationException $exception) {
             return $this->redirectBackToUsersList($request)->withErrors([
                 'delete' => $exception->getMessage(),

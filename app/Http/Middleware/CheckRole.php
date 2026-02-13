@@ -18,7 +18,7 @@ class CheckRole
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         if (! $request->user()) {
-            return ApiResponse::error('Unauthenticated.', 401);
+            return ApiResponse::error(__('messages.errors.unauthenticated'), 401);
         }
 
         foreach ($roles as $role) {
@@ -28,7 +28,7 @@ class CheckRole
         }
 
         return ApiResponse::error(
-            'Forbidden. You do not have the required role.',
+            __('messages.errors.forbidden_role'),
             403,
             [
                 'required_roles' => $roles,

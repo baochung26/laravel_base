@@ -37,7 +37,7 @@ class UserController extends ApiController
         return $this->resourcePaginatedResponse(
             UserResource::collection($users->items()),
             $users,
-            'Users retrieved successfully'
+            __('messages.success.users_retrieved')
         );
     }
 
@@ -52,11 +52,11 @@ class UserController extends ApiController
             $userDTO = UserDTO::fromArray($data);
             $user = $this->userService->createWithAvatar($userDTO, $request->file('avatar'));
 
-            return $this->successResponse(
-                new UserResource($user),
-                'User created successfully',
-                201
-            );
+        return $this->successResponse(
+            new UserResource($user),
+            __('messages.success.user_created'),
+            201
+        );
         } catch (ValidationException $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
@@ -70,10 +70,10 @@ class UserController extends ApiController
         try {
             $user = $this->userService->getModelByIdWithRelations($id);
 
-            return $this->successResponse(
-                new UserResource($user),
-                'User retrieved successfully'
-            );
+        return $this->successResponse(
+            new UserResource($user),
+            __('messages.success.user_retrieved')
+        );
         } catch (ResourceNotFoundException $e) {
             return $this->notFoundResponse($e->getMessage());
         }
@@ -90,10 +90,10 @@ class UserController extends ApiController
             $userDTO = UserDTO::fromArray(array_merge($data, ['id' => $id]));
             $user = $this->userService->updateWithAvatar($id, $userDTO, $request->file('avatar'));
 
-            return $this->successResponse(
-                new UserResource($user),
-                'User updated successfully'
-            );
+        return $this->successResponse(
+            new UserResource($user),
+            __('messages.success.user_updated')
+        );
         } catch (ValidationException $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         } catch (ResourceNotFoundException $e) {
@@ -109,7 +109,7 @@ class UserController extends ApiController
         try {
             $this->userService->delete($id);
 
-            return $this->successResponse(null, 'User deleted successfully');
+        return $this->successResponse(null, __('messages.success.user_deleted'));
         } catch (ResourceNotFoundException $e) {
             return $this->notFoundResponse($e->getMessage());
         }
@@ -127,10 +127,10 @@ class UserController extends ApiController
             $this->userService->setAvatarFromFile($id, $request->file('avatar'));
             $user = $this->userService->getModelByIdWithRelations($id);
 
-            return $this->successResponse(
-                new UserResource($user),
-                'Avatar uploaded successfully'
-            );
+        return $this->successResponse(
+            new UserResource($user),
+            __('messages.success.avatar_uploaded')
+        );
         } catch (ResourceNotFoundException $e) {
             return $this->notFoundResponse($e->getMessage());
         }
@@ -145,10 +145,10 @@ class UserController extends ApiController
             $this->userService->deleteAvatar($id);
             $user = $this->userService->getModelByIdWithRelations($id);
 
-            return $this->successResponse(
-                new UserResource($user),
-                'Avatar deleted successfully'
-            );
+        return $this->successResponse(
+            new UserResource($user),
+            __('messages.success.avatar_deleted')
+        );
         } catch (ResourceNotFoundException $e) {
             return $this->notFoundResponse($e->getMessage());
         }

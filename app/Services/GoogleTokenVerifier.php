@@ -17,17 +17,17 @@ class GoogleTokenVerifier
         ]);
 
         if (! $response->successful()) {
-            throw new UnauthorizedException('Invalid Google token.');
+            throw new UnauthorizedException(__('messages.errors.invalid_google_token'));
         }
 
         $payload = $response->json();
         if (! is_array($payload)) {
-            throw new UnauthorizedException('Invalid Google token payload.');
+            throw new UnauthorizedException(__('messages.errors.invalid_google_token_payload'));
         }
 
         $issuer = $payload['iss'] ?? null;
         if (! in_array($issuer, ['https://accounts.google.com', 'accounts.google.com'], true)) {
-            throw new UnauthorizedException('Invalid Google token issuer.');
+            throw new UnauthorizedException(__('messages.errors.invalid_google_token_issuer'));
         }
 
         $audience = $payload['aud'] ?? null;
@@ -37,18 +37,18 @@ class GoogleTokenVerifier
         ));
 
         if (! empty($allowedAudiences) && ! in_array($audience, $allowedAudiences, true)) {
-            throw new UnauthorizedException('Google token audience mismatch.');
+            throw new UnauthorizedException(__('messages.errors.google_token_audience_mismatch'));
         }
 
         $expiresAt = (int) ($payload['exp'] ?? 0);
         if ($expiresAt > 0 && $expiresAt < time()) {
-            throw new UnauthorizedException('Google token has expired.');
+            throw new UnauthorizedException(__('messages.errors.google_token_expired'));
         }
 
         $googleId = $payload['sub'] ?? null;
         $email = isset($payload['email']) ? strtolower((string) $payload['email']) : null;
         if (! $googleId || ! $email) {
-            throw new UnauthorizedException('Google token missing required profile information.');
+            throw new UnauthorizedException(__('messages.errors.google_token_missing_profile'));
         }
 
         return [

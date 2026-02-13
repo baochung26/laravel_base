@@ -35,13 +35,14 @@ class AuthService
         $key = 'register.' . request()->ip();
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
-            throw new ValidationException('Too many registration attempts. Please try again in ' . ceil($seconds / 60) . ' minute(s).');
+            $minutes = (int) ceil($seconds / 60);
+            throw new ValidationException(__('messages.errors.too_many_registration_attempts', ['minutes' => $minutes]));
         }
 
         // Check if email already exists
         if ($this->userRepository->existsByEmail($userDTO->email)) {
             RateLimiter::hit($key, 600); // 10 minutes lockout
-            throw new ValidationException('Email already exists');
+            throw new ValidationException(__('messages.errors.email_exists'));
         }
 
         // Create user
@@ -74,9 +75,10 @@ class AuthService
         // Check rate limit for login attempts (5 attempts per 5 minutes)
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
+            $minutes = (int) ceil($seconds / 60);
 
             throw LaravelValidationException::withMessages([
-                'email' => ['Too many login attempts. Please try again in ' . ceil($seconds / 60) . ' minute(s).'],
+                'email' => [__('messages.errors.too_many_login_attempts', ['minutes' => $minutes])],
             ]);
         }
 
@@ -85,7 +87,7 @@ class AuthService
             RateLimiter::hit($key, 300); // 5 minutes lockout
 
             throw LaravelValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'email' => [__('messages.errors.credentials_incorrect')],
             ]);
         }
 
@@ -116,7 +118,7 @@ class AuthService
         $googleProfile = $this->googleTokenVerifier->verifyIdToken($idToken);
 
         if (! $googleProfile['email_verified']) {
-            throw new UnauthorizedException('Google account email is not verified.');
+            throw new UnauthorizedException(__('messages.errors.google_email_not_verified'));
         }
 
         $user = $this->userRepository->findBy('google_id', $googleProfile['google_id']);
@@ -192,7 +194,7 @@ class AuthService
     {
         $user = Auth::user();
         if (! $user) {
-            throw new ValidationException('User not authenticated');
+            throw new ValidationException(__('messages.errors.user_not_authenticated'));
         }
 
         return $this->userService->getByIdWithRelations($user->id);
@@ -205,12 +207,12 @@ class AuthService
     {
         $user = Auth::user();
         if (! $user) {
-            throw new ValidationException('User not authenticated');
+            throw new ValidationException(__('messages.errors.user_not_authenticated'));
         }
 
         $currentToken = $user->currentAccessToken();
         if (! $currentToken || $currentToken->name !== 'refresh_token') {
-            throw new UnauthorizedException('Refresh token is required.');
+            throw new UnauthorizedException(__('messages.errors.refresh_token_required'));
         }
 
         // Rotate token session: revoke all existing tokens, then issue a new pair.

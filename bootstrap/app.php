@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
 
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
+
         // CORS middleware (handled by Laravel's HandleCors middleware automatically if config/cors.php exists)
         
         // Request ID middleware (should be early in the stack)

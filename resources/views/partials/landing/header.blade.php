@@ -19,19 +19,43 @@
 
             <nav class="landing-center-nav d-none d-lg-flex" aria-label="Main navigation">
                 <ul class="landing-nav mb-0">
-                    <li><a class="nav-link" href="{{ route('welcome') }}#top">Trang chủ</a></li>
-                    <li><a class="nav-link" href="{{ route('welcome') }}#gioi-thieu">Giới thiệu</a></li>
-                    <li><a class="nav-link" href="{{ route('welcome') }}#tinh-nang">Tính năng</a></li>
+                    <li><a class="nav-link" href="{{ route('welcome') }}#top">{{ __('ui.nav.home') }}</a></li>
+                    <li><a class="nav-link" href="{{ route('welcome') }}#gioi-thieu">{{ __('ui.nav.about') }}</a></li>
+                    <li><a class="nav-link" href="{{ route('welcome') }}#tinh-nang">{{ __('ui.nav.features') }}</a></li>
                 </ul>
             </nav>
 
             <div class="landing-actions">
+                @php
+                    $currentLocale = app()->getLocale();
+                @endphp
+                <form method="POST" action="{{ route('locale.switch') }}" class="landing-lang-switch" aria-label="Language switcher">
+                    @csrf
+                    <button
+                        type="submit"
+                        name="locale"
+                        value="vi"
+                        class="landing-lang-btn {{ $currentLocale === 'vi' ? 'is-active' : '' }}"
+                        aria-pressed="{{ $currentLocale === 'vi' ? 'true' : 'false' }}"
+                    >
+                        VI
+                    </button>
+                    <button
+                        type="submit"
+                        name="locale"
+                        value="en"
+                        class="landing-lang-btn {{ $currentLocale === 'en' ? 'is-active' : '' }}"
+                        aria-pressed="{{ $currentLocale === 'en' ? 'true' : 'false' }}"
+                    >
+                        EN
+                    </button>
+                </form>
                 <button
                     type="button"
                     class="theme-toggle"
                     data-theme-toggle
-                    aria-label="Chuyển giao diện sáng tối"
-                    title="Chuyển giao diện"
+                    aria-label="{{ __('ui.header.theme_toggle_label') }}"
+                    title="{{ __('ui.header.theme_toggle_title') }}"
                 >
                     <span class="theme-icon theme-icon-moon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -95,7 +119,7 @@
                                         <path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                     </svg>
                                 </span>
-                                Hồ sơ
+                                {{ __('ui.nav.profile') }}
                             </a>
 
                             @if ($isAdmin)
@@ -108,7 +132,7 @@
                                             <rect x="13.5" y="13.5" width="7" height="7" stroke="currentColor" stroke-width="1.8"/>
                                         </svg>
                                     </span>
-                                    Dashboard
+                                    {{ __('ui.nav.dashboard') }}
                                 </a>
                             @endif
 
@@ -118,8 +142,8 @@
                                 method="POST"
                                 class="landing-logout-form"
                                 data-confirm
-                                data-confirm-title="Đăng xuất"
-                                data-confirm-message="Bạn có chắc chắn muốn đăng xuất?"
+                                data-confirm-title="{{ __('ui.confirm.logout_title') }}"
+                                data-confirm-message="{{ __('ui.confirm.logout_message') }}"
                             >
                                 @csrf
                                 <button type="submit" class="dropdown-item">
@@ -130,22 +154,22 @@
                                             <path d="M14 5h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                         </svg>
                                     </span>
-                                    Đăng xuất
+                                    {{ __('ui.nav.logout') }}
                                 </button>
                             </form>
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" class="btn btn-link landing-btn-login">Đăng nhập</a>
-                    <a href="{{ route('register') }}" class="btn landing-btn-register">Đăng ký</a>
+                    <a href="{{ route('login') }}" class="btn btn-link landing-btn-login">{{ __('ui.nav.login') }}</a>
+                    <a href="{{ route('register') }}" class="btn landing-btn-register">{{ __('ui.nav.register') }}</a>
                 @endauth
             </div>
 
             <div class="collapse landing-mobile-menu d-lg-none" id="landingNavbarMobile">
                 <ul class="landing-mobile-nav mb-3">
-                    <li><a class="nav-link" href="{{ route('welcome') }}#top">Trang chủ</a></li>
-                    <li><a class="nav-link" href="{{ route('welcome') }}#gioi-thieu">Giới thiệu</a></li>
-                    <li><a class="nav-link" href="{{ route('welcome') }}#tinh-nang">Tính năng</a></li>
+                    <li><a class="nav-link" href="{{ route('welcome') }}#top">{{ __('ui.nav.home') }}</a></li>
+                    <li><a class="nav-link" href="{{ route('welcome') }}#gioi-thieu">{{ __('ui.nav.about') }}</a></li>
+                    <li><a class="nav-link" href="{{ route('welcome') }}#tinh-nang">{{ __('ui.nav.features') }}</a></li>
                 </ul>
             </div>
         </div>

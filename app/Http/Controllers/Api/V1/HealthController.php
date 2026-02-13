@@ -25,7 +25,7 @@ class HealthController extends ApiController
             'overall_status' => $allOk ? 'ok' : 'degraded',
             'timestamp' => (new \DateTimeImmutable())->format(\DATE_ATOM),
             'checks' => $checks,
-        ], 'OK');
+        ], __('messages.success.ok'));
     }
 
     /**
@@ -36,7 +36,7 @@ class HealthController extends ApiController
         return $this->successResponse([
             'status' => 'ok',
             'timestamp' => (new \DateTimeImmutable())->format(\DATE_ATOM),
-        ], 'OK');
+        ], __('messages.success.ok'));
     }
 
     /**
@@ -55,7 +55,7 @@ class HealthController extends ApiController
         }
 
         if (! $allOk) {
-            return $this->errorResponse('Service Unavailable', 503, [
+            return $this->errorResponse(__('messages.errors.service_unavailable'), 503, [
                 'checks' => $checks,
                 'timestamp' => (new \DateTimeImmutable())->format(\DATE_ATOM),
             ]);
@@ -65,7 +65,7 @@ class HealthController extends ApiController
             'status' => 'ready',
             'timestamp' => (new \DateTimeImmutable())->format(\DATE_ATOM),
             'checks' => $checks,
-        ], 'OK');
+        ], __('messages.success.ok'));
     }
 
     /**
@@ -127,4 +127,3 @@ class HealthController extends ApiController
         }
     }
 }
-

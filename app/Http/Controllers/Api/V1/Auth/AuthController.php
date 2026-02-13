@@ -35,7 +35,7 @@ class AuthController extends ApiController
 
         $result = $this->authService->register($userDTO, 'user');
 
-        return $this->authResponse($result, 'User registered successfully', 201);
+        return $this->authResponse($result, __('messages.success.register_success'), 201);
     }
 
     /**
@@ -50,7 +50,7 @@ class AuthController extends ApiController
 
         $result = $this->authService->login($loginDTO);
 
-        return $this->authResponse($result, 'Login successful');
+        return $this->authResponse($result, __('messages.success.login_success'));
     }
 
     /**
@@ -60,7 +60,7 @@ class AuthController extends ApiController
     {
         $result = $this->authService->loginWithGoogle($request->string('id_token')->toString());
 
-        return $this->authResponse($result, 'Google login successful');
+        return $this->authResponse($result, __('messages.success.google_login_success'));
     }
 
     /**
@@ -70,7 +70,7 @@ class AuthController extends ApiController
     {
         $this->authService->logout();
 
-        return $this->successResponse(null, 'Logged out successfully');
+        return $this->successResponse(null, __('messages.success.logout_success'));
     }
 
     /**
@@ -85,7 +85,7 @@ class AuthController extends ApiController
             'user' => new UserResource($userModel),
             'permissions' => $userDTO->permissions ?? [],
             'roles' => $userDTO->roles ?? [],
-        ]);
+        ], __('messages.success.profile_retrieved'));
     }
 
     /**
@@ -95,7 +95,7 @@ class AuthController extends ApiController
     {
         $tokens = $this->authService->refresh();
 
-        return $this->successResponse($tokens, 'Token refreshed successfully');
+        return $this->successResponse($tokens, __('messages.success.token_refreshed'));
     }
 
     private function authResponse(array $result, string $message, int $statusCode = 200): JsonResponse

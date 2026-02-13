@@ -32,7 +32,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => 'The provided credentials are incorrect.',
+                'email' => __('messages.errors.credentials_incorrect'),
             ]);
         }
 
@@ -48,9 +48,10 @@ class LoginRequest extends FormRequest
         event(new Lockout($this));
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
+        $minutes = (int) ceil($seconds / 60);
 
         throw ValidationException::withMessages([
-            'email' => 'Too many login attempts. Please try again in '.ceil($seconds / 60).' minute(s).',
+            'email' => __('messages.errors.too_many_login_attempts', ['minutes' => $minutes]),
         ]);
     }
 

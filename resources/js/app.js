@@ -3,26 +3,43 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import Swal from 'sweetalert2';
 
 const THEME_STORAGE_KEY = 'ui-theme';
+const RAW_UI_CONFIG = window.AppUIConfig || {};
+const I18N = RAW_UI_CONFIG.i18n || {};
 const DEFAULT_UI_CONFIG = {
     toast: {
         position: 'bottom-end',
         timer: 2600,
     },
     loading: {
-        text: 'Đang xử lý...',
+        text: I18N.loading || 'Processing...',
     },
 };
 const UI_CONFIG = {
     ...DEFAULT_UI_CONFIG,
-    ...(window.AppUIConfig || {}),
+    ...RAW_UI_CONFIG,
     toast: {
         ...DEFAULT_UI_CONFIG.toast,
-        ...(window.AppUIConfig?.toast || {}),
+        ...(RAW_UI_CONFIG.toast || {}),
     },
     loading: {
         ...DEFAULT_UI_CONFIG.loading,
-        ...(window.AppUIConfig?.loading || {}),
+        ...(RAW_UI_CONFIG.loading || {}),
     },
+};
+
+const VALIDATION_I18N = I18N.validation || {};
+const CONFIRM_I18N = I18N.confirm || {};
+
+const interpolate = (template, vars = {}) => {
+    return Object.keys(vars).reduce(
+        (result, key) => result.replaceAll(`:${key}`, String(vars[key])),
+        template
+    );
+};
+
+const validationMessage = (key, fallback, vars = {}) => {
+    const template = VALIDATION_I18N[key] || fallback;
+    return interpolate(template, vars);
 };
 
 const getPreferredTheme = () => {
@@ -119,7 +136,7 @@ const showAlertFromSession = () => {
     Swal.fire({
         icon,
         text: message,
-        confirmButtonText: 'Đóng',
+        confirmButtonText: I18N.alert_close || 'Close',
         customClass: {
             popup: 'app-swal-popup',
             confirmButton: 'app-swal-confirm',
@@ -134,8 +151,8 @@ const showConfirm = async (title, text) => {
         title,
         text,
         showCancelButton: true,
-        confirmButtonText: 'Xác nhận',
-        cancelButtonText: 'Hủy',
+        confirmButtonText: CONFIRM_I18N.confirm || 'Confirm',
+        cancelButtonText: CONFIRM_I18N.cancel || 'Cancel',
         reverseButtons: true,
         customClass: {
             popup: 'app-swal-popup',
@@ -224,7 +241,10 @@ const validateField = (field) => {
         const originalValue = field.dataset.serverErrorValue || '';
 
         if (currentValue === originalValue) {
-            return setFieldError(field, field.dataset.serverErrorMessage || 'Dữ liệu chưa hợp lệ.');
+            return setFieldError(
+                field,
+                field.dataset.serverErrorMessage || validationMessage('invalid', 'This data is invalid.')
+            );
         }
 
         delete field.dataset.serverError;
@@ -237,20 +257,26 @@ const validateField = (field) => {
     const value = (field.value || '').trim();
 
     if (required && value === '') {
-        return setFieldError(field, `${label} là bắt buộc.`);
+        return setFieldError(field, validationMessage('required', ':label is required.', { label }));
     }
 
     if (value !== '' && field.type === 'email') {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailPattern.test(value)) {
-            return setFieldError(field, 'Email không đúng định dạng.');
+            return setFieldError(field, validationMessage('email', 'Email is not valid.'));
         }
     }
 
     if (value !== '' && field.dataset.minLength) {
         const minLength = Number(field.dataset.minLength);
         if (Number.isFinite(minLength) && value.length < minLength) {
-            return setFieldError(field, `${label} phải có ít nhất ${minLength} ký tự.`);
+            return setFieldError(
+                field,
+                validationMessage('min_length', ':label must be at least :min characters.', {
+                    label,
+                    min: minLength,
+                })
+            );
         }
     }
 
@@ -259,7 +285,7 @@ const validateField = (field) => {
             document.querySelector(field.dataset.match) ||
             field.form?.querySelector(`[name="${field.dataset.match}"]`);
         if (target && value !== target.value.trim()) {
-            return setFieldError(field, `${label} không khớp.`);
+            return setFieldError(field, validationMessage('match', ':label does not match.', { label }));
         }
     }
 
@@ -308,8 +334,8 @@ const initConfirmActions = () => {
             }
 
             event.preventDefault();
-            const title = form.dataset.confirmTitle || 'Xác nhận thao tác';
-            const text = form.dataset.confirmMessage || 'Bạn có chắc muốn tiếp tục?';
+            const title = form.dataset.confirmTitle || CONFIRM_I18N.title || 'Confirm action';
+            const text = form.dataset.confirmMessage || CONFIRM_I18N.message || 'Are you sure you want to continue?';
             const confirmed = await showConfirm(title, text);
 
             if (confirmed) {

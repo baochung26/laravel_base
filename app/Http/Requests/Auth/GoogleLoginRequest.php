@@ -26,15 +26,4 @@ class GoogleLoginRequest extends FormRequest
         ];
     }
 
-    /**
-     * Get custom messages for validator errors.
-     *
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'id_token.required' => 'Google id_token is required.',
-        ];
-    }
 }
