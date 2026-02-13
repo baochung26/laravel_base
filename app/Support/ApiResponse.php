@@ -20,8 +20,8 @@ class ApiResponse
         string $message = 'Error',
         int $statusCode = 400,
         ?array $errors = null,
-        ?array $additional = null,
-        ?array $meta = null
+        ?array $meta = null,
+        ?array $additional = null
     ): JsonResponse {
         return self::makeResponse(false, $message, $statusCode, null, $errors, $meta, $additional);
     }

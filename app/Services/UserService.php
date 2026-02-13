@@ -5,11 +5,13 @@ namespace App\Services;
 use App\DTOs\UserDTO;
 use App\Exceptions\ResourceNotFoundException;
 use App\Exceptions\ValidationException;
+use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Services\Storage\StorageService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -105,33 +107,54 @@ class UserService extends BaseService
     /**
      * Create user with optional avatar file. Returns user model with relations for API resource.
      */
-    public function createWithAvatar(UserDTO $userDTO, ?UploadedFile $avatarFile = null, ?string $roleName = null)
+    public function createWithAvatar(UserDTO $userDTO, ?UploadedFile $avatarFile = null, ?string $roleName = null): User
     {
-        $created = $this->create($userDTO, $roleName);
-        if ($created->id && $avatarFile) {
-            $this->setAvatarFromFile($created->id, $avatarFile);
-        }
+        $avatarPath = null;
 
-        return $this->getModelByIdWithRelations($created->id);
+        try {
+            return DB::transaction(function () use ($userDTO, $avatarFile, $roleName, &$avatarPath) {
+                $created = $this->create($userDTO, $roleName);
+
+                if ($created->id && $avatarFile) {
+                    $avatarPath = $this->storeAvatarForUser($created->id, $avatarFile);
+                    $this->userRepository->update($created->id, ['avatar' => $avatarPath]);
+                }
+
+                return $this->getModelByIdWithRelations($created->id);
+            });
+        } catch (\Throwable $e) {
+            $this->deleteAvatarFile($avatarPath);
+            throw $e;
+        }
     }
 
     /**
      * Update user with optional avatar file. Returns user model with relations.
      */
-    public function updateWithAvatar(int $id, UserDTO $userDTO, ?UploadedFile $avatarFile = null)
+    public function updateWithAvatar(int $id, UserDTO $userDTO, ?UploadedFile $avatarFile = null): User
     {
-        $dto = $userDTO;
-        if ($avatarFile) {
-            $user = $this->userRepository->findOrFail($id);
-            if ($user->avatar) {
-                $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
-            }
-            $path = $this->storageService->storeAvatar($avatarFile, $id, config('constants.uploads.avatar_disk'));
-            $dto = UserDTO::fromArray(array_merge($userDTO->toArray(), ['avatar' => $path]));
-        }
-        $this->update($id, $dto);
+        $newAvatarPath = null;
+        $oldAvatarPath = null;
 
-        return $this->getModelByIdWithRelations($id);
+        try {
+            return DB::transaction(function () use ($id, $userDTO, $avatarFile, &$newAvatarPath, &$oldAvatarPath) {
+                $dto = $userDTO;
+
+                if ($avatarFile) {
+                    [$newAvatarPath, $oldAvatarPath] = $this->prepareAvatarReplacement($id, $avatarFile);
+                    $dto = UserDTO::fromArray(array_merge($userDTO->toArray(), ['avatar' => $newAvatarPath]));
+                }
+
+                $this->update($id, $dto);
+
+                $this->scheduleAvatarDeletion($oldAvatarPath);
+
+                return $this->getModelByIdWithRelations($id);
+            });
+        } catch (\Throwable $e) {
+            $this->deleteAvatarFile($newAvatarPath);
+            throw $e;
+        }
     }
 
     /**
@@ -139,12 +162,20 @@ class UserService extends BaseService
      */
     public function setAvatarFromFile(int $userId, UploadedFile $file): void
     {
-        $user = $this->userRepository->findOrFail($userId);
-        if ($user->avatar) {
-            $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
+        $newAvatarPath = null;
+        $oldAvatarPath = null;
+
+        try {
+            DB::transaction(function () use ($userId, $file, &$newAvatarPath, &$oldAvatarPath) {
+                [$newAvatarPath, $oldAvatarPath] = $this->prepareAvatarReplacement($userId, $file);
+                $this->userRepository->update($userId, ['avatar' => $newAvatarPath]);
+
+                $this->scheduleAvatarDeletion($oldAvatarPath);
+            });
+        } catch (\Throwable $e) {
+            $this->deleteAvatarFile($newAvatarPath);
+            throw $e;
         }
-        $path = $this->storageService->storeAvatar($file, $userId, config('constants.uploads.avatar_disk'));
-        $this->userRepository->update($userId, ['avatar' => $path]);
     }
 
     /**
@@ -209,7 +240,7 @@ class UserService extends BaseService
     {
         $user = $this->userRepository->findOrFail($id);
         if ($user->avatar) {
-            $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
+            $this->deleteAvatarFile($user->avatar);
         }
         $this->userRepository->update($id, ['avatar' => null]);
         $updatedUser = $this->userRepository->withRolesAndPermissions($id);
@@ -237,9 +268,6 @@ class UserService extends BaseService
         ];
 
         if ($userDTO->avatar) {
-            if ($user->avatar) {
-                $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
-            }
             $data['avatar'] = $userDTO->avatar;
         }
 
@@ -252,20 +280,30 @@ class UserService extends BaseService
     /**
      * Update profile with optional avatar file. Returns user model with relations.
      */
-    public function updateProfileWithAvatar(int $id, UserDTO $userDTO, ?UploadedFile $avatarFile = null)
+    public function updateProfileWithAvatar(int $id, UserDTO $userDTO, ?UploadedFile $avatarFile = null): User
     {
-        $dto = $userDTO;
-        if ($avatarFile) {
-            $user = $this->userRepository->findOrFail($id);
-            if ($user->avatar) {
-                $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
-            }
-            $path = $this->storageService->storeAvatar($avatarFile, $id, config('constants.uploads.avatar_disk'));
-            $dto = UserDTO::fromArray(array_merge($userDTO->toArray(), ['avatar' => $path]));
-        }
-        $this->updateProfile($id, $dto);
+        $newAvatarPath = null;
+        $oldAvatarPath = null;
 
-        return $this->getModelByIdWithRelations($id);
+        try {
+            return DB::transaction(function () use ($id, $userDTO, $avatarFile, &$newAvatarPath, &$oldAvatarPath) {
+                $dto = $userDTO;
+
+                if ($avatarFile) {
+                    [$newAvatarPath, $oldAvatarPath] = $this->prepareAvatarReplacement($id, $avatarFile);
+                    $dto = UserDTO::fromArray(array_merge($userDTO->toArray(), ['avatar' => $newAvatarPath]));
+                }
+
+                $this->updateProfile($id, $dto);
+
+                $this->scheduleAvatarDeletion($oldAvatarPath);
+
+                return $this->getModelByIdWithRelations($id);
+            });
+        } catch (\Throwable $e) {
+            $this->deleteAvatarFile($newAvatarPath);
+            throw $e;
+        }
     }
 
     /**
@@ -296,7 +334,7 @@ class UserService extends BaseService
     {
         $user = $this->userRepository->findOrFail($id);
         if ($user->avatar) {
-            $this->storageService->delete($user->avatar, config('constants.uploads.avatar_disk'));
+            $this->deleteAvatarFile($user->avatar);
         }
 
         return $this->deleteRecord($id);
@@ -380,7 +418,7 @@ class UserService extends BaseService
     /**
      * Get user model by ID with relations (for Resource usage).
      */
-    public function getModelByIdWithRelations(int $id)
+    public function getModelByIdWithRelations(int $id): User
     {
         $user = $this->userRepository->withRolesAndPermissions($id);
         if (! $user) {
@@ -462,30 +500,34 @@ class UserService extends BaseService
     /**
      * Create user for dashboard with role + status.
      */
-    public function createDashboardUser(UserDTO $userDTO, string $roleName, string $status)
+    public function createDashboardUser(UserDTO $userDTO, string $roleName, string $status): User
     {
-        $created = $this->create($userDTO, $roleName);
+        return DB::transaction(function () use ($userDTO, $roleName, $status) {
+            $created = $this->create($userDTO, $roleName);
 
-        $emailVerifiedAt = $status === 'active' ? now() : null;
-        $this->userRepository->update($created->id, [
-            'email_verified_at' => $emailVerifiedAt,
-        ]);
+            $emailVerifiedAt = $status === 'active' ? now() : null;
+            $this->userRepository->update($created->id, [
+                'email_verified_at' => $emailVerifiedAt,
+            ]);
 
-        return $this->getModelByIdWithRelations($created->id);
+            return $this->getModelByIdWithRelations($created->id);
+        });
     }
 
     /**
      * Update dashboard user profile and role.
      */
-    public function updateDashboardUser(int $userId, UserDTO $userDTO, ?string $roleName = null)
+    public function updateDashboardUser(int $userId, UserDTO $userDTO, ?string $roleName = null): User
     {
-        $this->update($userId, $userDTO);
+        return DB::transaction(function () use ($userId, $userDTO, $roleName) {
+            $this->update($userId, $userDTO);
 
-        if ($roleName !== null && $roleName !== '') {
-            $this->syncRoles($userId, [$roleName]);
-        }
+            if ($roleName !== null && $roleName !== '') {
+                $this->syncRoles($userId, [$roleName]);
+            }
 
-        return $this->getModelByIdWithRelations($userId);
+            return $this->getModelByIdWithRelations($userId);
+        });
     }
 
     /**
@@ -551,5 +593,61 @@ class UserService extends BaseService
 
         // Reload with fresh relations
         return UserDTO::fromModel($user->load('roles', 'permissions'));
+    }
+
+    /**
+     * Resolve avatar disk from config.
+     */
+    private function avatarDisk(): string
+    {
+        return (string) config('constants.uploads.avatar_disk');
+    }
+
+    /**
+     * Store avatar for user and return its path.
+     */
+    private function storeAvatarForUser(int $userId, UploadedFile $file): string
+    {
+        return $this->storageService->storeAvatar($file, $userId, $this->avatarDisk());
+    }
+
+    /**
+     * Prepare avatar replacement by storing the new file and returning both paths.
+     *
+     * @return array{0:string,1:?string}
+     */
+    private function prepareAvatarReplacement(int $userId, UploadedFile $file): array
+    {
+        $user = $this->userRepository->findOrFail($userId);
+        $oldPath = $user->avatar;
+        $newPath = $this->storeAvatarForUser($userId, $file);
+
+        return [$newPath, $oldPath];
+    }
+
+    /**
+     * Delete avatar after transaction commits.
+     */
+    private function scheduleAvatarDeletion(?string $path): void
+    {
+        if (! $path) {
+            return;
+        }
+
+        DB::afterCommit(function () use ($path) {
+            $this->storageService->delete($path, $this->avatarDisk());
+        });
+    }
+
+    /**
+     * Delete avatar immediately (best-effort cleanup).
+     */
+    private function deleteAvatarFile(?string $path): void
+    {
+        if (! $path) {
+            return;
+        }
+
+        $this->storageService->delete($path, $this->avatarDisk());
     }
 }
