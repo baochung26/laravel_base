@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\Auth\GoogleLoginRequest;
 use App\Http\Requests\Web\Auth\LoginRequest;
 use App\Services\GoogleAuthService;
+use App\Support\WebRedirect;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         return redirect()
-            ->intended(route('dashboard', absolute: false))
+            ->intended(WebRedirect::postAuthRoute($request->user(), false))
             ->with('status', __('messages.success.login_success'));
     }
 
@@ -46,7 +47,7 @@ class AuthenticatedSessionController extends Controller
             $this->googleAuthService->login($result['user']);
 
             return redirect()
-                ->intended(route('dashboard', absolute: false))
+                ->intended(WebRedirect::postAuthRoute($request->user(), false))
                 ->with('status', __('messages.success.google_login_success'));
         } catch (ValidationException $exception) {
             throw $exception;

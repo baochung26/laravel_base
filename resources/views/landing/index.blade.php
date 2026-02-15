@@ -12,7 +12,7 @@
 
                 <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 pt-2">
                     @auth
-                        <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('dashboard') }}">Đi tới Dashboard</a>
+                        <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ \App\Support\WebRedirect::postAuthRoute(auth()->user()) }}">Đi tới Dashboard</a>
                     @else
                         <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('register') }}">{{ __('ui.nav.register') }}</a>
                         <a class="btn btn-outline-light btn-lg px-4" href="{{ route('login') }}">{{ __('ui.nav.login') }}</a>
@@ -79,7 +79,7 @@
 
             <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 pt-2">
                 @auth
-                    <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('dashboard') }}">Mở Dashboard</a>
+                    <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ \App\Support\WebRedirect::postAuthRoute(auth()->user()) }}">Mở Dashboard</a>
                 @else
                     <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('register') }}">{{ __('ui.nav.register') }}</a>
                     <a class="btn btn-outline-light btn-lg px-4" href="{{ route('login') }}">{{ __('ui.nav.login') }}</a>

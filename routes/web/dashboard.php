@@ -4,9 +4,9 @@ use App\Http\Controllers\Web\Dashboard\DashboardController;
 use App\Http\Controllers\Web\Dashboard\DashboardUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('dashboard')->group(function () {
+Route::prefix('dashboard')->middleware('admin')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
-    Route::middleware('admin')->name('dashboard.')->group(function () {
+    Route::name('dashboard.')->group(function () {
         Route::get('/users', [DashboardUserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [DashboardUserController::class, 'create'])->name('users.create');
         Route::post('/users', [DashboardUserController::class, 'store'])->name('users.store');

@@ -7,7 +7,7 @@
     <form method="POST" action="{{ route('verification.send') }}">
         @csrf
         <div class="actions">
-            <a class="link" href="{{ route('dashboard') }}">{{ __('ui.auth.go_dashboard') }}</a>
+            <a class="link" href="{{ \App\Support\WebRedirect::postAuthRoute(auth()->user()) }}">{{ __('ui.auth.go_dashboard') }}</a>
             <button class="btn" type="submit">{{ __('ui.auth.resend_verification') }}</button>
         </div>
     </form>

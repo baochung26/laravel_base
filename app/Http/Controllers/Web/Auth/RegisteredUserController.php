@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\Auth\RegisterRequest;
 use App\Services\WebAuthService;
+use App\Support\WebRedirect;
 use App\DTOs\UserDTO;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +30,8 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('dashboard')->with('status', __('messages.success.register_success'));
+        return redirect()
+            ->route(WebRedirect::postAuthRouteName($user))
+            ->with('status', __('messages.success.register_success'));
     }
 }
