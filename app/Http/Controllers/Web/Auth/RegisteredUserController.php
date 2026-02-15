@@ -29,6 +29,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('dashboard')->with('status', 'Đăng ký tài khoản thành công.');
+        return redirect()->route('welcome')->with('status', 'Đăng ký tài khoản thành công.');
     }
 }

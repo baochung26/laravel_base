@@ -15,6 +15,9 @@
     @if (session('status'))
         data-alert-type="success"
         data-alert-message="{{ session('status') }}"
+    @elseif (session('error'))
+        data-alert-type="error"
+        data-alert-message="{{ session('error') }}"
     @endif
 >
     @include('partials.landing.header')

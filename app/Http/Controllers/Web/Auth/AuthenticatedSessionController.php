@@ -32,7 +32,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         return redirect()
-            ->intended(route('dashboard', absolute: false))
+            ->intended(route('welcome', absolute: false))
             ->with('status', 'Đăng nhập thành công.');
     }
 
@@ -46,7 +46,7 @@ class AuthenticatedSessionController extends Controller
             $this->googleAuthService->login($result['user']);
 
             return redirect()
-                ->intended(route('dashboard', absolute: false))
+                ->intended(route('welcome', absolute: false))
                 ->with('status', 'Đăng nhập Google thành công.');
         } catch (ValidationException $exception) {
             throw $exception;

@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureAdmin
 {
     /**
-     * Handle an incoming request. Redirect to dashboard if user is not admin.
+     * Handle an incoming request. Redirect to home if user is not admin.
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -23,7 +23,7 @@ class EnsureAdmin
             }
 
             return redirect()
-                ->route('dashboard')
+                ->route('welcome')
                 ->with('error', 'Bạn không có quyền truy cập tính năng này.');
         }
 

@@ -11,11 +11,11 @@ class VerifyEmailController extends Controller
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('welcome');
         }
 
         $request->fulfill();
 
-        return redirect()->route('dashboard')->with('status', 'Your email has been verified.');
+        return redirect()->route('welcome')->with('status', 'Your email has been verified.');
     }
 }

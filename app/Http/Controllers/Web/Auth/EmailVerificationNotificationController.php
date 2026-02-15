@@ -11,7 +11,7 @@ class EmailVerificationNotificationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('welcome');
         }
 
         $request->user()->sendEmailVerificationNotification();

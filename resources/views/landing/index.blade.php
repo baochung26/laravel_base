@@ -3,6 +3,11 @@
 @section('title', config('app.name', 'Laravel'))
 
 @section('content')
+    @php
+        $authUser = auth()->user();
+        $isAdmin = $authUser && method_exists($authUser, 'hasRole') && $authUser->hasRole('admin');
+    @endphp
+
     <section id="top" class="hero-section border-bottom border-light border-opacity-10">
         <div class="container landing-container py-5">
             <div class="hero-grid py-5 text-center">
@@ -12,7 +17,11 @@
 
                 <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 pt-2">
                     @auth
-                        <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('dashboard') }}">Đi tới Dashboard</a>
+                        @if ($isAdmin)
+                            <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('dashboard') }}">Đi tới Dashboard</a>
+                        @else
+                            <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('profile.show') }}">Xem hồ sơ</a>
+                        @endif
                     @else
                         <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('register') }}">Bắt đầu ngay</a>
                         <a class="btn btn-outline-light btn-lg px-4" href="{{ route('login') }}">Đăng nhập</a>
@@ -79,7 +88,11 @@
 
             <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 pt-2">
                 @auth
-                    <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('dashboard') }}">Mở Dashboard</a>
+                    @if ($isAdmin)
+                        <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('dashboard') }}">Mở Dashboard</a>
+                    @else
+                        <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('profile.show') }}">Quản lý hồ sơ</a>
+                    @endif
                 @else
                     <a class="btn btn-light btn-lg px-4 fw-semibold" href="{{ route('register') }}">Đăng ký miễn phí</a>
                     <a class="btn btn-outline-light btn-lg px-4" href="{{ route('login') }}">Đã có tài khoản? Đăng nhập</a>
