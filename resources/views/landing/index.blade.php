@@ -13,6 +13,7 @@
             <div class="hero-grid py-5 text-center">
                 <span class="hero-badge mb-4 d-inline-block">Laravel 12 + Sanctum + Web Auth</span>
                 <h1 class="hero-title text-white mb-3">Xây dựng ứng dụng hiện đại với Laravel</h1>
+                <p class="text-warning fw-semibold mb-3">Chúc mừng năm mới thành công</p>
                 <p id="gioi-thieu" class="hero-subtitle mx-auto mb-0">Template hoàn chỉnh với API chuẩn, xác thực web bằng session và cấu trúc rõ ràng để phát triển dự án production.</p>
 
                 <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 pt-2">
