@@ -314,14 +314,12 @@ Tài liệu chi tiết nằm trong [`docs/`](docs/). **Mục lục:** [docs/READ
 | Nhóm | Tài liệu chính |
 |------|----------------|
 | **Bắt đầu** | [QUICK_START.md](docs/QUICK_START.md) |
-| **Swagger / OpenAPI** | [SWAGGER_USAGE.md](docs/SWAGGER_USAGE.md) |
-| **API** | [API_FOUNDATION.md](docs/API_FOUNDATION.md), [API_RESPONSE_AND_ERRORS.md](docs/API_RESPONSE_AND_ERRORS.md), [API_VERSIONING_STRATEGY.md](docs/API_VERSIONING_STRATEGY.md) |
-| **Auth & User** | [AUTHENTICATION.md](docs/AUTHENTICATION.md), [AUTH_CHECKLIST.md](docs/AUTH_CHECKLIST.md) |
-| **Hạ tầng** | [CONFIG_ENVIRONMENT.md](docs/CONFIG_ENVIRONMENT.md), [HEALTH_CHECK.md](docs/HEALTH_CHECK.md), [REDIS_SETUP.md](docs/REDIS_SETUP.md), [QUEUE_SCHEDULER.md](docs/QUEUE_SCHEDULER.md), [CACHE_STRATEGY.md](docs/CACHE_STRATEGY.md) |
-| **Data & Storage** | [DATABASE_CONVENTIONS.md](docs/DATABASE_CONVENTIONS.md), [QUERY_OPTIMIZATION.md](docs/QUERY_OPTIMIZATION.md), [FILE_STORAGE.md](docs/FILE_STORAGE.md) |
-| **Khác** | [LOGGING.md](docs/LOGGING.md), [API_RESPONSE_AND_ERRORS.md](docs/API_RESPONSE_AND_ERRORS.md), [SECURITY.md](docs/SECURITY.md), [EMAIL_USAGE.md](docs/EMAIL_USAGE.md) |
+| **API Contract** | [API_FOUNDATION.md](docs/API_FOUNDATION.md), [API_RESPONSE_AND_ERRORS.md](docs/API_RESPONSE_AND_ERRORS.md), [SWAGGER_USAGE.md](docs/SWAGGER_USAGE.md), [openapi.yaml](docs/openapi.yaml) |
+| **Architecture & Security** | [ARCHITECTURE_CONTROLLER_SERVICE_REPOSITORY.md](docs/ARCHITECTURE_CONTROLLER_SERVICE_REPOSITORY.md), [SECURITY.md](docs/SECURITY.md) |
+| **Auth** | [AUTHENTICATION.md](docs/AUTHENTICATION.md), [WEB_GOOGLE_LOGIN.md](docs/WEB_GOOGLE_LOGIN.md) |
+| **Operations** | [HEALTH_CHECK.md](docs/HEALTH_CHECK.md), [QUEUE_SCHEDULER.md](docs/QUEUE_SCHEDULER.md) |
 
-**Ghi chú:** `.env.example` có sẵn ở root. Template mở rộng: `docs/CONFIG_ENV.example`.
+**Ghi chú:** `.env.example` có sẵn ở root.
 
 ## 🔌 API Foundation
 
