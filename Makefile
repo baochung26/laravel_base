@@ -1,4 +1,4 @@
-.PHONY: help install up down restart logs shell composer artisan queue-logs scheduler-logs workers-restart ps
+.PHONY: help install up down restart logs shell composer artisan queue-logs scheduler-logs workers-restart ps npm-install npm-build npm-dev up-build
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -57,6 +57,19 @@ scheduler-logs: ## Tail scheduler logs
 
 workers-restart: ## Restart queue worker + scheduler
 	docker-compose restart queue scheduler
+
+npm-install: ## Install frontend dependencies via Node container
+	docker-compose run --rm node npm install
+
+npm-build: ## Build frontend assets via Vite
+	docker-compose run --rm node_build
+
+npm-dev: ## Run Vite dev server via Node container
+	docker-compose up node
+
+up-build: ## Build frontend assets then start backend containers
+	docker-compose --profile build run --rm node_build
+	docker-compose up -d app queue scheduler webserver db phpmyadmin redis
 
 cache-clear: ## Clear all caches
 	docker-compose exec app php artisan cache:clear

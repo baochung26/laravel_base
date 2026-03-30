@@ -35,7 +35,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Entrypoint for runtime setup (composer + writable dirs)
 COPY ./docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
 # Add user for laravel application
 RUN groupadd -g 1000 www

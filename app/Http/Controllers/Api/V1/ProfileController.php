@@ -6,7 +6,7 @@ use App\DTOs\UserDTO;
 use App\Exceptions\ValidationException;
 use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
-use App\Services\Storage\StorageService;
+use App\Support\Validation\AvatarValidation;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,8 +14,7 @@ use Illuminate\Http\Request;
 class ProfileController extends ApiController
 {
     public function __construct(
-        protected UserService $userService,
-        protected StorageService $storageService
+        protected UserService $userService
     ) {
     }
 
@@ -24,11 +23,10 @@ class ProfileController extends ApiController
      */
     public function show(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $userModel = $this->userService->getModelByIdWithRelations($user->id);
+        $user = $this->userService->getModelByIdWithRelations($request->user()->id);
 
         return $this->successResponse(
-            new UserResource($userModel),
+            new UserResource($user),
             'Profile retrieved successfully'
         );
     }
@@ -41,20 +39,9 @@ class ProfileController extends ApiController
         try {
             $user = $request->user();
             $data = $request->validated();
-
-            // Handle avatar upload
-            if ($request->hasFile('avatar')) {
-                $currentUser = $this->userService->getById($user->id);
-                if ($currentUser->avatar) {
-                    $this->storageService->delete($currentUser->avatar, config('constants.uploads.avatar_disk'));
-                }
-                $avatarPath = $this->storageService->storeAvatar($request->file('avatar'), $user->id);
-                $data['avatar'] = $avatarPath;
-            }
-
+            unset($data['avatar']);
             $userDTO = UserDTO::fromArray(array_merge($data, ['id' => $user->id]));
-            $this->userService->updateProfile($user->id, $userDTO);
-            $userModel = $this->userService->getModelByIdWithRelations($user->id);
+            $userModel = $this->userService->updateProfileWithAvatar($user->id, $userDTO, $request->file('avatar'));
 
             return $this->successResponse(
                 new UserResource($userModel),
@@ -72,21 +59,10 @@ class ProfileController extends ApiController
     {
         try {
             $request->validate([
-                'avatar' => [
-                    'required',
-                    'image',
-                    'mimes:' . implode(',', config('constants.uploads.allowed_avatar_mimes')),
-                    'max:' . config('constants.uploads.max_avatar_kb'),
-                ],
+                'avatar' => AvatarValidation::requiredRules(),
             ]);
-
             $user = $request->user();
-            $currentUser = $this->userService->getById($user->id);
-            if ($currentUser->avatar) {
-                $this->storageService->delete($currentUser->avatar, config('constants.uploads.avatar_disk'));
-            }
-            $avatarPath = $this->storageService->storeAvatar($request->file('avatar'), $user->id);
-            $this->userService->updateAvatar($user->id, $avatarPath);
+            $this->userService->setAvatarFromFile($user->id, $request->file('avatar'));
             $userModel = $this->userService->getModelByIdWithRelations($user->id);
 
             return $this->successResponse(

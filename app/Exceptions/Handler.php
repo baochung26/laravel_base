@@ -309,6 +309,6 @@ class Handler extends ExceptionHandler
         ?array $errors = null,
         ?array $additional = null
     ): JsonResponse {
-        return ApiResponse::error($message, $statusCode, $errors, $additional);
+        return ApiResponse::error($message, $statusCode, $errors, null, $additional);
     }
 }

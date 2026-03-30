@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
-use App\Repositories\Contracts\RepositoryInterface;
+use App\Repositories\Contracts\RolePermissionRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Eloquent\RolePermissionRepository;
 use App\Repositories\Eloquent\UserRepository;
+use App\View\Composers\DashboardSidebarComposer;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -16,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Bind Repository interfaces to implementations
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        $this->app->bind(RolePermissionRepositoryInterface::class, RolePermissionRepository::class);
 
         // Register other repositories here when needed
         // $this->app->bind(ProductRepositoryInterface::class, ProductRepository::class);
@@ -31,5 +35,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Register User Observer for cache invalidation
         \App\Models\User::observe(\App\Observers\UserObserver::class);
+
+        View::composer('layouts.app', DashboardSidebarComposer::class);
     }
 }

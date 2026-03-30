@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Requests\RolePermission\AssignRoleRequest;
+use App\Http\Requests\RolePermission\GivePermissionRequest;
+use App\Http\Requests\RolePermission\RemoveRoleRequest;
+use App\Http\Requests\RolePermission\RevokePermissionRequest;
+use App\Http\Requests\RolePermission\SyncRolesRequest;
 use App\Http\Resources\PermissionResource;
 use App\Http\Resources\RoleResource;
 use App\Http\Resources\UserResource;
-use App\Services\UserService;
+use App\Services\RolePermissionService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 
 class RolePermissionController extends ApiController
 {
     public function __construct(
-        protected UserService $userService
+        protected RolePermissionService $rolePermissionService
     ) {
     }
 
@@ -23,7 +25,7 @@ class RolePermissionController extends ApiController
      */
     public function getRoles(): JsonResponse
     {
-        $roles = Role::with('permissions')->get();
+        $roles = $this->rolePermissionService->getRoles();
 
         return $this->successResponse([
             'roles' => RoleResource::collection($roles),
@@ -35,7 +37,7 @@ class RolePermissionController extends ApiController
      */
     public function getPermissions(): JsonResponse
     {
-        $permissions = Permission::all();
+        $permissions = $this->rolePermissionService->getPermissions();
 
         return $this->successResponse([
             'permissions' => PermissionResource::collection($permissions),
@@ -45,91 +47,80 @@ class RolePermissionController extends ApiController
     /**
      * Assign role to user.
      */
-    public function assignRole(Request $request): JsonResponse
+    public function assignRole(AssignRoleRequest $request): JsonResponse
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'role' => 'required|exists:roles,name',
-        ]);
-
-        $this->userService->assignRole($request->user_id, $request->role);
-        $userModel = $this->userService->getModelByIdWithRelations($request->user_id);
+        $data = $request->validated();
+        $user = $this->rolePermissionService->assignRoleToUser(
+            (int) $data['user_id'],
+            $data['role']
+        );
 
         return $this->successResponse([
-            'user' => new UserResource($userModel),
+            'user' => new UserResource($user),
         ], 'Role assigned successfully');
     }
 
     /**
      * Remove role from user.
      */
-    public function removeRole(Request $request): JsonResponse
+    public function removeRole(RemoveRoleRequest $request): JsonResponse
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'role' => 'required|exists:roles,name',
-        ]);
-
-        $this->userService->removeRole($request->user_id, $request->role);
-        $userModel = $this->userService->getModelByIdWithRelations($request->user_id);
+        $data = $request->validated();
+        $user = $this->rolePermissionService->removeRoleFromUser(
+            (int) $data['user_id'],
+            $data['role']
+        );
 
         return $this->successResponse([
-            'user' => new UserResource($userModel),
+            'user' => new UserResource($user),
         ], 'Role removed successfully');
     }
 
     /**
      * Sync user roles.
      */
-    public function syncRoles(Request $request): JsonResponse
+    public function syncRoles(SyncRolesRequest $request): JsonResponse
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'roles' => 'required|array',
-            'roles.*' => 'exists:roles,name',
-        ]);
-
-        $this->userService->syncRoles($request->user_id, $request->roles);
-        $userModel = $this->userService->getModelByIdWithRelations($request->user_id);
+        $data = $request->validated();
+        $user = $this->rolePermissionService->syncRolesForUser(
+            (int) $data['user_id'],
+            $data['roles']
+        );
 
         return $this->successResponse([
-            'user' => new UserResource($userModel),
+            'user' => new UserResource($user),
         ], 'Roles synced successfully');
     }
 
     /**
      * Give permission to user.
      */
-    public function givePermissionTo(Request $request): JsonResponse
+    public function givePermissionTo(GivePermissionRequest $request): JsonResponse
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'permission' => 'required|exists:permissions,name',
-        ]);
-
-        $this->userService->givePermissionTo($request->user_id, $request->permission);
-        $userModel = $this->userService->getModelByIdWithRelations($request->user_id);
+        $data = $request->validated();
+        $user = $this->rolePermissionService->givePermissionToUser(
+            (int) $data['user_id'],
+            $data['permission']
+        );
 
         return $this->successResponse([
-            'user' => new UserResource($userModel),
+            'user' => new UserResource($user),
         ], 'Permission assigned successfully');
     }
 
     /**
      * Revoke permission from user.
      */
-    public function revokePermissionFrom(Request $request): JsonResponse
+    public function revokePermissionFrom(RevokePermissionRequest $request): JsonResponse
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'permission' => 'required|exists:permissions,name',
-        ]);
-
-        $this->userService->revokePermissionFrom($request->user_id, $request->permission);
-        $userModel = $this->userService->getModelByIdWithRelations($request->user_id);
+        $data = $request->validated();
+        $user = $this->rolePermissionService->revokePermissionFromUser(
+            (int) $data['user_id'],
+            $data['permission']
+        );
 
         return $this->successResponse([
-            'user' => new UserResource($userModel),
+            'user' => new UserResource($user),
         ], 'Permission revoked successfully');
     }
 }

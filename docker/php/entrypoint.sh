@@ -13,6 +13,9 @@ mkdir -p bootstrap/cache \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs
-chmod -R 777 bootstrap/cache storage || true
+chmod -R ug+rwX bootstrap/cache storage >/dev/null 2>&1 || true
+
+# Ensure public storage symlink exists for uploaded files (avatars, etc.)
+php artisan storage:link --no-interaction >/dev/null 2>&1 || true
 
 exec "$@"

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
@@ -60,5 +62,20 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new VerifyEmailNotification);
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        $avatar = $this->avatar;
+
+        if (! is_string($avatar) || trim($avatar) === '' || in_array($avatar, ['0', '1', 'false', 'true'], true)) {
+            return null;
+        }
+
+        if (Str::startsWith($avatar, ['http://', 'https://', '//', 'data:'])) {
+            return $avatar;
+        }
+
+        return Storage::disk('public')->url($avatar);
     }
 }

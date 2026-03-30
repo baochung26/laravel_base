@@ -17,6 +17,10 @@ class LogQueryMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (! config('logging.enable_query_log', false)) {
+            return $next($request);
+        }
+
         // Enable query log
         DB::enableQueryLog();
 
