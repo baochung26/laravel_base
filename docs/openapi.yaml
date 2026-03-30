@@ -937,7 +937,7 @@ components:
     ErrorEnvelope:
       type: object
       required: [success, message, meta]
-      description: Mọi lỗi API đều trả về format này. Không có statusCode/path/error ở top-level; khi APP_DEBUG=true có meta.status_code.
+      description: All API errors use this envelope. No top-level statusCode/path/error fields; when APP_DEBUG=true, meta.status_code may be present.
       properties:
         success:
           type: boolean
@@ -951,7 +951,7 @@ components:
           type: object
           nullable: true
           additionalProperties: true
-          description: Có khi validation (field -> array message) hoặc chi tiết lỗi (vd. required_roles).
+          description: Optional structured details (for example validation field errors or domain-specific error metadata).
       example:
         success: false
         message: The email field is required.
@@ -965,7 +965,7 @@ components:
     ResponseMeta:
       type: object
       required: [request_id, timestamp]
-      description: Luôn có request_id (khi có middleware), timestamp (ISO 8601). status_code chỉ khi APP_DEBUG=true.
+      description: Always includes request_id (when request-id middleware is active) and timestamp (ISO 8601). status_code appears only when APP_DEBUG=true.
       properties:
         request_id:
           type: string
@@ -978,7 +978,7 @@ components:
         status_code:
           type: integer
           nullable: true
-          description: Chỉ có khi APP_DEBUG=true
+          description: Present only when APP_DEBUG=true.
 
     PaginationMeta:
       allOf:
@@ -1207,7 +1207,7 @@ components:
     SuccessNoDataResponse:
       type: object
       required: [success, message, meta]
-      description: Success nhưng không trả data (logout, forgot password, delete, v.v.). Key "data" không xuất hiện trong response.
+      description: Success envelope without data payload (for example logout, forgot password, delete). The "data" key is omitted.
       properties:
         success:
           type: boolean
@@ -1490,7 +1490,7 @@ components:
     ProfileSuccessResponse:
       type: object
       required: [success, message, meta, data]
-      description: "data là object User (từ UserResource), không bọc trong { user: ... }."
+      description: '"data" is a User object (from UserResource), not wrapped as { "user": ... }.'
       properties:
         success:
           type: boolean
@@ -1522,7 +1522,7 @@ components:
     UsersIndexSuccessResponse:
       type: object
       required: [success, message, meta, data, links]
-      description: Luôn phân trang. meta gồm request_id, timestamp và pagination (current_page, per_page, total, last_page, from, to).
+      description: Always paginated. meta includes request_id, timestamp, and pagination fields (current_page, per_page, total, last_page, from, to).
       properties:
         success:
           type: boolean
@@ -1569,7 +1569,7 @@ components:
     UserSuccessResponse:
       type: object
       required: [success, message, meta, data]
-      description: data là object User (UserResource). Dùng cho GET/PUT /users/{id}, create user, upload/delete avatar.
+      description: data is a User object (UserResource). Used for GET/PUT /users/{id}, create user, and avatar upload/delete.
       properties:
         success:
           type: boolean
@@ -1667,7 +1667,7 @@ components:
     RoleUserMutationSuccessResponse:
       type: object
       required: [success, message, meta, data]
-      description: Assign role, sync roles, assign permission, sync permissions — data.user là User (UserResource).
+      description: Used for assign/sync role and permission mutations. data.user is a User object (UserResource).
       properties:
         success:
           type: boolean
