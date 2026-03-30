@@ -39,6 +39,12 @@ class RolePermissionSeeder extends Seeder
             'edit content',
             'delete content',
             'publish content',
+
+            // File Management
+            'view files',
+            'upload files',
+            'delete files',
+            'manage files',
             
             // Admin permissions
             'access admin panel',
@@ -46,14 +52,14 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // Create roles and assign permissions
-        $adminRole = Role::create(['name' => 'admin']);
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $adminRole->givePermissionTo(Permission::all()); // Admin has all permissions
 
-        $moderatorRole = Role::create(['name' => 'moderator']);
+        $moderatorRole = Role::firstOrCreate(['name' => 'moderator']);
         $moderatorRole->givePermissionTo([
             'view users',
             'view content',
@@ -61,13 +67,17 @@ class RolePermissionSeeder extends Seeder
             'edit content',
             'delete content',
             'publish content',
+            'view files',
+            'upload files',
         ]);
 
-        $userRole = Role::create(['name' => 'user']);
+        $userRole = Role::firstOrCreate(['name' => 'user']);
         $userRole->givePermissionTo([
             'view content',
             'create content',
             'edit content',
+            'view files',
+            'upload files',
         ]);
 
         $this->command->info('Roles and permissions created successfully!');

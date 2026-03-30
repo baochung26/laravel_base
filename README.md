@@ -23,14 +23,13 @@ cd laravel_base_cursor
 docker-compose up -d
 ```
 
+Lệnh trên sẽ khởi động luôn service `node` chạy Vite dev server tại `http://localhost:5173`.
+
 ### Bước 3: Cài đặt dependencies
 
 ```bash
 # Cài đặt Composer packages
 docker-compose exec app composer install
-
-# Cài đặt NPM packages (tùy chọn)
-docker-compose exec app npm install
 ```
 
 ### Bước 4: Cấu hình môi trường
@@ -59,8 +58,9 @@ docker-compose exec app php artisan db:seed --class=RolePermissionSeeder
 ### Bước 7: Truy cập ứng dụng
 
 Mở trình duyệt và truy cập:
-- **Application:** http://localhost:8000
-- **phpMyAdmin:** http://localhost:8080
+- **Application:** http://localhost:${WEB_PORT} (mặc định `8000`)
+- **Vite Dev Server:** http://localhost:${VITE_PORT} (mặc định `5173`)
+- **phpMyAdmin:** http://localhost:${PHPMYADMIN_PORT} (mặc định `8080`)
 
 ## 🛠️ Các lệnh hữu ích
 
@@ -77,9 +77,12 @@ make shell         # Mở shell trong container app
 make db-shell      # Mở MySQL shell
 make artisan CMD="migrate"  # Chạy artisan command
 make composer CMD="install" # Chạy composer command
-make npm CMD="install"      # Chạy npm command
 make fresh         # Fresh migration với seeding
 make cache-clear   # Xóa tất cả cache
+make npm-install   # Cài dependencies frontend (Vite)
+make npm-build     # Build assets frontend
+make npm-dev       # Chạy Vite dev server (port 5173)
+make up-build      # Build frontend trước rồi start backend containers
 ```
 
 ### Hoặc sử dụng Docker Compose trực tiếp
@@ -100,9 +103,6 @@ docker-compose exec app php artisan migrate
 # Chạy composer commands
 docker-compose exec app composer install
 
-# Chạy npm commands
-docker-compose exec app npm install
-
 # Truy cập shell trong container
 docker-compose exec app bash
 
@@ -121,6 +121,7 @@ laravel_base_cursor/
 │   │   │   └── RolePermissionController.php
 │   │   ├── Middleware/    # Custom middleware
 │   │   ├── Requests/     # Form request validation
+│   │   ├── Resources/    # API Resources
 │   │   └── Kernel.php    # HTTP Kernel
 │   ├── Services/         # Business Logic Layer
 │   │   ├── AuthService.php
@@ -146,12 +147,11 @@ laravel_base_cursor/
 │   └── seeders/          # Database seeders
 ├── public/               # Public assets
 ├── resources/
-│   ├── views/            # Blade templates
-│   ├── css/              # CSS files
-│   └── js/               # JavaScript files
+│   └── views/            # Email templates
 ├── routes/               # Route definitions
-│   ├── web.php           # Web routes
-│   └── api.php           # API routes
+│   ├── console.php       # Artisan commands
+│   └── api/v1/           # API v1 (prefix: /api/v1)
+│       └── routes.php    # Auth, users, files, health, etc.
 ├── storage/              # Storage files
 ├── tests/                # Tests
 ├── docker/               # Docker configuration
@@ -162,7 +162,7 @@ laravel_base_cursor/
 ├── Dockerfile            # PHP Dockerfile
 ├── Makefile              # Helper commands
 └── docs/                 # Documentation
-    ├── ARCHITECTURE.md   # Architecture guide
+    ├── API_FOUNDATION.md # API & architecture
     ├── AUTHENTICATION.md # Authentication guide
     └── QUICK_START.md    # Quick start guide
 ```
@@ -176,7 +176,7 @@ Dự án sử dụng **Repository-Service-Controller Pattern** để tách biệ
 - **Controller Layer**: Xử lý HTTP requests/responses (HTTP Layer)
 - **DTOs**: Transfer data type-safe giữa các layers
 
-Xem chi tiết trong file [ARCHITECTURE.md](docs/ARCHITECTURE.md)
+Xem chi tiết trong [API_FOUNDATION.md](docs/API_FOUNDATION.md) và [QUICK_START.md](docs/QUICK_START.md).
 
 ## 🗄️ Cấu hình Database
 
@@ -234,10 +234,15 @@ FROM php:8.3-fpm
 
 ### Thay đổi port
 
-Chỉnh sửa `docker-compose.yml`:
-- Application port (8000): Thay đổi `"8000:80"` trong service `webserver`
-- phpMyAdmin port (8080): Thay đổi `"8080:80"` trong service `phpmyadmin`
-- MySQL port (3306): Thay đổi `"3306:3306"` trong service `db`
+Chỉnh sửa file `.env` (không cần sửa `docker-compose.yml`):
+- `WEB_PORT=8000` (port host cho web app)
+- `PHPMYADMIN_PORT=8080` (port host cho phpMyAdmin)
+- `DB_FORWARD_PORT=3306` (port host forward tới MySQL container)
+
+Sau khi đổi port, chạy lại:
+```bash
+docker-compose up -d --force-recreate
+```
 
 ### Thay đổi cấu hình PHP
 
@@ -304,28 +309,17 @@ Hoặc sử dụng: `make cache-clear`
 
 ## 📚 Tài liệu dự án
 
-Các tài liệu chi tiết của dự án được lưu trong thư mục [`docs/`](docs/):
+Tài liệu chi tiết nằm trong [`docs/`](docs/). **Mục lục:** [docs/README.md](docs/README.md).
 
-- [📐 ARCHITECTURE.md](docs/ARCHITECTURE.md) - Hướng dẫn về kiến trúc và Repository-Service-Controller Pattern
-- [🔐 AUTHENTICATION.md](docs/AUTHENTICATION.md) - Hướng dẫn về Authentication & Authorization
-- [👤 USER_MODULE.md](docs/USER_MODULE.md) - Hướng dẫn về User Module (CRUD, Profile, Password)
-- [🔌 API_FOUNDATION.md](docs/API_FOUNDATION.md) - Hướng dẫn về API Foundation (Versioning, Response Format, Resources)
-- [🔢 API_VERSIONING_STRATEGY.md](docs/API_VERSIONING_STRATEGY.md) - Chiến lược API Versioning và Deprecation Policy
-- [❤️ HEALTH_CHECK.md](docs/HEALTH_CHECK.md) - Health check endpoints (Liveness/Readiness) cho monitoring/K8s probes
-- [📊 LOGGING.md](docs/LOGGING.md) - Hướng dẫn về Logging & Monitoring (JSON logs, Request ID, Slow Queries)
-- [🚨 EXCEPTION_HANDLING.md](docs/EXCEPTION_HANDLING.md) - Hướng dẫn về Exception Handling chuẩn (Standardized Error Format)
-- [⚙️ CONFIG_ENVIRONMENT.md](docs/CONFIG_ENVIRONMENT.md) - Hướng dẫn về Configuration & Environment (Cache, Queue, Mail, File System)
-- [🔄 QUEUE_SCHEDULER.md](docs/QUEUE_SCHEDULER.md) - Hướng dẫn về Queue & Scheduler (Redis Queue, Jobs, Cron Tasks)
-- [💾 CACHE_STRATEGY.md](docs/CACHE_STRATEGY.md) - Hướng dẫn về Cache Strategy (Key Convention, Invalidation)
-- [📁 FILE_STORAGE.md](docs/FILE_STORAGE.md) - Hướng dẫn về File Storage (Local, S3, Public/Private Files)
-- [🗄️ DATABASE_CONVENTIONS.md](docs/DATABASE_CONVENTIONS.md) - Hướng dẫn về Database Conventions (Migrations, Soft Deletes, Indexing)
-- [⚡ QUERY_OPTIMIZATION.md](docs/QUERY_OPTIMIZATION.md) - Hướng dẫn về Database Query Optimization (Eager Loading, Indexing, Performance)
-- [🔴 REDIS_SETUP.md](docs/REDIS_SETUP.md) - Hướng dẫn về Redis Setup trong Docker
-- [🚀 QUICK_START.md](docs/QUICK_START.md) - Hướng dẫn khởi động nhanh dự án
-- [✅ AUTH_CHECKLIST.md](docs/AUTH_CHECKLIST.md) - Checklist các tính năng Auth & Authorization
-- [📋 PROJECT_AUDIT.md](docs/PROJECT_AUDIT.md) - Báo cáo đánh giá và tối ưu dự án
+| Nhóm | Tài liệu chính |
+|------|----------------|
+| **Bắt đầu** | [QUICK_START.md](docs/QUICK_START.md) |
+| **API Contract** | [API_FOUNDATION.md](docs/API_FOUNDATION.md), [API_RESPONSE_AND_ERRORS.md](docs/API_RESPONSE_AND_ERRORS.md), [SWAGGER_USAGE.md](docs/SWAGGER_USAGE.md), [openapi.yaml](docs/openapi.yaml) |
+| **Architecture & Security** | [ARCHITECTURE_CONTROLLER_SERVICE_REPOSITORY.md](docs/ARCHITECTURE_CONTROLLER_SERVICE_REPOSITORY.md), [SECURITY.md](docs/SECURITY.md) |
+| **Auth** | [AUTHENTICATION.md](docs/AUTHENTICATION.md), [WEB_GOOGLE_LOGIN.md](docs/WEB_GOOGLE_LOGIN.md) |
+| **Operations** | [HEALTH_CHECK.md](docs/HEALTH_CHECK.md), [QUEUE_SCHEDULER.md](docs/QUEUE_SCHEDULER.md) |
 
-**Note:** File `.env.example` đã có sẵn trong root directory. Template chi tiết có thể được tìm thấy trong `docs/CONFIG_ENV.example`
+**Ghi chú:** `.env.example` có sẵn ở root.
 
 ## 🔌 API Foundation
 
@@ -335,6 +329,8 @@ Dự án sử dụng API Foundation với các tính năng:
 - **Response Format:** Standardized success/error responses
 - **Pagination:** Standardized pagination format
 - **API Resources:** Transformers cho data formatting
+- **Swagger UI:** `GET /api/v1/docs`
+- **OpenAPI Spec:** `GET /api/v1/openapi.yaml`
 
 Xem chi tiết trong file [API_FOUNDATION.md](docs/API_FOUNDATION.md)
 

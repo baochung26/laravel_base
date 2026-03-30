@@ -21,13 +21,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\RequestIdMiddleware::class);
         
         // Query logging middleware (optional, can be enabled/disabled via config)
-        if (config('logging.enable_query_log', false)) {
+        if (env('LOG_ENABLE_QUERY_LOG', false)) {
             $middleware->append(\App\Http\Middleware\LogQueryMiddleware::class);
         }
 
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

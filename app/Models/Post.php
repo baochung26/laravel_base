@@ -2,16 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Post extends Model
+class Post extends BaseModel
 {
-    use HasFactory;
-    use SoftDeletes;
-
     protected $fillable = [
         'user_id',
         'title',
@@ -28,7 +22,6 @@ class Post extends Model
     protected $casts = [
         'is_featured' => 'boolean',
         'published_at' => 'datetime',
-        'deleted_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -36,4 +29,3 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 }
-

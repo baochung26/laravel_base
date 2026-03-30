@@ -3,6 +3,7 @@
 namespace App\Http\Requests\User;
 
 use App\Helpers\PasswordRules;
+use App\Support\Validation\AvatarValidation;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreUserRequest extends FormRequest
@@ -26,7 +27,7 @@ class StoreUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', PasswordRules::standard()],
-            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'], // 2MB max
+            'avatar' => AvatarValidation::nullableRules(),
         ];
     }
 
@@ -44,9 +45,7 @@ class StoreUserRequest extends FormRequest
             'email.unique' => 'This email is already registered.',
             'password.required' => 'Password is required.',
             'password.confirmed' => 'Password confirmation does not match.',
-            'avatar.image' => 'Avatar must be an image.',
-            'avatar.mimes' => 'Avatar must be a file of type: jpeg, png, jpg, gif.',
-            'avatar.max' => 'Avatar must not exceed 2MB.',
+            ...AvatarValidation::messages(),
         ];
     }
 }

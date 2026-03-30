@@ -8,10 +8,10 @@ use App\Exceptions\ValidationException;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
+use App\Support\Validation\AvatarValidation;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class UserController extends ApiController
 {
@@ -21,27 +21,22 @@ class UserController extends ApiController
     }
 
     /**
-     * Get all users.
+     * Get all users (always paginated).
+     * Query: per_page, page, search.
      */
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->get('per_page', 15);
+        $perPage = (int) $request->get('per_page', config('constants.app.default_per_page'));
+        $perPage = max(1, min($perPage, config('constants.app.max_per_page', 100)));
         $search = $request->get('search');
 
-        if ($search) {
-            $users = $this->userService->search($search, $perPage);
-            return $this->resourcePaginatedResponse(
-                UserResource::collection($users->items()),
-                $users,
-                'Users retrieved successfully'
-            );
-        }
+        $users = $search
+            ? $this->userService->search($search, $perPage)
+            : $this->userService->paginate($perPage);
 
-        // getAll() now automatically eager loads roles
-        $users = $this->userService->getAll(['id', 'name', 'email', 'avatar', 'created_at']);
-        
-        return $this->successResponse(
-            UserResource::collection($users),
+        return $this->resourcePaginatedResponse(
+            UserResource::collection($users->items()),
+            $users,
             'Users retrieved successfully'
         );
     }
@@ -53,20 +48,12 @@ class UserController extends ApiController
     {
         try {
             $data = $request->validated();
-            
-            // Handle avatar upload
-            if ($request->hasFile('avatar')) {
-                $avatarPath = $request->file('avatar')->store('avatars', 'public');
-                $data['avatar'] = $avatarPath;
-            }
-
+            unset($data['avatar']);
             $userDTO = UserDTO::fromArray($data);
-            $user = $this->userService->create($userDTO);
-            // Get model with relations for Resource
-            $userModel = $this->userService->getModelByIdWithRelations($user->id);
+            $user = $this->userService->createWithAvatar($userDTO, $request->file('avatar'));
 
             return $this->successResponse(
-                new UserResource($userModel),
+                new UserResource($user),
                 'User created successfully',
                 201
             );
@@ -81,10 +68,10 @@ class UserController extends ApiController
     public function show(int $id): JsonResponse
     {
         try {
-            $userModel = $this->userService->getModelByIdWithRelations($id);
+            $user = $this->userService->getModelByIdWithRelations($id);
 
             return $this->successResponse(
-                new UserResource($userModel),
+                new UserResource($user),
                 'User retrieved successfully'
             );
         } catch (ResourceNotFoundException $e) {
@@ -99,26 +86,12 @@ class UserController extends ApiController
     {
         try {
             $data = $request->validated();
-
-            // Handle avatar upload
-            if ($request->hasFile('avatar')) {
-                // Delete old avatar if exists
-                $user = $this->userService->getById($id);
-                if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                    Storage::disk('public')->delete($user->avatar);
-                }
-
-                // Upload new avatar
-                $avatarPath = $request->file('avatar')->store('avatars', 'public');
-                $data['avatar'] = $avatarPath;
-            }
-
+            unset($data['avatar']);
             $userDTO = UserDTO::fromArray(array_merge($data, ['id' => $id]));
-            $this->userService->update($id, $userDTO);
-            $userModel = $this->userService->getModelByIdWithRelations($id);
+            $user = $this->userService->updateWithAvatar($id, $userDTO, $request->file('avatar'));
 
             return $this->successResponse(
-                new UserResource($userModel),
+                new UserResource($user),
                 'User updated successfully'
             );
         } catch (ValidationException $e) {
@@ -134,12 +107,6 @@ class UserController extends ApiController
     public function destroy(int $id): JsonResponse
     {
         try {
-            // Delete avatar if exists
-            $user = $this->userService->getById($id);
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-
             $this->userService->delete($id);
 
             return $this->successResponse(null, 'User deleted successfully');
@@ -155,22 +122,13 @@ class UserController extends ApiController
     {
         try {
             $request->validate([
-                'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+                'avatar' => AvatarValidation::requiredRules(),
             ]);
-
-            // Delete old avatar if exists
-            $user = $this->userService->getById($id);
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-
-            // Upload new avatar
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            $this->userService->updateAvatar($id, $avatarPath);
-            $userModel = $this->userService->getModelByIdWithRelations($id);
+            $this->userService->setAvatarFromFile($id, $request->file('avatar'));
+            $user = $this->userService->getModelByIdWithRelations($id);
 
             return $this->successResponse(
-                new UserResource($userModel),
+                new UserResource($user),
                 'Avatar uploaded successfully'
             );
         } catch (ResourceNotFoundException $e) {
@@ -185,10 +143,10 @@ class UserController extends ApiController
     {
         try {
             $this->userService->deleteAvatar($id);
-            $userModel = $this->userService->getModelByIdWithRelations($id);
+            $user = $this->userService->getModelByIdWithRelations($id);
 
             return $this->successResponse(
-                new UserResource($userModel),
+                new UserResource($user),
                 'Avatar deleted successfully'
             );
         } catch (ResourceNotFoundException $e) {

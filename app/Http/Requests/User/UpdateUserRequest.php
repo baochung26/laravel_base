@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\User;
 
+use App\Support\Validation\AvatarValidation;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -27,7 +27,7 @@ class UpdateUserRequest extends FormRequest
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'email' => ['sometimes', 'required', 'string', 'email', 'max:255', 'unique:users,email,' . $userId],
-            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'], // 2MB max
+            'avatar' => AvatarValidation::nullableRules(),
         ];
     }
 
@@ -43,9 +43,7 @@ class UpdateUserRequest extends FormRequest
             'email.required' => 'Email is required.',
             'email.email' => 'Please provide a valid email address.',
             'email.unique' => 'This email is already registered.',
-            'avatar.image' => 'Avatar must be an image.',
-            'avatar.mimes' => 'Avatar must be a file of type: jpeg, png, jpg, gif.',
-            'avatar.max' => 'Avatar must not exceed 2MB.',
+            ...AvatarValidation::messages(),
         ];
     }
 }

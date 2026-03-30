@@ -1,0 +1,91 @@
+/*
+ * Shared UI components: loading overlay, SweetAlert2 overrides.
+ * Each consuming file must define: --app-shared-line, --app-shared-surface,
+ * --app-shared-text, --app-shared-btn, --app-shared-btn-text (before or in same scope).
+ */
+
+/* SweetAlert2 popup modal */
+.app-swal-popup {
+    border-radius: 14px;
+    border: 1px solid var(--app-shared-line, #1b3358);
+    background: var(--app-shared-surface, #020f29);
+    color: var(--app-shared-text, #edf3ff);
+}
+
+.app-swal-confirm,
+.app-swal-cancel {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-weight: 700;
+}
+
+.app-swal-confirm {
+    background: var(--app-shared-btn, #e5e7eb);
+    color: var(--app-shared-btn-text, #0f172a);
+}
+
+.app-swal-cancel {
+    background: rgba(148, 163, 184, 0.2);
+    color: var(--app-shared-text, #edf3ff);
+}
+
+/* SweetAlert2 toast */
+.swal2-popup.swal2-toast.app-toast-popup {
+    border-radius: 12px;
+    border: 1px solid var(--app-shared-line, #1b3358) !important;
+    background: var(--app-shared-surface, #020f29) !important;
+    color: var(--app-shared-text, #edf3ff) !important;
+}
+
+.swal2-popup.swal2-toast.app-toast-popup .swal2-title,
+.swal2-popup.swal2-toast.app-toast-popup .swal2-html-container {
+    color: var(--app-shared-text, #edf3ff) !important;
+}
+
+/* Loading overlay */
+.app-loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 8, 24, 0.45);
+    backdrop-filter: blur(2px);
+}
+
+.app-loading-overlay.is-active {
+    display: flex;
+}
+
+.app-loading-box {
+    min-width: 190px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--app-shared-line, #1b3358);
+    background: var(--app-shared-surface, #020f29);
+    color: var(--app-shared-text, #edf3ff);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.app-loading-spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    border: 2px solid rgba(148, 163, 184, 0.25);
+    border-top-color: var(--app-shared-text, #f1f5f9);
+    animation: app-loading-spin 0.8s linear infinite;
+}
+
+.app-loading-text {
+    font-weight: 600;
+}
+
+@keyframes app-loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

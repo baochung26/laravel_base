@@ -1,63 +1,69 @@
-# Quick Start Guide
+# Quick Start
 
-## Khởi động nhanh dự án
+This guide runs the project with Docker and verifies the API is working.
 
-### 1. Cài đặt Laravel (nếu chưa có)
+## Requirements
 
-Nếu bạn chưa có Laravel installed, chạy:
+- Docker Desktop (or Docker Engine + Docker Compose)
+- Git
 
-```bash
-docker-compose up -d
-docker-compose exec app composer create-project laravel/laravel .
-```
-
-Hoặc sử dụng Laravel installer:
+## 1. Boot containers
 
 ```bash
-composer create-project laravel/laravel .
+docker compose up -d
 ```
 
-### 2. Setup môi trường
+Services started by default include `app`, `webserver`, `db`, `redis`, `queue`, `scheduler`, `node`, and `phpmyadmin`.
+
+## 2. Install dependencies and app key
 
 ```bash
-# Copy .env.example thành .env (sẽ được tạo tự động nếu dùng composer create-project)
-cp .env.example .env
-
-# Generate application key
-docker-compose exec app php artisan key:generate
+docker compose exec app composer install
+docker compose exec app cp .env.example .env
+docker compose exec app php artisan key:generate
 ```
 
-### 3. Chạy migrations
+## 3. Run migrations and seed baseline data
 
 ```bash
-docker-compose exec app php artisan migrate
+docker compose exec app php artisan migrate
+docker compose exec app php artisan db:seed --class=RolePermissionSeeder
 ```
 
-### 4. Truy cập ứng dụng
+## 4. Access local services
 
-- Application: http://localhost:8000
-- phpMyAdmin: http://localhost:8080
+- App/API: `http://localhost:8000` (or `${WEB_PORT}`)
+- Swagger UI: `http://localhost:8000/api/v1/docs`
+- OpenAPI YAML: `http://localhost:8000/api/v1/openapi.yaml`
+- phpMyAdmin: `http://localhost:8080` (or `${PHPMYADMIN_PORT}`)
+- Vite dev server: `http://localhost:5173` (or `${VITE_PORT}`)
 
-## Hoặc sử dụng Makefile (khuyến nghị)
+## 5. First API checks
 
 ```bash
-make setup
+# Health
+curl http://localhost:8000/api/v1/health
+
+# Register
+curl -X POST http://localhost:8000/api/v1/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"Demo User",
+    "email":"demo@example.com",
+    "password":"password123",
+    "password_confirmation":"password123"
+  }'
 ```
 
-Lệnh này sẽ tự động:
-- Khởi động containers
-- Cài đặt dependencies
-- Copy .env.example thành .env
-- Generate application key
-- Chạy migrations
+## 6. Common commands
 
-## Ghi chú
+```bash
+# See logs
+docker compose logs -f app webserver
 
-- File `.env.example` sẽ được tạo tự động khi bạn cài đặt Laravel bằng `composer create-project`
-- Nếu bạn đã có Laravel project, chỉ cần copy file `.env.example` từ project Laravel khác hoặc tạo file `.env` với cấu hình phù hợp
-- Database connection đã được cấu hình sẵn trong `docker-compose.yml`:
-  - Host: db
-  - Port: 3306
-  - Database: laravel_db
-  - Username: laravel_user
-  - Password: root
+# Run tests
+docker compose exec app php artisan test
+
+# Stop all
+docker compose down
+```

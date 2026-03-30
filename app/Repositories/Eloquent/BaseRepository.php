@@ -2,12 +2,14 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Repositories\Contracts\RepositoryInterface;
+use App\Repositories\Contracts\CrudRepositoryInterface;
+use App\Repositories\Contracts\CriteriaRepositoryInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-abstract class BaseRepository implements RepositoryInterface
+abstract class BaseRepository implements CrudRepositoryInterface, CriteriaRepositoryInterface
 {
     /**
      * The model instance.
@@ -20,9 +22,9 @@ abstract class BaseRepository implements RepositoryInterface
     protected array $with = [];
 
     /**
-     * Where conditions.
+     * Criteria conditions (keeps call order).
      */
-    protected array $wheres = [];
+    protected array $criteria = [];
 
     /**
      * Order by conditions.
@@ -57,13 +59,23 @@ abstract class BaseRepository implements RepositoryInterface
     }
 
     /**
-     * Reset the query builder.
+     * Reset the model and criteria state.
      */
     protected function resetModel(): void
     {
         $this->makeModel();
         $this->with = [];
-        $this->wheres = [];
+        $this->criteria = [];
+        $this->orderBy = [];
+    }
+
+    /**
+     * Reset criteria state (relations, conditions, order).
+     */
+    public function resetCriteria(): void
+    {
+        $this->with = [];
+        $this->criteria = [];
         $this->orderBy = [];
     }
 
@@ -72,12 +84,7 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function all(array $columns = ['*']): Collection
     {
-        $this->applyCriteria();
-
-        $query = $this->model;
-        if (! empty($this->with)) {
-            $query = $query->with($this->with);
-        }
+        $query = $this->applyCriteria();
         $result = $query->get($columns);
 
         $this->resetModel();
@@ -90,12 +97,7 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function find(int $id, array $columns = ['*']): ?Model
     {
-        $this->applyCriteria();
-
-        $query = $this->model;
-        if (! empty($this->with)) {
-            $query = $query->with($this->with);
-        }
+        $query = $this->applyCriteria();
         $result = $query->find($id, $columns);
 
         $this->resetModel();
@@ -108,12 +110,7 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function findOrFail(int $id, array $columns = ['*']): Model
     {
-        $this->applyCriteria();
-
-        $query = $this->model;
-        if (! empty($this->with)) {
-            $query = $query->with($this->with);
-        }
+        $query = $this->applyCriteria();
         $result = $query->findOrFail($id, $columns);
 
         $this->resetModel();
@@ -126,9 +123,8 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function findBy(string $field, $value, array $columns = ['*']): ?Model
     {
-        $this->applyCriteria();
-
-        $result = $this->model->where($field, $value)->first($columns);
+        $query = $this->applyCriteria();
+        $result = $query->where($field, $value)->first($columns);
 
         $this->resetModel();
 
@@ -140,9 +136,8 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function findAllBy(string $field, $value, array $columns = ['*']): Collection
     {
-        $this->applyCriteria();
-
-        $result = $this->model->where($field, $value)->get($columns);
+        $query = $this->applyCriteria();
+        $result = $query->where($field, $value)->get($columns);
 
         $this->resetModel();
 
@@ -166,9 +161,8 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function update(int $id, array $data): bool
     {
-        $this->applyCriteria();
-
-        $result = $this->model->findOrFail($id)->update($data);
+        $query = $this->applyCriteria();
+        $result = $query->findOrFail($id)->update($data);
 
         $this->resetModel();
 
@@ -192,9 +186,8 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function delete(int $id): bool
     {
-        $this->applyCriteria();
-
-        $result = $this->model->findOrFail($id)->delete();
+        $query = $this->applyCriteria();
+        $result = $query->findOrFail($id)->delete();
 
         $this->resetModel();
 
@@ -206,12 +199,7 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function paginate(int $perPage = 15, array $columns = ['*']): LengthAwarePaginator
     {
-        $this->applyCriteria();
-
-        $query = $this->model;
-        if (! empty($this->with)) {
-            $query = $query->with($this->with);
-        }
+        $query = $this->applyCriteria();
         $result = $query->paginate($perPage, $columns);
 
         $this->resetModel();
@@ -239,7 +227,250 @@ abstract class BaseRepository implements RepositoryInterface
             $operator = '=';
         }
 
-        $this->wheres[] = compact('column', 'operator', 'value');
+        $this->criteria[] = [
+            'type' => 'where',
+            'boolean' => 'and',
+            'column' => $column,
+            'operator' => $operator,
+            'value' => $value,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply or where clause.
+     */
+    public function orWhere(string $column, $operator = null, $value = null): self
+    {
+        if (func_num_args() === 2) {
+            $value = $operator;
+            $operator = '=';
+        }
+
+        $this->criteria[] = [
+            'type' => 'where',
+            'boolean' => 'or',
+            'column' => $column,
+            'operator' => $operator,
+            'value' => $value,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply nested where clause.
+     */
+    public function whereNested(callable $callback): self
+    {
+        $this->criteria[] = [
+            'type' => 'nested',
+            'boolean' => 'and',
+            'callback' => $callback,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply or nested where clause.
+     */
+    public function orWhereNested(callable $callback): self
+    {
+        $this->criteria[] = [
+            'type' => 'nested',
+            'boolean' => 'or',
+            'callback' => $callback,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply where in clause.
+     */
+    public function whereIn(string $column, array $values): self
+    {
+        $this->criteria[] = [
+            'type' => 'whereIn',
+            'boolean' => 'and',
+            'column' => $column,
+            'values' => $values,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply or where in clause.
+     */
+    public function orWhereIn(string $column, array $values): self
+    {
+        $this->criteria[] = [
+            'type' => 'whereIn',
+            'boolean' => 'or',
+            'column' => $column,
+            'values' => $values,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply where null clause.
+     */
+    public function whereNull(string $column): self
+    {
+        $this->criteria[] = [
+            'type' => 'whereNull',
+            'boolean' => 'and',
+            'column' => $column,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply or where null clause.
+     */
+    public function orWhereNull(string $column): self
+    {
+        $this->criteria[] = [
+            'type' => 'whereNull',
+            'boolean' => 'or',
+            'column' => $column,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply where not null clause.
+     */
+    public function whereNotNull(string $column): self
+    {
+        $this->criteria[] = [
+            'type' => 'whereNotNull',
+            'boolean' => 'and',
+            'column' => $column,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply or where not null clause.
+     */
+    public function orWhereNotNull(string $column): self
+    {
+        $this->criteria[] = [
+            'type' => 'whereNotNull',
+            'boolean' => 'or',
+            'column' => $column,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply where between clause.
+     */
+    public function whereBetween(string $column, array $values): self
+    {
+        $this->criteria[] = [
+            'type' => 'whereBetween',
+            'boolean' => 'and',
+            'column' => $column,
+            'values' => $values,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply or where between clause.
+     */
+    public function orWhereBetween(string $column, array $values): self
+    {
+        $this->criteria[] = [
+            'type' => 'whereBetween',
+            'boolean' => 'or',
+            'column' => $column,
+            'values' => $values,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply where date clause.
+     */
+    public function whereDate(string $column, $operator, $value = null): self
+    {
+        if (func_num_args() === 2) {
+            $value = $operator;
+            $operator = '=';
+        }
+
+        $this->criteria[] = [
+            'type' => 'whereDate',
+            'boolean' => 'and',
+            'column' => $column,
+            'operator' => $operator,
+            'value' => $value,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply or where date clause.
+     */
+    public function orWhereDate(string $column, $operator, $value = null): self
+    {
+        if (func_num_args() === 2) {
+            $value = $operator;
+            $operator = '=';
+        }
+
+        $this->criteria[] = [
+            'type' => 'whereDate',
+            'boolean' => 'or',
+            'column' => $column,
+            'operator' => $operator,
+            'value' => $value,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply where has clause.
+     */
+    public function whereHas(string $relation, ?callable $callback = null): self
+    {
+        $this->criteria[] = [
+            'type' => 'whereHas',
+            'boolean' => 'and',
+            'relation' => $relation,
+            'callback' => $callback,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Apply or where has clause.
+     */
+    public function orWhereHas(string $relation, ?callable $callback = null): self
+    {
+        $this->criteria[] = [
+            'type' => 'whereHas',
+            'boolean' => 'or',
+            'relation' => $relation,
+            'callback' => $callback,
+        ];
 
         return $this;
     }
@@ -259,9 +490,8 @@ abstract class BaseRepository implements RepositoryInterface
      */
     public function get(array $columns = ['*']): Collection
     {
-        $this->applyCriteria();
-
-        $result = $this->model->get($columns);
+        $query = $this->applyCriteria();
+        $result = $query->get($columns);
 
         $this->resetModel();
 
@@ -269,23 +499,103 @@ abstract class BaseRepository implements RepositoryInterface
     }
 
     /**
+     * Get the underlying query builder with current criteria.
+     */
+    public function query(): Builder
+    {
+        $query = $this->applyCriteria();
+
+        return $query;
+    }
+
+    /**
+     * Get the underlying query builder and reset criteria state.
+     */
+    public function queryAndReset(): Builder
+    {
+        $query = $this->applyCriteria();
+        $this->resetCriteria();
+
+        return $query;
+    }
+
+    /**
      * Apply all criteria to the model.
      */
-    protected function applyCriteria(): void
+    protected function applyCriteria(): Builder
     {
+        $query = $this->model->newQuery();
+
         // Apply eager loading
         if (! empty($this->with)) {
-            $this->model = $this->model->with($this->with);
+            $query = $query->with($this->with);
         }
 
-        // Apply where conditions
-        foreach ($this->wheres as $where) {
-            $this->model = $this->model->where($where['column'], $where['operator'], $where['value']);
+        // Apply criteria in the same order they were added
+        foreach ($this->criteria as $criterion) {
+            $boolean = $criterion['boolean'] ?? 'and';
+            switch ($criterion['type']) {
+                case 'where':
+                    $query = $query->where(
+                        $criterion['column'],
+                        $criterion['operator'],
+                        $criterion['value'],
+                        $boolean
+                    );
+                    break;
+                case 'nested':
+                    $query = $boolean === 'or'
+                        ? $query->orWhere($criterion['callback'])
+                        : $query->where($criterion['callback']);
+                    break;
+                case 'whereIn':
+                    $query = $boolean === 'or'
+                        ? $query->orWhereIn($criterion['column'], $criterion['values'])
+                        : $query->whereIn($criterion['column'], $criterion['values']);
+                    break;
+                case 'whereBetween':
+                    $query = $boolean === 'or'
+                        ? $query->orWhereBetween($criterion['column'], $criterion['values'])
+                        : $query->whereBetween($criterion['column'], $criterion['values']);
+                    break;
+                case 'whereNull':
+                    $query = $boolean === 'or'
+                        ? $query->orWhereNull($criterion['column'])
+                        : $query->whereNull($criterion['column']);
+                    break;
+                case 'whereNotNull':
+                    $query = $boolean === 'or'
+                        ? $query->orWhereNotNull($criterion['column'])
+                        : $query->whereNotNull($criterion['column']);
+                    break;
+                case 'whereDate':
+                    $query = $query->whereDate(
+                        $criterion['column'],
+                        $criterion['operator'],
+                        $criterion['value'],
+                        $boolean
+                    );
+                    break;
+                case 'whereHas':
+                    if ($criterion['callback']) {
+                        $query = $boolean === 'or'
+                            ? $query->orWhereHas($criterion['relation'], $criterion['callback'])
+                            : $query->whereHas($criterion['relation'], $criterion['callback']);
+                        break;
+                    }
+
+                    $query = $boolean === 'or'
+                        ? $query->orWhereHas($criterion['relation'])
+                        : $query->whereHas($criterion['relation']);
+                    break;
+            }
         }
 
         // Apply order by
         foreach ($this->orderBy as $order) {
-            $this->model = $this->model->orderBy($order['column'], $order['direction']);
+            $query = $query->orderBy($order['column'], $order['direction']);
         }
+
+        return $query;
     }
 }

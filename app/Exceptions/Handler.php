@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use App\Support\ApiResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
@@ -180,10 +181,13 @@ class Handler extends ExceptionHandler
      */
     protected function renderLaravelValidationException(Request $request, LaravelValidationException $e): JsonResponse
     {
+        $errors = $e->errors();
+        $firstError = collect($errors)->flatten()->first();
+
         return $this->standardizedErrorResponse(
-            'Validation failed',
+            is_string($firstError) ? $firstError : 'Validation failed',
             HttpResponse::HTTP_UNPROCESSABLE_ENTITY,
-            $e->errors()
+            $errors
         );
     }
 
@@ -305,35 +309,6 @@ class Handler extends ExceptionHandler
         ?array $errors = null,
         ?array $additional = null
     ): JsonResponse {
-        $requestId = app()->bound('request_id') ? app('request_id') : null;
-
-        $response = [
-            'success' => false,
-            'message' => $message,
-        ];
-
-        if ($errors !== null) {
-            $response['errors'] = $errors;
-        }
-
-        if ($additional !== null) {
-            $response = array_merge($response, $additional);
-        }
-
-        if (config('app.debug')) {
-            $response['debug'] = [
-                'status_code' => $statusCode,
-                'request_id' => $requestId,
-            ];
-        }
-
-        $jsonResponse = response()->json($response, $statusCode);
-
-        if ($requestId) {
-            $jsonResponse->headers->set('X-Request-ID', $requestId);
-            $jsonResponse->headers->set('X-Correlation-ID', $requestId);
-        }
-
-        return $jsonResponse;
+        return ApiResponse::error($message, $statusCode, $errors, null, $additional);
     }
 }

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class AuthApiV1Test extends TestCase
@@ -32,6 +33,8 @@ class AuthApiV1Test extends TestCase
             'data' => [
                 'user',
                 'token',
+                'access_token',
+                'refresh_token',
             ],
         ]);
 
@@ -61,6 +64,8 @@ class AuthApiV1Test extends TestCase
             'data' => [
                 'user',
                 'token',
+                'access_token',
+                'refresh_token',
                 'permissions',
                 'roles',
             ],
@@ -122,10 +127,12 @@ class AuthApiV1Test extends TestCase
         ]);
     }
 
-    public function test_logout_revokes_current_token(): void
+    public function test_logout_revokes_all_user_tokens(): void
     {
         $user = User::factory()->create();
-        $token = $user->createToken('test_token')->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'])->plainTextToken;
+        $user->createToken('refresh_token', ['token:refresh']);
+        $this->assertDatabaseCount('personal_access_tokens', 2);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/logout');
@@ -138,5 +145,112 @@ class AuthApiV1Test extends TestCase
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
-}
 
+    public function test_refresh_requires_refresh_token(): void
+    {
+        $user = User::factory()->create();
+        $accessToken = $user->createToken('auth_token', ['*'])->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$accessToken)
+            ->postJson('/api/v1/refresh');
+
+        $response->assertStatus(401);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Refresh token is required.',
+        ]);
+    }
+
+    public function test_refresh_with_refresh_token_rotates_token_pair(): void
+    {
+        $user = User::factory()->create();
+        $refreshToken = $user->createToken('refresh_token', ['token:refresh'])->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$refreshToken)
+            ->postJson('/api/v1/refresh');
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Token refreshed successfully',
+        ]);
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'data' => [
+                'token',
+                'access_token',
+                'refresh_token',
+            ],
+        ]);
+
+        $this->assertDatabaseCount('personal_access_tokens', 2);
+    }
+
+    public function test_google_login_creates_user_and_returns_token(): void
+    {
+        Http::fake([
+            'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
+                'iss' => 'https://accounts.google.com',
+                'sub' => 'google-sub-001',
+                'aud' => 'test-client-id',
+                'email' => 'google-user@example.com',
+                'email_verified' => 'true',
+                'name' => 'Google User',
+                'picture' => 'https://example.com/avatar.jpg',
+                'exp' => (string) (time() + 3600),
+            ], 200),
+        ]);
+
+        config()->set('services.google.client_id', 'test-client-id');
+
+        $response = $this->postJson('/api/v1/login/google', [
+            'id_token' => 'valid-google-id-token',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Google login successful',
+        ]);
+        $response->assertJsonPath('data.login_type', 'google');
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'meta',
+            'data' => [
+                'user',
+                'token',
+                'access_token',
+                'refresh_token',
+                'permissions',
+                'roles',
+                'login_type',
+            ],
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'google-user@example.com',
+            'google_id' => 'google-sub-001',
+        ]);
+    }
+
+    public function test_google_login_rejects_invalid_token(): void
+    {
+        Http::fake([
+            'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
+                'error' => 'invalid_token',
+            ], 400),
+        ]);
+
+        $response = $this->postJson('/api/v1/login/google', [
+            'id_token' => 'invalid-token',
+        ]);
+
+        $response->assertStatus(401);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Invalid Google token.',
+        ]);
+    }
+}

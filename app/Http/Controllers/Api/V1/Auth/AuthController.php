@@ -4,20 +4,21 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\DTOs\LoginDTO;
 use App\DTOs\UserDTO;
-use App\Exceptions\ValidationException as AppValidationException;
 use App\Http\Controllers\Api\V1\ApiController;
+use App\Http\Requests\Auth\GoogleLoginRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
+use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends ApiController
 {
     public function __construct(
-        protected AuthService $authService
+        protected AuthService $authService,
+        protected UserService $userService
     ) {
     }
 
@@ -26,25 +27,15 @@ class AuthController extends ApiController
      */
     public function register(RegisterRequest $request): JsonResponse
     {
-        try {
-            $userDTO = UserDTO::fromArray([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => $request->password,
-            ]);
+        $userDTO = UserDTO::fromArray([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => $request->password,
+        ]);
 
-            $result = $this->authService->register($userDTO, 'user');
+        $result = $this->authService->register($userDTO, 'user');
 
-            // Get model with relations for Resource (result['user'] is UserDTO)
-            $userModel = app(\App\Services\UserService::class)->getModelByIdWithRelations($result['user']->id);
-            
-            return $this->successResponse([
-                'user' => new UserResource($userModel),
-                'token' => $result['token'],
-            ], 'User registered successfully', 201);
-        } catch (AppValidationException $e) {
-            return $this->errorResponse($e->getMessage(), $e->getCode());
-        }
+        return $this->authResponse($result, 'User registered successfully', 201);
     }
 
     /**
@@ -52,26 +43,24 @@ class AuthController extends ApiController
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        try {
-            $loginDTO = LoginDTO::fromArray([
-                'email' => $request->email,
-                'password' => $request->password,
-            ]);
+        $loginDTO = LoginDTO::fromArray([
+            'email' => $request->email,
+            'password' => $request->password,
+        ]);
 
-            $result = $this->authService->login($loginDTO);
+        $result = $this->authService->login($loginDTO);
 
-            // Get model with relations for Resource (result['user'] is UserDTO)
-            $userModel = app(\App\Services\UserService::class)->getModelByIdWithRelations($result['user']->id);
+        return $this->authResponse($result, 'Login successful');
+    }
 
-            return $this->successResponse([
-                'user' => new UserResource($userModel),
-                'token' => $result['token'],
-                'permissions' => $result['permissions'],
-                'roles' => $result['roles'],
-            ], 'Login successful');
-        } catch (ValidationException $e) {
-            return $this->validationErrorResponse($e->errors(), 'The provided credentials are incorrect.');
-        }
+    /**
+     * Login/register user by Google ID token.
+     */
+    public function googleLogin(GoogleLoginRequest $request): JsonResponse
+    {
+        $result = $this->authService->loginWithGoogle($request->string('id_token')->toString());
+
+        return $this->authResponse($result, 'Google login successful');
     }
 
     /**
@@ -90,7 +79,7 @@ class AuthController extends ApiController
     public function me(Request $request): JsonResponse
     {
         $userDTO = $this->authService->me();
-        $userModel = app(\App\Services\UserService::class)->getModelByIdWithRelations($userDTO->id);
+        $userModel = $this->userService->getModelByIdWithRelations($userDTO->id);
 
         return $this->successResponse([
             'user' => new UserResource($userModel),
@@ -104,12 +93,23 @@ class AuthController extends ApiController
      */
     public function refresh(Request $request): JsonResponse
     {
-        try {
-            $token = $this->authService->refresh();
+        $tokens = $this->authService->refresh();
 
-            return $this->successResponse(['token' => $token], 'Token refreshed successfully');
-        } catch (AppValidationException $e) {
-            return $this->errorResponse($e->getMessage(), $e->getCode());
-        }
+        return $this->successResponse($tokens, 'Token refreshed successfully');
+    }
+
+    private function authResponse(array $result, string $message, int $statusCode = 200): JsonResponse
+    {
+        $userModel = $this->userService->getModelByIdWithRelations($result['user']->id);
+
+        return $this->successResponse([
+            'user' => new UserResource($userModel),
+            'token' => $result['token'],
+            'access_token' => $result['access_token'] ?? $result['token'],
+            'refresh_token' => $result['refresh_token'] ?? null,
+            'permissions' => $result['permissions'] ?? [],
+            'roles' => $result['roles'] ?? [],
+            'login_type' => $result['login_type'] ?? 'password',
+        ], $message, $statusCode);
     }
 }

@@ -2,12 +2,13 @@
 
 namespace App\Providers;
 
-use App\Repositories\Contracts\RepositoryInterface;
+use App\Repositories\Contracts\RolePermissionRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Eloquent\RolePermissionRepository;
 use App\Repositories\Eloquent\UserRepository;
+use App\View\Composers\DashboardSidebarComposer;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Bind Repository interfaces to implementations
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        $this->app->bind(RolePermissionRepositoryInterface::class, RolePermissionRepository::class);
 
         // Register other repositories here when needed
         // $this->app->bind(ProductRepositoryInterface::class, ProductRepository::class);
@@ -28,12 +30,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register Spatie Permission package
-        if (! $this->app->runningInConsole()) {
-            $this->app->make(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
-        }
+        // Spatie Permission: cache is used by default. Clear only when roles/permissions
+        // change (e.g. in seeders or admin UI); do not clear on every request.
 
         // Register User Observer for cache invalidation
         \App\Models\User::observe(\App\Observers\UserObserver::class);
+
+        View::composer('layouts.app', DashboardSidebarComposer::class);
     }
 }

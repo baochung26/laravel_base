@@ -3,9 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
-
-class UserResource extends JsonResource
+class UserResource extends BaseResource
 {
     /**
      * Transform the resource into an array.
@@ -18,10 +16,10 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'avatar' => $this->avatar ? url('storage/' . $this->avatar) : null,
-            'email_verified_at' => $this->email_verified_at?->toISOString(),
-            'created_at' => $this->created_at->toISOString(),
-            'updated_at' => $this->updated_at->toISOString(),
+            'avatar' => $this->storageUrl($this->avatar, config('constants.uploads.avatar_disk')),
+            'email_verified_at' => $this->iso($this->email_verified_at),
+            'created_at' => $this->iso($this->created_at),
+            'updated_at' => $this->iso($this->updated_at),
             
             // Relations
             'roles' => $this->whenLoaded('roles', function () {
